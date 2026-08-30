@@ -12,6 +12,26 @@
     <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F;flex:1">Profile &amp; Prompts</div>
     <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ versionLabel }}</div>
   </div>
+
+  <sc-if value="{{ pendingOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#F8F3E0;border:1px solid #C98A1E;padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#C98A1E">Предложения, ждущие включения</div>
+      <sc-for list="{{ pending }}" as="p" hint-placeholder-count="2">
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153;flex:1;min-width:200px">{{ p.text }}</div>
+          <button onClick="{{ p.activate }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace;cursor:pointer">Включить</button>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ staleOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid #DA501C;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;flex:1;min-width:240px">{{ staleText }}</div>
+      <button onClick="{{ goRuns }}" style="border:1px solid #DA501C;background:transparent;color:#DA501C;padding:7px 12px;font:400 11px/1 'JetBrains Mono',monospace;cursor:pointer">Раздел Runs →</button>
+    </div>
+  </sc-if>
+
   <div style="display:flex;border-bottom:1px solid rgba(19,30,95,0.16);flex-wrap:wrap">
     <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
       <div onClick="{{ t.pick }}" style="padding:9px 14px;cursor:pointer;font:400 12px/1 'JetBrains Mono',monospace;color:{{ t.fg }};background:{{ t.bg }}">{{ t.label }}</div>
@@ -20,8 +40,23 @@
 
   <sc-if value="{{ isBiz }}" hint-placeholder-val="{{ true }}">
     <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
-      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Описание бизнеса заказчика</div>
-      <div style="margin-top:10px;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 14px/1.6 'JetBrains Mono',monospace;color:#131E5F">{{ description }}</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479;flex:1">Описание бизнеса заказчика</div>
+        <sc-if value="{{ canWrite }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ bizToggle }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ bizEditLabel }}</div>
+        </sc-if>
+      </div>
+
+      <sc-if value="{{ bizEditing }}" hint-placeholder-val="{{ false }}">
+        <textarea value="{{ bizDraft }}" onInput="{{ setBizDraft }}" rows="4" style="margin-top:10px;width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 14px/1.6 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button onClick="{{ bizSave }}" disabled="{{ saving }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">{{ saveLabel }}</button>
+          <button onClick="{{ bizCancel }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#184153;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отмена</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ bizNotEditing }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:10px;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 14px/1.6 'JetBrains Mono',monospace;color:#131E5F">{{ description }}</div>
+      </sc-if>
       <div style="margin-top:16px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ editNote }}</div>
     </div>
   </sc-if>
@@ -30,36 +65,107 @@
     <div style="display:flex;flex-direction:column;gap:14px">
       <sc-for list="{{ pains }}" as="p" hint-placeholder-count="4">
         <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
-          <div style="font:400 15px/1.3 'Architexture',sans-serif;color:#131E5F">{{ p.label }}</div>
-          <div>
-            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L1 · слова-якоря ({{ p.anchorsTotal }})</div>
-            <div style="margin-top:5px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ p.anchors }}</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font:400 15px/1.3 'Architexture',sans-serif;color:#131E5F;flex:1">{{ p.label }}</div>
+            <sc-if value="{{ canWrite }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ p.toggle }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ p.editLabel }}</div>
+            </sc-if>
           </div>
-          <div>
-            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L2 · эталонные фразы ({{ p.protosTotal }})</div>
-            <sc-for list="{{ p.protos }}" as="x" hint-placeholder-count="3">
-              <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
-            </sc-for>
-          </div>
+
+          <sc-if value="{{ p.editing }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L1 · слова-якоря, по одному на строку</div>
+              <textarea value="{{ p.anchorsDraft }}" onInput="{{ p.setAnchors }}" rows="6" style="margin-top:6px;width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;outline:none;resize:vertical"></textarea>
+            </div>
+            <div>
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L2 · эталонные фразы, по одной на строку (пусто — не трогать)</div>
+              <textarea value="{{ p.protosDraft }}" onInput="{{ p.setProtos }}" rows="5" style="margin-top:6px;width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;outline:none;resize:vertical"></textarea>
+              <div style="margin-top:4px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Сохранение непустого списка пересчитывает эмбеддинги — без эмбеддера сохранение анкоров без фраз пройдёт, а с фразами будет отклонено.</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ p.save }}" disabled="{{ saving }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">{{ saveLabel }}</button>
+              <button onClick="{{ p.cancel }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#184153;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отмена</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ p.notEditing }}" hint-placeholder-val="{{ true }}">
+            <div>
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L1 · слова-якоря ({{ p.anchorsTotal }})</div>
+              <div style="margin-top:5px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ p.anchors }}</div>
+            </div>
+            <div>
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L2 · эталонные фразы ({{ p.protosTotal }})</div>
+              <sc-for list="{{ p.protos }}" as="x" hint-placeholder-count="3">
+                <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
         </div>
       </sc-for>
+
+      <sc-if value="{{ canWrite }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px dashed rgba(19,30,95,0.3);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <div onClick="{{ newPainToggle }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ newPainLabel }}</div>
+          <sc-if value="{{ newPainOpen }}" hint-placeholder-val="{{ false }}">
+            <input value="{{ newPainName }}" onInput="{{ setNewPainName }}" placeholder="название боли" style="border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:8px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+            <textarea value="{{ newPainAnchors }}" onInput="{{ setNewPainAnchors }}" rows="4" placeholder="якоря, по одному на строку" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;outline:none;resize:vertical"></textarea>
+            <textarea value="{{ newPainProtos }}" onInput="{{ setNewPainProtos }}" rows="4" placeholder="эталонные фразы L2, по одной на строку (можно оставить пустым)" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;outline:none;resize:vertical"></textarea>
+            <div style="display:flex;gap:8px">
+              <button onClick="{{ newPainSave }}" disabled="{{ saving }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">{{ saveLabel }}</button>
+              <button onClick="{{ newPainCancel }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#184153;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отмена</button>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
 
       <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
         <div style="font:400 15px/1.3 'Architexture',sans-serif;color:#DA501C">Что система считает шумом</div>
         <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ noiseNote }}</div>
         <sc-for list="{{ noise }}" as="n" hint-placeholder-count="4">
           <div>
-            <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ n.key }}</div>
-            <sc-for list="{{ n.examples }}" as="x" hint-placeholder-count="3">
-              <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
-            </sc-for>
+            <div style="display:flex;align-items:center;gap:10px">
+              <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479;flex:1">{{ n.key }}</div>
+              <sc-if value="{{ canWrite }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ n.toggle }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ n.editLabel }}</div>
+              </sc-if>
+            </div>
+            <sc-if value="{{ n.editing }}" hint-placeholder-val="{{ false }}">
+              <textarea value="{{ n.draft }}" onInput="{{ n.setDraft }}" rows="4" style="margin-top:6px;width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;outline:none;resize:vertical"></textarea>
+              <div style="margin-top:8px;display:flex;gap:8px">
+                <button onClick="{{ n.save }}" disabled="{{ saving }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">{{ saveLabel }}</button>
+                <button onClick="{{ n.cancel }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#184153;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отмена</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ n.notEditing }}" hint-placeholder-val="{{ true }}">
+              <sc-for list="{{ n.examples }}" as="x" hint-placeholder-count="3">
+                <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
+              </sc-for>
+            </sc-if>
           </div>
         </sc-for>
         <div>
-          <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Дисквалификаторы (пометка, не отсев)</div>
-          <sc-for list="{{ disq }}" as="x" hint-placeholder-count="3">
-            <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
-          </sc-for>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479;flex:1">Дисквалификаторы (пометка, не отсев)</div>
+            <sc-if value="{{ canWrite }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ disqToggleAll }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ disqEditLabelAll }}</div>
+            </sc-if>
+          </div>
+          <sc-if value="{{ disqEditingAny }}" hint-placeholder-val="{{ false }}">
+            <sc-for list="{{ disqRows }}" as="dq" hint-placeholder-count="3">
+              <div style="margin-top:8px">
+                <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#184153">{{ dq.key }}</div>
+                <textarea value="{{ dq.draft }}" onInput="{{ dq.setDraft }}" rows="3" style="margin-top:4px;width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:8px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;outline:none;resize:vertical"></textarea>
+              </div>
+            </sc-for>
+            <div style="margin-top:8px;display:flex;gap:8px">
+              <button onClick="{{ disqSaveAll }}" disabled="{{ saving }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">{{ saveLabel }}</button>
+              <button onClick="{{ disqCancelAll }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#184153;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отмена</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ disqNotEditing }}" hint-placeholder-val="{{ true }}">
+            <sc-for list="{{ disq }}" as="x" hint-placeholder-count="3">
+              <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
+            </sc-for>
+          </sc-if>
         </div>
       </div>
     </div>
@@ -85,8 +191,23 @@
         </table>
       </div>
       <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
-        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Системный промпт L3 · {{ promptVersion }}</div>
-        <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap">{{ prompt }}</pre>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479;flex:1">Системный промпт L3 · {{ promptVersion }}</div>
+          <sc-if value="{{ canWrite }}" hint-placeholder-val="{{ false }}">
+            <div onClick="{{ promptToggle }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ promptEditLabel }}</div>
+          </sc-if>
+        </div>
+        <sc-if value="{{ promptEditing }}" hint-placeholder-val="{{ false }}">
+          <textarea value="{{ promptDraft }}" onInput="{{ setPromptDraft }}" rows="14" style="margin-top:10px;width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+          <div style="margin-top:8px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Сохранение поднимает версию промпта. Старые вердикты остаются на прежней версии — экран покажет, сколько их, и предложит переклассификацию.</div>
+          <div style="margin-top:10px;display:flex;gap:8px">
+            <button onClick="{{ promptSave }}" disabled="{{ saving }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">{{ saveLabel }}</button>
+            <button onClick="{{ promptCancel }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#184153;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отмена</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{ promptNotEditing }}" hint-placeholder-val="{{ true }}">
+          <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap">{{ prompt }}</pre>
+        </sc-if>
       </div>
     </div>
   </sc-if>
@@ -95,58 +216,237 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  // Экран показывает ровно то, по чему сейчас работает каскад, и ничего сверх того.
-  // До переписывания здесь жили выдуманные числа прямо в разметке («Найдено болей:
-  // 41/50», «Средняя уверенность: 0.79», «Таксономия болей (12)») — они не приходили
-  // ниоткуда и не менялись никогда. Такой экран хуже пустого: по нему принимают
-  // решения о настройке отбора.
-  state = { d:null, loading:true, error:null, tab:'biz' };
+  // Экран показывает ровно то, по чему сейчас работает каскад, и с 30.08 умеет
+  // писать в тот же источник (`POST /profile/proposals`), а не только читать
+  // (см. `app/api/v1/profile.py` в Atomic-Radar). Владелец видит правку включённой
+  // сразу, заказчик — как предложение, которое ждёт активации (баннер сверху).
+  state = {
+    d:null, versions:null, loading:true, error:null, tab:'biz', saving:false,
+    bizEditing:false, bizDraft:'',
+    editingPain:null, painAnchors:'', painProtos:'',
+    newPainOpen:false, newPainName:'', newPainAnchors:'', newPainProtos:'',
+    editingNoise:null, noiseDraft:'',
+    disqEditing:false, disqDrafts:{},
+    promptEditing:false, promptDraft:'',
+  };
 
   async componentDidMount(){
+    await this.load();
+  }
+
+  async load(){
     try {
       const { get } = await import('./radar-api.js');
-      this.setState({d: await get('/profile'), loading:false});
+      const [d, versions] = await Promise.all([get('/profile'), get('/profile/versions')]);
+      this.setState({d, versions, loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
       this.setState({error:describe(e), loading:false});
     }
   }
 
+  // Список строк, разбитый по переносам — общий формат ввода для якорей,
+  // эталонов и маркеров дисквалификаторов: одна строка — одно значение,
+  // без запятых и кавычек, которые пришлось бы экранировать в самих фразах.
+  lines(text){
+    return String(text || '').split('\n').map(s=>s.trim()).filter(Boolean);
+  }
+
+  async save(body, okMsg){
+    const api = this.props.api || {};
+    const { post, describe } = await import('./radar-api.js');
+    this.setState({saving:true});
+    try {
+      const r = await post('/profile/proposals', body);
+      const activated = !!r.activated;
+      api.toast && api.toast(
+        activated ? okMsg : 'Предложение сохранено и ждёт, когда владелец его включит',
+        activated ? '#2E7D57' : '#C98A1E');
+      if (r.reclassify_suggested) {
+        api.toast && api.toast('Правило изменилось — старые вердикты остались на прежнем; загляните в Runs', '#156479');
+      }
+      this.setState({saving:false, bizEditing:false, editingPain:null, editingNoise:null,
+                     disqEditing:false, promptEditing:false, newPainOpen:false,
+                     newPainName:'', newPainAnchors:'', newPainProtos:''});
+      await this.load();
+    } catch (e) {
+      this.setState({saving:false});
+      api.toast && api.toast(describe(e), '#DA501C');
+    }
+  }
+
+  async activate(kind, id, label){
+    const api = this.props.api || {};
+    const { post, describe } = await import('./radar-api.js');
+    try {
+      await post('/profile/versions/' + kind + '/' + id + '/activate');
+      api.toast && api.toast('Включено: ' + label, '#2E7D57');
+      await this.load();
+    } catch (e) {
+      api.toast && api.toast(describe(e), '#DA501C');
+    }
+  }
+
   renderVals(){
+    const api = this.props.api || {};
     const S = this.state, d = S.d || {};
+    const v = S.versions || {};
     const c = d.cascade || {};
+    const editable = d.editable || {};
+    const canWrite = !!(editable.can_edit || editable.can_propose);
     const tab = (k, label)=>({label, bg: S.tab === k ? '#131E5F' : 'transparent',
                               fg: S.tab === k ? '#F8F3E0' : '#156479',
                               pick:()=>this.setState({tab:k})});
     const note = S.loading ? 'загрузка…' : (S.error || '');
     const onOff = (on, model)=> on ? ('включена · ' + (model || 'модель не названа'))
                                    : 'выключена (адрес модели не задан)';
+    const saveLabel = editable.can_edit ? 'Сохранить и включить' : 'Предложить правку';
+
+    // Предложения, которые ещё не активированы — из любой из трёх версионируемых
+    // частей. Показываются, только если их видно и есть право включить: заказчик
+    // своё предложение и так видит по тому, что правка не применилась.
+    const pending = [];
+    if (editable.can_activate) {
+      for (const r of (v.cascade || [])) if (!r.is_active) pending.push(
+        {text:'Таксономия ' + r.version + ' от ' + (r.created_by || '—') + ' · ' + r.pains + ' болей',
+         activate:()=>this.activate('cascade', r.id, 'таксономия ' + r.version)});
+      for (const r of (v.l3_prompts || [])) if (!r.is_active) pending.push(
+        {text:'Промпт L3 (' + r.prompt_key + ') ' + r.version + ' от ' + (r.created_by || '—'),
+         activate:()=>this.activate('prompt', r.id, 'промпт ' + r.version)});
+      for (const r of (v.business || [])) if (!r.is_active) pending.push(
+        {text:'Описание бизнеса ' + r.version + ' от ' + (r.created_by || '—'),
+         activate:()=>this.activate('business', r.id, 'описание ' + r.version)});
+    }
+
+    const staleN = d.stale_l3_verdicts || 0;
 
     return {
       pad: this.props.mobile ? '12px' : '0',
-      versionLabel: note || ('Версия профиля: ' + (d.version || '—')),
+      versionLabel: note || ('Версия профиля: ' + (d.version || '—') +
+                             (c.l3_prompt_version ? ' · промпт ' + c.l3_prompt_version : '')),
       tabs:[tab('biz', 'Бизнес'), tab('pains', 'Боли и шум'), tab('cascade', 'Каскад')],
       isBiz: S.tab === 'biz', isPains: S.tab === 'pains', isCascade: S.tab === 'cascade',
+      canWrite, saveLabel, saving: S.saving,
 
+      pendingOpen: pending.length > 0, pending,
+
+      staleOpen: staleN > 0,
+      staleText: staleN + ' ' + (staleN === 1 ? 'вердикт L3 вынесен' : 'вердиктов L3 вынесено') +
+                ' прежней версией промпта — переклассификация обновит их под текущую',
+      goRuns: ()=>api.go && api.go('runs'),
+
+      // ── бизнес ──────────────────────────────────────────────────────────────
       description: note || d.business_description || '—',
-      editNote: 'Профиль сейчас задаётся в коде каскада и правится вместе с ним — '
-              + 'редактирования из интерфейса нет, и кнопки, которая делает вид, '
-              + 'что оно есть, тоже.',
+      bizEditing: S.bizEditing, bizNotEditing: !S.bizEditing,
+      bizEditLabel: S.bizEditing ? 'вид' : 'править',
+      bizDraft: S.bizDraft,
+      setBizDraft: (e)=>this.setState({bizDraft:e.target.value}),
+      bizToggle: ()=>this.setState({bizEditing:!S.bizEditing,
+                                    bizDraft: d.business_description || ''}),
+      bizSave: ()=>this.save({business_description: S.bizDraft},
+                             'Описание бизнеса сохранено и включено'),
+      bizCancel: ()=>this.setState({bizEditing:false}),
+      editNote: canWrite
+        ? 'Правка пишет в ту же таблицу, из которой читает эта карточка — второй копии для показа нет.'
+        : 'Правка доступна ролям owner и customer. У вашей роли только просмотр.',
 
-      // Боли — те самые, по которым принимаются решения. Отдельного списка «для
-      // экрана» нет: он разошёлся бы с поведением в первый же день.
-      pains:(d.pains || []).map(p=>({
-        label:p.label,
-        anchorsTotal:p.anchors_total || 0,
-        anchors:(p.anchors || []).join(', ') || '—',
-        protos:p.prototypes || [],
-        protosTotal:(p.prototypes || []).length
-      })),
+      // ── боли ────────────────────────────────────────────────────────────────
+      pains:(d.pains || []).map(p=>{
+        const editing = S.editingPain === p.key;
+        return {
+          label:p.label,
+          anchorsTotal:p.anchors_total || 0,
+          anchors:(p.anchors || []).join(', ') || '—',
+          protos:p.prototypes || [],
+          protosTotal:(p.prototypes || []).length,
+          editing, notEditing: !editing,
+          editLabel: editing ? 'вид' : 'править',
+          anchorsDraft: S.painAnchors, protosDraft: S.painProtos,
+          setAnchors:(e)=>this.setState({painAnchors:e.target.value}),
+          setProtos:(e)=>this.setState({painProtos:e.target.value}),
+          toggle:()=>this.setState({
+            editingPain: editing ? null : p.key,
+            painAnchors: editing ? '' : (p.anchors || []).join('\n'),
+            painProtos: editing ? '' : (p.prototypes || []).join('\n'),
+          }),
+          save:()=>{
+            const anchors = this.lines(S.painAnchors);
+            if (!anchors.length) { api.toast && api.toast('Нужен хотя бы один якорь', '#DA501C'); return; }
+            const protos = this.lines(S.painProtos);
+            const body = {pains: {[p.key]: {anchors, prototypes: protos.length ? protos : null}}};
+            this.save(body, 'Боль «' + p.label + '» сохранена и включена');
+          },
+          cancel:()=>this.setState({editingPain:null}),
+        };
+      }),
+
+      newPainOpen: S.newPainOpen,
+      newPainLabel: S.newPainOpen ? 'скрыть' : '+ новая боль',
+      newPainToggle: ()=>this.setState({newPainOpen:!S.newPainOpen}),
+      newPainName: S.newPainName, setNewPainName:(e)=>this.setState({newPainName:e.target.value}),
+      newPainAnchors: S.newPainAnchors, setNewPainAnchors:(e)=>this.setState({newPainAnchors:e.target.value}),
+      newPainProtos: S.newPainProtos, setNewPainProtos:(e)=>this.setState({newPainProtos:e.target.value}),
+      newPainSave: ()=>{
+        const name = (S.newPainName || '').trim();
+        if (!name) { api.toast && api.toast('Название боли не может быть пустым', '#DA501C'); return; }
+        const anchors = this.lines(S.newPainAnchors);
+        if (!anchors.length) { api.toast && api.toast('Нужен хотя бы один якорь', '#DA501C'); return; }
+        const protos = this.lines(S.newPainProtos);
+        this.save({pains: {[name]: {anchors, prototypes: protos.length ? protos : null}}},
+                  'Новая боль «' + name + '» сохранена и включена');
+      },
+      newPainCancel: ()=>this.setState({newPainOpen:false, newPainName:'',
+                                        newPainAnchors:'', newPainProtos:''}),
+
       noiseNote: 'L2 сравнивает сообщение и с болями, и с шумом, и выбирает, к чему '
                + 'оно ближе. Без этих эталонов ступень умела бы только соглашаться.',
-      noise:(d.noise_prototypes || []).map(n=>({key:n.key, examples:n.examples || []})),
+      noise:(d.noise_prototypes || []).map(n=>{
+        const editing = S.editingNoise === n.key;
+        return {
+          key:n.key, examples:n.examples || [],
+          editing, notEditing: !editing,
+          editLabel: editing ? 'вид' : 'править',
+          draft: S.noiseDraft,
+          setDraft:(e)=>this.setState({noiseDraft:e.target.value}),
+          toggle:()=>this.setState({
+            editingNoise: editing ? null : n.key,
+            noiseDraft: editing ? '' : (n.examples || []).join('\n'),
+          }),
+          save:()=>{
+            const phrases = this.lines(S.noiseDraft);
+            if (!phrases.length) { api.toast && api.toast('Нужна хотя бы одна фраза', '#DA501C'); return; }
+            this.save({noise_prototypes: {[n.key]: phrases}},
+                      'Шумовой эталон «' + n.key + '» сохранён и включён');
+          },
+          cancel:()=>this.setState({editingNoise:null}),
+        };
+      }),
       disq:(d.disqualifiers || []).map(x=>x.key + ': ' + (x.markers || []).join(', ')),
+      disqRows:(d.disqualifiers || []).map(x=>({
+        key:x.key,
+        draft: S.disqDrafts[x.key] !== undefined ? S.disqDrafts[x.key] : (x.markers || []).join('\n'),
+        setDraft:(e)=>this.setState({disqDrafts:{...S.disqDrafts, [x.key]:e.target.value}}),
+      })),
+      disqEditingAny: S.disqEditing, disqNotEditing: !S.disqEditing,
+      disqEditLabelAll: S.disqEditing ? 'вид' : 'править',
+      disqToggleAll: ()=>this.setState({
+        disqEditing:!S.disqEditing,
+        disqDrafts: S.disqEditing ? {} :
+          Object.fromEntries((d.disqualifiers || []).map(x=>[x.key, (x.markers || []).join('\n')])),
+      }),
+      disqSaveAll: ()=>{
+        const body = {};
+        for (const x of (d.disqualifiers || [])) {
+          const raw = S.disqDrafts[x.key];
+          const markers = this.lines(raw === undefined ? (x.markers || []).join('\n') : raw);
+          if (markers.length) body[x.key] = markers;
+        }
+        if (!Object.keys(body).length) { api.toast && api.toast('Нечего сохранять', '#DA501C'); return; }
+        this.save({disqualifiers: body}, 'Дисквалификаторы сохранены и включены');
+      },
+      disqCancelAll: ()=>this.setState({disqEditing:false, disqDrafts:{}}),
 
+      // ── каскад / промпт ─────────────────────────────────────────────────────
       cfgCols:['Параметр','Значение'],
       cfg:[
         {k:'L1 · слова', v:'всегда включён, ' + (d.pains || []).length + ' групп болей'},
@@ -154,10 +454,23 @@ class Component extends DCLogic {
         {k:'L2 · минимальный отрыв', v: c.l2_min_margin == null ? '—' : String(c.l2_min_margin)},
         {k:'L3 · LLM', v:onOff(c.l3_enabled, c.l3_model)},
         {k:'L3 · версия промпта', v:c.l3_prompt_version || '—'},
+        {k:'Версия таксономии', v:(d.cascade_version && d.cascade_version.version) || '—'},
         {k:'Черновики', v:(d.generation && d.generation.note) || '—'},
       ],
       promptVersion: c.l3_prompt_version || '—',
-      prompt: c.l3_prompt || 'L3 выключена — промпта в работе нет.'
+      prompt: c.l3_prompt || 'L3 выключена — промпта в работе нет.',
+      promptEditing: S.promptEditing, promptNotEditing: !S.promptEditing,
+      promptEditLabel: S.promptEditing ? 'вид' : 'править',
+      promptDraft: S.promptDraft,
+      setPromptDraft:(e)=>this.setState({promptDraft:e.target.value}),
+      promptToggle: ()=>this.setState({promptEditing:!S.promptEditing,
+                                       promptDraft: c.l3_prompt || ''}),
+      promptSave: ()=>{
+        const text = (S.promptDraft || '').trim();
+        if (!text) { api.toast && api.toast('Промпт не может быть пустым', '#DA501C'); return; }
+        this.save({l3_system_prompt: text}, 'Промпт L3 сохранён, версия поднята и включена');
+      },
+      promptCancel: ()=>this.setState({promptEditing:false}),
     };
   }
 }

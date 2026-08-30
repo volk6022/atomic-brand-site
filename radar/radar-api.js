@@ -53,6 +53,14 @@ export async function patch(path, body) {
   return parse(r, path);
 }
 
+// `del`, а не `delete`: зарезервированное слово нельзя использовать как имя
+// экспорта. Тело не отправляется ни разу за всю ручку — DELETE в этом API
+// адресует ресурс целиком путём, а не описывает его телом.
+export async function del(path) {
+  const r = await fetch(API + path, { method: 'DELETE', credentials: 'same-origin' });
+  return parse(r, path);
+}
+
 // Поток серверных событий. Стоит рядом с get/post не по родству, а по адресу:
 // базовый путь у него тот же, и разъехаться этим двум местам нельзя.
 //
