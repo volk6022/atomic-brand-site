@@ -13,8 +13,27 @@
     <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Channels</div>
     <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
     <div style="flex:1"></div>
+    <sc-if value="{{ canAdd }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ addToggle }}" style="border:1px solid #131E5F;background:transparent;color:#131E5F;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">{{ addToggleLabel }}</button>
+    </sc-if>
     <button onClick="{{ backfillAll }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Запустить бэкфилл всем</button>
   </div>
+
+  <sc-if value="{{ addOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Подключить канал по @username</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <input value="{{ addUsername }}" onInput="{{ setAddUsername }}" placeholder="@username канала" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+        <select value="{{ addAccount }}" onChange="{{ setAddAccount }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <sc-for list="{{ accountOptions }}" as="a" hint-placeholder-count="5">
+            <option value="{{ a.value }}">{{ a.label }}</option>
+          </sc-for>
+        </select>
+        <button onClick="{{ addSubmit }}" disabled="{{ adding }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace">Подключить</button>
+      </div>
+      <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Аккаунт вступит в канал и, если у него есть привязанная группа обсуждения, вступит и в неё — иначе комментарии не будут видны вотчеру. Занимает до нескольких минут: Engage подписывает не мгновенно. Ход виден в разделе Runs.</div>
+    </div>
+  </sc-if>
 
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по названию и username" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
@@ -86,7 +105,8 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:420},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { rows:[], total:0, loading:true, error:null };
+  state = { rows:[], total:0, loading:true, error:null,
+           addOpen:false, addUsername:'', addAccount:1, adding:false };
 
   // Массив сортируемых колонок: title, members, leads_total.
   COLUMNS = [
@@ -149,6 +169,56 @@ class Component extends DCLogic {
     } catch (e) { t(describe(e), '#DA501C'); }
   }
 
+  // Подключение канала (FIXES.md #7): резолв, подписка выбранным аккаунтом и,
+  // если найдётся, вступление в группу обсуждения — всё асинхронно вебхуками
+  // Engage, поэтому ответ здесь означает «запрошено», а не «готово».
+  async addChannel(){
+    const S = this.state;
+    const t = (this.props.api || {}).toast || (()=>{});
+    const username = (S.addUsername || '').trim();
+    if (!username) { t('Введите @username канала', '#DA501C'); return; }
+    const { post, describe } = await import('./radar-api.js');
+    this.setState({adding:true});
+    try {
+      const r = await post('/channels',
+                           {username, engage_account_id: Number(S.addAccount)});
+      t('Подключение @' + r.username + ' запрошено — ' + r.note, '#156479');
+      this.setState({adding:false, addOpen:false, addUsername:''});
+      this.load();
+    } catch (e) {
+      this.setState({adding:false});
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  async setTracking(id, enabled){
+    const { patch, describe } = await import('./radar-api.js');
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      await patch('/channels/' + id, {ingest_enabled: enabled});
+      t(enabled ? 'Отслеживание включено' : 'Отслеживание снято', '#156479');
+      this.load();
+    } catch (e) { t(describe(e), '#DA501C'); }
+  }
+
+  async purgeMessages(id, title){
+    const api = this.props.api || {};
+    if (!api.modal) return;
+    api.modal({
+      title:'Удалить накопленные сообщения канала',
+      word:'УДАЛИТЬ',
+      lines:[{text:'Канал «' + title + '»: сообщения, лиды и черновики по нему исчезнут'},
+             {text:'Отслеживание — отдельная настройка, эта кнопка её не трогает'},
+             {text:'Ручные отправки (что реально ушло человеку) не удаляются'},
+             {text:'Курсор бэкфилла обнулится: следующее чтение истории начнётся заново'}],
+      confirm:'Удалить', btnBg:'#DA501C', done:'Сообщения канала удалены',
+      run: async ()=>{
+        const { del } = await import('./radar-api.js');
+        await del('/channels/' + id + '/messages');
+        this.load();
+      }});
+  }
+
   renderVals(){
     const api = this.props.api || {};
     const t = api.toast || (()=>{});
@@ -159,7 +229,10 @@ class Component extends DCLogic {
       return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
               rows:[], cols:[], pages:[], sizes:[], range:'загрузка…', q:'',
               reload:()=>{}, backfillAll:()=>{}, setQ:()=>{}, resetAll:()=>{},
-              prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+              prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+              canAdd:false, addOpen:false, addToggle:()=>{}, addToggleLabel:'',
+              addUsername:'', setAddUsername:()=>{}, addAccount:1, setAddAccount:()=>{},
+              accountOptions:[], addSubmit:()=>{}, adding:false};
     }
 
     // Ширина полоски — доля от лучшего канала в списке, а не абсолютное число:
@@ -180,6 +253,21 @@ class Component extends DCLogic {
         confirm:'Запустить', btnBg:'#131E5F', done:'Бэкфилл поставлен в очередь',
         run:()=>rows.filter(c=>c.username)
                     .forEach((c, i)=>this.backfill(c.username, i))}),
+
+      // `channel.add` — та же роль, что открывает Safety на переключение LIVE
+      // (owner + customer); проверяется и на сервере, кнопка здесь — только чтобы
+      // не показывать форму тому, кого ручка развернёт.
+      canAdd: api.role === 'owner' || api.role === 'customer',
+      addOpen: S.addOpen,
+      addToggleLabel: S.addOpen ? 'скрыть форму' : '+ подключить канал',
+      addToggle:()=>this.setState({addOpen:!S.addOpen}),
+      addUsername: S.addUsername,
+      setAddUsername:(e)=>this.setState({addUsername:e.target.value}),
+      addAccount: S.addAccount,
+      setAddAccount:(e)=>this.setState({addAccount:e.target.value}),
+      accountOptions: this.ACCOUNTS.map(id=>({value:id, label:'аккаунт ' + id})),
+      addSubmit:()=>this.addChannel(),
+      adding: S.adding,
 
       rows:rows.map(c=>({
         name:c.title,
@@ -203,12 +291,28 @@ class Component extends DCLogic {
             {k:'Лидов', v:this.num(c.leads_total)},
             {k:'Лид на 1000 сообщений', v:c.leads_per_1000 == null ? '—' : String(c.leads_per_1000)},
             {k:'Группа обсуждения', v:c.linked_chat_username ? '@' + c.linked_chat_username : 'нет'},
-            {k:'Ингест', v:c.ingest_enabled ? 'включён' : 'выключен'}
+            {k:'Ингест', v:c.ingest_enabled ? 'включён' : 'выключен'},
+            // Кем подписан — заполнено только у каналов, подключённых руками
+            // через эту форму; заведённые сами при первом сообщении молчат тут
+            // «—», и это не пробел в данных, а честный ответ «никто не выбирал».
+            {k:'Подписан аккаунтом', v:c.subscribed_account_id
+              ? 'аккаунт ' + c.subscribed_account_id + (c.subscribed_by ? ' · ' + c.subscribed_by : '')
+              : '— (заведён сам, при первом сообщении)'}
           ],
           actions:[
             {label:'Дочитать историю', c:'#156479',
              run:()=>c.username ? this.backfill(c.username, c.id)
                                 : t('У группы нет username — читать нечем', '#C98A1E')},
+            // Снятие отслеживания и удаление сообщений — два разных решения
+            // (FIXES.md #7 прямым текстом запрещает сводить их в одну кнопку):
+            // одно останавливает приём новых, другое стирает уже накопленное.
+            c.ingest_enabled
+              ? {label:'Снять с отслеживания', c:'#C98A1E',
+                 run:()=>this.setTracking(c.id, false)}
+              : {label:'Включить отслеживание', c:'#156479',
+                 run:()=>this.setTracking(c.id, true)},
+            {label:'Удалить сообщения канала', c:'#DA501C',
+             run:()=>this.purgeMessages(c.id, c.title)},
             {label:'Обновить экран', c:'#156479', run:()=>this.load()}
           ],
           json:JSON.stringify(c, null, 2)
