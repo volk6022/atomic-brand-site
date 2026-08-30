@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">{{ title }}</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+    <button onClick="{{ exportCsv }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Экспорт страницы</button>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <button onClick="{{ cyclePassed }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ passedLabel }}</button>
+    <select value="{{ channel }}" onChange="{{ setChannel }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ channels }}" as="c" hint-placeholder-count="5">
+        <option value="{{ c.value }}">{{ c.label }}</option>
+      </sc-for>
+    </select>
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по тексту и автору" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
+    <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+    <table style="font:400 13px/1.4 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="5">
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="m" hint-placeholder-count="6">
+          <tr onClick="{{ m.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;color:#8A8F9E;width:110px">{{ m.time }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:180px">{{ m.channel }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:160px">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ m.author }}</div>
+              <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#8A8F9E">{{ m.username }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top">{{ m.text }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:170px">
+              <div style="display:flex;gap:6px;align-items:center">
+                <sc-for list="{{ m.cascade }}" as="c" hint-placeholder-count="4">
+                  <span style="width:22px;text-align:center;font:400 12px/1 'JetBrains Mono',monospace;color:{{ c.c }};border:1px solid {{ c.c }};padding:3px 0">{{ c.s }}</span>
+                </sc-for>
+                <span style="font:400 10px/1.2 'JetBrains Mono',monospace;color:#2E7D57">{{ m.verdict }}</span>
+              </div>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ rows }}" as="m" hint-placeholder-count="6">
+    <div onClick="{{ m.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ m.author }}</div>
+        <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#8A8F9E">{{ m.time }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ m.text }}</div>
+      <div style="margin-top:8px;display:flex;gap:6px">
+        <sc-for list="{{ m.cascade }}" as="c" hint-placeholder-count="4">
+          <span style="width:22px;text-align:center;font:400 12px/1 'JetBrains Mono',monospace;color:{{ c.c }};border:1px solid {{ c.c }};padding:3px 0">{{ c.s }}</span>
+        </sc-for>
+      </div>
+    </div>
+  </sc-for>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 2px">
+    <div onClick="{{ prev }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">← назад</div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div onClick="{{ next }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">вперёд →</div>
+  </div>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;workflowTitle&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, loading:true, error:null, channels:[] };
+
+  // Экран работает в двух видах и это один и тот же экран, а не два похожих.
+  // Пустой `workflow` — общий поток: старые колонки `messages.cascade_*`, вердикт
+  // контура ЛС. Заданный — поток сценария: свой вердикт на пару «сообщение ×
+  // сценарий». Сообщение, отсеянное правилами личных сообщений на L1, для
+  // публичного ответа может быть законной целью, поэтому смешивать нельзя.
+  wf(){ return this.props.workflow || ''; }
+
+  endpoint(){
+    return this.wf() ? '/workflows/' + this.wf() + '/stream' : '/messages';
+  }
+
+  // Ключ таблицы — он же ключ в адресной строке и в localStorage. У каждого вида
+  // свой: с общим ключом фильтр, набранный в потоке личных сообщений, приезжал бы
+  // в публичный вместе с номером страницы, и человек видел бы чужой срез,
+  // подписанный именем своего сценария.
+  tableKey(){ return this.wf() ? 'stream:' + this.wf() : 'stream'; }
+
+  // Четыре положения, а не два: у сообщения три исхода плюс «показать все».
+  // «Ждёт обработки» нельзя прятать внутрь «отсеяно» — это очередь на L2/L3, и
+  // если её не видно, экран врёт, что весь поток разобран.
+  //
+  // У сценария есть пятое: вердикта нет вовсе. «Ждёт обработки» значит «ступень
+  // включена, вход ещё не посчитан», а «не доходил» — что сценарий этого сообщения
+  // не касался: заведён позже, чем оно пришло. Первое — очередь, второе — работа,
+  // которую никто не начинал, и путать их значит принимать одно за другое.
+  cycle(){
+    const base = [
+      {v:'',        btn:'Все сообщения'},
+      {v:'true',    btn:'Прошло каскад ✓'},
+      {v:'false',   btn:'Отсеяно ✗'},
+      {v:'pending', btn:'Ждёт обработки …'},
+    ];
+    return this.wf() ? base.concat([{v:'uncomputed', btn:'Сценарий не доходил ○'}])
+                     : base;
+  }
+
+  // Колонки таблицы. `sort` — имя, которое понимает сервер; колонки без него
+  // рисуются без стрелки и не кликаются. Список сортируемых полей задан на
+  // сервере белым списком, и выдумывать здесь новые бесполезно: придёт 422.
+  COLUMNS = [
+    {label:'Время', sort:'date'},
+    {label:'Канал', sort:'channel'},
+    {label:'Автор', sort:'author'},
+    {label:'Текст', sort:null},
+    {label:'L0 L1 L2 L3', sort:'level'},
+  ];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.Table = Table;
+    this.build();
+    this.loadChannels();
+  }
+
+  // Переход между блоками сайдбара не пересоздаёт экран: место в разметке одно и
+  // то же, меняется только пропс. Без этого поток публичных ответов показывал бы
+  // строки личных до первого нажатия «обновить» — то есть врал бы молча.
+  componentDidUpdate(prev){
+    if(!this.Table) return;
+    if((prev.workflow || '') === this.wf()) return;
+    this.setState({rows:[], total:0, loading:true, error:null});
+    this.build();
+  }
+
+  build(){
+    this.table = new this.Table({
+      key:this.tableKey(), size:50, sort:'date', order:'desc',
+      sorts:[{key:'date'}, {key:'channel'}, {key:'author'}, {key:'level'}],
+      filters:{channel_id:'', passed:''},
+    });
+    this.table.attach(()=>this.load());
+    this.load();
+  }
+
+  // Справочник каналов для выпадающего списка. Отдельной лёгкой ручкой, а не из
+  // `/channels`: тот на каждый канал считает количество сообщений и долю
+  // прошедших, и дёргать его ради заполнения списка — лишняя работа базы.
+  async loadChannels(){
+    try {
+      const { get } = await import('./radar-api.js');
+      this.setState({channels: await get('/channels/options')});
+    } catch (e) { /* без списка экран работает, фильтр просто пуст */ }
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get(this.endpoint(), this.table.query());
+      this.setState({rows:data.rows, total:data.total, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  // Выгружается то, что сейчас на экране, и подпись говорит об этом прямо: в базе
+  // сообщений на порядки больше страницы, и «экспорт» без такой оговорки читался бы
+  // как выгрузка всего потока.
+  async exportCsv(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const rows = this.state.rows || [];
+    if(!rows.length) return t('Выгружать нечего: на экране пусто', '#C98A1E');
+    const { downloadCsv } = await import('./radar-api.js');
+    // Имя файла называет сценарий: две выгрузки из разных блоков ложатся в одну
+    // папку загрузок, и `radar-stream.csv` рядом с `radar-stream (1).csv` не
+    // отличить, а вердикты в них разные.
+    const name = this.wf() ? 'radar-stream-' + this.wf() + '.csv' : 'radar-stream.csv';
+    downloadCsv(name, [
+      {label:'Дата', get:r=>r.tg_date},
+      {label:'Канал', get:r=>r.channel},
+      {label:'Автор', get:r=>r.author_name},
+      {label:'Username', get:r=>r.author_username || ''},
+      {label:'Текст', get:r=>r.text},
+      {label:'L0', get:r=>(r.cascade || {}).l0},
+      {label:'L1', get:r=>(r.cascade || {}).l1},
+      {label:'L2', get:r=>(r.cascade || {}).l2},
+      {label:'L3', get:r=>(r.cascade || {}).l3},
+      {label:'Причина L1', get:r=>(r.cascade_notes || {}).l1 || ''},
+      {label:'Причина L2', get:r=>(r.cascade_notes || {}).l2 || ''},
+      {label:'Причина L3', get:r=>(r.cascade_notes || {}).l3 || ''},
+    ], rows);
+    t('Выгружено строк: ' + rows.length + ' (страница, не весь поток)', '#2E7D57');
+  }
+
+  // Значок ступени: ✓ прошло, ✗ отсеяно, — не запускалась. Третье состояние
+  // обязано отличаться от второго: «не дошло» и «не прошло» — разные причины.
+  mark(v){
+    if(v === true) return {s:'✓', c:'#2E7D57'};
+    if(v === false) return {s:'✗', c:'#DA501C'};
+    return {s:'—', c:'#8A8F9E'};
+  }
+
+  // С сортировкой по любому полю время без даты стало непонятным: при порядке
+  // «по автору» соседние строки могут быть из разных лет.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    const p = (n)=>String(n).padStart(2,'0');
+    return p(d.getDate()) + '.' + p(d.getMonth()+1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const S = this.state;
+    const rows = S.rows || [];
+
+    // Заголовок называет сценарий, потому что экранов теперь несколько и по виду
+    // они одинаковы. Общий поток остаётся «Stream» — переименовывать существующий
+    // экран заодно с этой работой незачем.
+    const title = this.wf()
+      ? 'Поток · ' + (this.props.workflowTitle || this.wf())
+      : 'Stream';
+
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              title,
+              rows:[], cols:[], pages:[], sizes:[], channels:[],
+              range:'загрузка…', q:'', passedLabel:'Все сообщения',
+              reload:()=>{}, exportCsv:()=>{}, setQ:()=>{}, resetAll:()=>{},
+              setChannel:()=>{}, cyclePassed:()=>{}, prev:()=>{}, next:()=>{},
+              prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+    }
+
+    const cycle = this.cycle();
+    const passed = this.table.filters.passed || '';
+    const idx = Math.max(0, cycle.findIndex(o=>o.v === passed));
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      title,
+      ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      exportCsv:()=>this.exportCsv(),
+      passedLabel: cycle[idx].btn,
+      cyclePassed:()=>this.table.setFilter(
+        'passed', cycle[(idx + 1) % cycle.length].v),
+      channels:[{value:'', label:'все каналы'}].concat(
+        (S.channels || []).map(c=>({value:String(c.id), label:c.title}))),
+      channel:String(this.table.filters.channel_id || ''),
+      setChannel:(e)=>this.table.setFilter('channel_id', e.target.value),
+      rows:rows.map(m=>{
+        const c = m.cascade || {};
+        const notes = m.cascade_notes || {};
+        // Что каскад в итоге породил, называется по-разному: у общего потока это
+        // лид, у сценария — цель. Сущность одна, и одна из них — обобщение другой,
+        // но подписывать цель публичного ответа словом «лид» нельзя: лид означает
+        // «кому написать», а тут отвечают под сообщением и адресата-человека может
+        // не быть вовсе.
+        const wf = this.wf();
+        const outcomeId = wf ? m.target_id : m.lead_id;
+        const outcomeWord = wf ? 'цель' : 'лид';
+        return {
+          time:this.when(m.tg_date), channel:m.channel,
+          author:m.author_name, username:m.author_username || '',
+          text:'«' + m.text + '»',
+          cascade:[this.mark(c.l0), this.mark(c.l1), this.mark(c.l2), this.mark(c.l3)],
+          // По наличию лида, а не по галочке L3: ступени бывают выключены, и тогда
+          // каскад заканчивается раньше, но лид всё равно настоящий.
+          //
+          // Прочерки в колонке ступеней у сценария двусмысленны — так выглядит и
+          // очередь, и нетронутое. Поэтому «не считалось» подписано словами: без
+          // подписи пустой поток нового сценария читается как сломанный конвейер.
+          verdict: outcomeId ? ('пройден → ' + outcomeWord)
+                             : (wf && m.computed === false ? 'не считалось' : ''),
+          open:()=>api.drill && api.drill({
+            title:'Сообщение #' + m.id,
+            subtitle:m.channel + ' · ' + this.when(m.tg_date),
+            rows:[
+              {k:'Автор', v:m.author_name + ' ' + (m.author_username || '')},
+              {k:'Текст', v:m.text},
+              // Причина по каждой ступени приходит с сервера. Экран потока нужен
+              // ровно для вопроса «почему это не стало лидом», и придумывать
+              // объяснение на клиенте значило бы отвечать на него наугад.
+              {k:'L0 отсев', v:notes.l0 || '—'},
+              {k:'L1 ключевые слова', v:notes.l1 || '—'},
+              {k:'L2 эмбеддинги', v:notes.l2 || '—'},
+              {k:'L3 LLM', v:notes.l3 || '—'},
+              {k:'Автопересылка поста', v:m.is_automatic_forward ? 'да' : 'нет'},
+              {k:(wf ? 'Цель' : 'Лид'),
+               v:outcomeId ? '#' + outcomeId
+                           : (wf && m.computed === false ? 'сценарий сюда не доходил'
+                                                         : 'не создан')}
+            ],
+            actions:[
+              {label:(wf ? 'Открыть цели' : 'Открыть лида'), c:'#156479',
+               run:()=>outcomeId
+                 ? (api.go && api.go(wf ? 'wf:' + wf + ':targets' : 'leads'))
+                 : t('По этому сообщению ' + outcomeWord + ' не создан' + (wf ? 'а' : ''),
+                     '#C98A1E')}
+            ],
+            json:JSON.stringify(m, null, 2)
+          })
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

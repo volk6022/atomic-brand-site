@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Runs</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ liveFg }}">{{ liveLabel }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ pendingLabel }}</div>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Запустить</div>
+    <select value="{{ newKind }}" onChange="{{ setKind }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="3">
+        <option value="{{ k.value }}">{{ k.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ newScope }}" onChange="{{ setScope }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ scopes }}" as="s" hint-placeholder-count="2">
+        <option value="{{ s.value }}">{{ s.label }}</option>
+      </sc-for>
+    </select>
+    <div onClick="{{ toggleL2 }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ l2Bg }};color:{{ l2Fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ l2Label }}</div>
+    <div onClick="{{ toggleL3 }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ l3Bg }};color:{{ l3Fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ l3Label }}</div>
+    <button onClick="{{ startRun }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace">Запустить</button>
+    <div style="flex:1"></div>
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ hint }}</div>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="5">
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+          <tr style-hover="background:#EDF4F3">
+            <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">
+              <div style="color:#131E5F">{{ r.name }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.who }}</div>
+            </td>
+            <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">{{ r.when }}</td>
+            <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.status }}</span></td>
+            <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer;width:260px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="flex:1;height:8px;background:#EDF4F3"><div style="height:8px;width:{{ r.w }};background:{{ r.c }}"></div></div>
+                <div style="width:44px">{{ r.progress }}</div>
+              </div>
+              <div style="margin-top:4px;font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.note }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:110px">
+              <div onClick="{{ r.cancel }}" style="cursor:{{ r.cancelCursor }};font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.cancelFg }}">{{ r.cancelLabel }}</div>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+    <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 13px/1.2 'JetBrains Mono',monospace;color:#131E5F">{{ r.name }}</div>
+        <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.status }}</div>
+      </div>
+      <div style="margin-top:8px;height:8px;background:#EDF4F3"><div style="height:8px;width:{{ r.w }};background:{{ r.c }}"></div></div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.progress }} · {{ r.note }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, loading:true, error:null, pending:0, kinds:[],
+            stages:{}, kind:'reclassify', scope:'pending', l2:true, l3:true,
+            polling:false };
+
+  COLUMNS = [
+    {label:'Задача', sort:'kind'},
+    {label:'Создана', sort:'created'},
+    {label:'Статус', sort:'status'},
+    {label:'Прогресс', sort:'progress'},
+    {label:'', sort:null},
+  ];
+
+  STATUS_LABEL = {queued:'в очереди', running:'выполняется', done:'готово',
+                  failed:'упала', cancelled:'остановлена',
+                  interrupted:'прервана перезапуском'};
+  STATUS_COLOR = {queued:'#C98A1E', running:'#156479', done:'#2E7D57',
+                  failed:'#DA501C', cancelled:'#8A8F9E', interrupted:'#DA501C'};
+
+  ACTIVE = ['queued', 'running'];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      key:'runs', size:25, sort:'created', order:'desc',
+      sorts:[{key:'created'}, {key:'kind'}, {key:'status'}, {key:'progress'}],
+    });
+    this.table.attach(()=>this.load());
+
+    // Пока поток жив, строки приезжают сами и таймер молчит: два источника одних
+    // и тех же строк дали бы мигание — снимок сервера и результат опроса
+    // приходили бы вразнобой. Опрос никуда не делся, он остаётся запасным путём
+    // и включается сам, когда канала нет или он оборвался.
+    const events = (this.props.api || {}).events;
+    if(events){
+      this.offRuns = events.on('runs', (d)=>this.onRuns((d && d.rows) || []));
+      this.offStream = events.on('stream', ()=>{
+        // Канал поднялся или упал. В обе стороны перечитываем: пока его не было,
+        // список мог уйти вперёд, а пока он работал — мы сервер не спрашивали.
+        // `load` заодно решит судьбу таймера, `schedule` смотрит на канал.
+        this.load();
+      });
+    }
+    this.load();
+  }
+
+  // Отписка обязательна. У раздела две точки монтирования, десктопная и
+  // мобильная, и при пересечении брейкпоинта этот экземпляр размонтируется —
+  // оставшийся обработчик дёргал бы `setState` у мёртвого компонента.
+  componentWillUnmount(){
+    clearTimeout(this.timer);
+    if(this.offRuns) this.offRuns();
+    if(this.offStream) this.offStream();
+  }
+
+  // Возит ли поток прогоны прямо сейчас. Спрашиваем оболочку, а не свою копию:
+  // копия однажды разойдётся с настоящим состоянием канала.
+  liveNow(){
+    const events = (this.props.api || {}).events;
+    return !!(events && events.live('runs'));
+  }
+
+  // Кадр `runs` — только активные прогоны и только четыре поля: id, вид, статус,
+  // процент. Строка таблицы шире (имя, кто запустил, когда, ошибка, итог), а сама
+  // таблица может стоять не на первой странице и в своей сортировке, — подменить
+  // список кадром нельзя.
+  //
+  // Отсюда деление. Меняется один процент — двигаем полосу на месте, без запроса.
+  // Изменился набор активных задач или их статусы (задача появилась, кончилась,
+  // остановилась) — перечитываем `/runs`: у такой задачи меняется и то, чего в
+  // кадре нет, включая счётчик недосчитанных сообщений, ради которого сюда и
+  // заходят.
+  onRuns(rows){
+    const sign = rows.map(r=>r.id + ':' + r.status).join(',');
+    if(sign !== this.sign){ this.sign = sign; this.load(); return; }
+    const seen = {};
+    for(const r of rows) seen[r.id] = r.progress;
+    this.setState(s=>({rows:(s.rows || []).map(r=>
+      r.id in seen ? {...r, progress:seen[r.id]} : r)}));
+  }
+
+  async load(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const d = await get('/runs', this.table.query());
+      this.setState({rows:d.rows, total:d.total, pending:d.pending_messages,
+                     kinds:d.kinds || [], stages:d.stages || {},
+                     loading:false, error:null});
+      this.schedule(d.rows || []);
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  // Запасной путь: пока что-то выполняется, перечитываем сами. Прогресс, который
+  // не двигается без ручного обновления, ничем не лучше его отсутствия. Когда всё
+  // закончилось — перестаём, чтобы не дёргать сервер вхолостую.
+  //
+  // При живом потоке таймер не заводим вовсе — иначе те же строки приезжали бы
+  // из двух источников и таблица мигала бы.
+  schedule(rows){
+    clearTimeout(this.timer);
+    const active = rows.some(r=>this.ACTIVE.includes(r.status));
+    const poll = active && !this.liveNow();
+    this.setState({polling:poll});
+    if(poll) this.timer = setTimeout(()=>this.load(), 3000);
+  }
+
+  async startRun(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const S = this.state;
+    const params = S.kind === 'reclassify'
+      ? {scope:S.scope, l2:S.l2, l3:S.l3} : {};
+    try {
+      const { post } = await import('./radar-api.js');
+      const run = await post('/runs', {kind:S.kind, params});
+      t('Запущено: ' + run.name, '#2E7D57');
+      this.load();
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      // Сервер отказывает осмысленно: «такая задача уже идёт», «роль не может
+      // запускать этот вид». Показываем его текст.
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  async cancel(id){
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      const { post } = await import('./radar-api.js');
+      await post('/runs/' + id + '/cancel', {});
+      t('Просьба остановиться отправлена — задача дописывает посчитанное', '#C98A1E');
+      this.load();
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    const p = (n)=>String(n).padStart(2,'0');
+    return p(d.getDate()) + '.' + p(d.getMonth()+1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  async openRun(id){
+    const api = this.props.api || {};
+    try {
+      const { get } = await import('./radar-api.js');
+      const r = await get('/runs/' + id);
+      api.drill && api.drill({
+        title:r.name, subtitle:'задача #' + r.id + ' · ' + (r.created_by || '—'),
+        rows:[
+          {k:'Статус', v:this.STATUS_LABEL[r.status] || r.status},
+          {k:'Прогресс', v:r.progress + '%'},
+          {k:'Параметры', v:JSON.stringify(r.params || {})},
+          {k:'Создана', v:this.when(r.created_at)},
+          {k:'Начата', v:this.when(r.started_at)},
+          {k:'Завершена', v:this.when(r.finished_at)},
+          {k:'Ошибка', v:r.error || '—'},
+          {k:'Итог', v:r.result ? JSON.stringify(r.result) : '—'},
+          // Лог — то, ради чего сюда заходят: он отвечает на вопрос «на чём стоит».
+          {k:'Ход работы', v:(r.log || []).join('\n') || '—'}
+        ],
+        json:JSON.stringify(r, null, 2)
+      });
+    } catch (e) { /* деталей нет — список всё равно показан */ }
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const rows = S.rows || [];
+
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              rows:[], cols:[], pages:[], kinds:[], scopes:[],
+              range:'загрузка…', pendingLabel:'', hint:'', liveLabel:'',
+              liveFg:'#8A8F9E', newKind:'reclassify', newScope:'pending',
+              l2Label:'L2', l3Label:'L3', l2Bg:'transparent', l3Bg:'transparent',
+              l2Fg:'#156479', l3Fg:'#156479',
+              reload:()=>{}, startRun:()=>{}, setKind:()=>{}, setScope:()=>{},
+              toggleL2:()=>{}, toggleL3:()=>{}, prev:()=>{}, next:()=>{},
+              prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+    }
+
+    const on = (v)=>({bg: v ? '#131E5F' : 'transparent',
+                      fg: v ? '#F8F3E0' : '#8A8F9E'});
+    const l2 = on(S.l2), l3 = on(S.l3);
+    const live = this.liveNow();
+    const stale = (api.events || {}).stale;
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      // Число недосчитанных — то, ради чего пересчёт и запускают. Без него человеку
+      // пришлось бы гадать, нужен ли прогон вообще.
+      pendingLabel: S.pending
+        ? ('ждёт обработки сообщений: ' + S.pending)
+        : 'необработанных сообщений нет',
+      // Подпись говорит, откуда берутся строки. Жалоба сервера идёт первой: при
+      // ней поток цел, но числа могли отстать, и молчаливо зелёная точка тут
+      // обманывала бы ровно там, где на неё смотрят.
+      liveLabel: stale ? ('▲ ' + stale)
+               : (live ? '● живое обновление'
+               : (S.polling ? '● обновляется' : '')),
+      liveFg: stale ? '#C98A1E'
+            : ((live || S.polling) ? '#2E7D57' : '#8A8F9E'),
+
+      // «Недоступно» и «нажимается в другом месте» — разные новости. Бэкфиллу нужен
+      // выбранный канал, поэтому его кнопка живёт в разделе Channels, а задача
+      // всё равно появляется в этом списке.
+      kinds:(S.kinds || []).filter(k=>k.available || k.where === 'channels')
+        .map(k=>({
+          value:k.kind,
+          label:k.title + (k.available ? ''
+                : (k.where === 'channels' ? ' — запускается в разделе Channels'
+                                          : ' — пока недоступно'))})),
+      newKind:S.kind,
+      setKind:(e)=>this.setState({kind:e.target.value}),
+      scopes:[{value:'pending', label:'только недосчитанное'},
+              {value:'all', label:'все сообщения'}],
+      newScope:S.scope,
+      setScope:(e)=>this.setState({scope:e.target.value}),
+
+      // Ступени можно выключить: без модели прогон идёт минуты вместо часа, и это
+      // нормальный режим, когда правились только ключевые слова.
+      l2Label:'L2 эмбеддинги', l2Bg:l2.bg, l2Fg:l2.fg,
+      l3Label:'L3 модель', l3Bg:l3.bg, l3Fg:l3.fg,
+      toggleL2:()=>this.setState({l2: !S.l2}),
+      toggleL3:()=>this.setState({l3: !S.l3}),
+      hint: S.scope === 'all'
+        ? 'Полный прогон по всей базе — это надолго и займёт видеокарту'
+        : 'Разберёт только то, что ещё не досчитано',
+
+      startRun:()=>this.startRun(),
+
+      rows:rows.map(r=>{
+        const active = this.ACTIVE.includes(r.status);
+        return {
+          name:r.name, who:r.created_by || '—',
+          when:this.when(r.created_at),
+          status:this.STATUS_LABEL[r.status] || r.status,
+          c:this.STATUS_COLOR[r.status] || '#8A8F9E',
+          progress:Math.round(r.progress) + '%',
+          w:Math.max(2, Math.round(r.progress)) + '%',
+          note: r.error ? r.error : (r.result ? 'итог в карточке' : ''),
+          cancelLabel: active ? (r.cancel_requested ? 'останавливается…' : 'остановить') : '',
+          cancelFg: active && !r.cancel_requested ? '#DA501C' : '#8A8F9E',
+          cancelCursor: active && !r.cancel_requested ? 'pointer' : 'default',
+          cancel:()=>{ if(active && !r.cancel_requested) this.cancel(r.id); },
+          open:()=>this.openRun(r.id)
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

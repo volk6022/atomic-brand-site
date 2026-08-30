@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F;flex:1">Attribution</div>
+    <button onClick="{{ filters }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Фильтры ▾</button>
+    <button onClick="{{ exportCsv }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Экспорт</button>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="a" hint-placeholder-count="3">
+          <tr onClick="{{ a.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ a.token }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ a.lead }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ a.click }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ a.start }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:{{ a.c }}">{{ a.conv }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ a.sum }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">Юнит-экономика по каналам</div>
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ unitCols }}" as="c" hint-placeholder-count="6">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ unit }}" as="u" hint-placeholder-count="3">
+          <tr>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ u.ch }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ u.leads }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ u.ans }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ u.conv }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ u.rev }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E">{{ u.cost }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:500},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { d:null, loading:true, error:null };
+
+  async componentDidMount(){
+    try {
+      const { get } = await import('./radar-api.js');
+      this.setState({d: await get('/attribution'), loading:false});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  async exportCsv(unit){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(!unit.length) return t('Выгружать нечего: каналов без сообщений тут нет', '#C98A1E');
+    const { downloadCsv } = await import('./radar-api.js');
+    downloadCsv('radar-unit-economics.csv', [
+      {label:'Канал', get:r=>r.channel},
+      {label:'Сообщений', get:r=>r.messages},
+      {label:'Лидов', get:r=>r.leads},
+      {label:'Ответов', get:r=>r.answered},
+      {label:'Конверсий', get:r=>r.converted},
+      {label:'Выручка', get:r=>r.revenue},
+    ], unit);
+    t('Выгружено каналов: ' + unit.length, '#2E7D57');
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const S = this.state, d = S.d || {};
+    const note = S.loading ? 'загрузка…' : (S.error || d.note || '');
+    const unit = d.unit_economics || [];
+    const leads = d.leads || [];
+
+    return {
+      pad: this.props.mobile ? '12px' : '0',
+      filters:()=>t('Фильтры появятся с первыми конверсиями', '#156479'),
+      // Выгружается юнит-экономика по каналам: она посчитана из настоящих сообщений
+      // и лидов и уже сейчас имеет смысл. Таблица атрибуции пуста по существу —
+      // отправок не было, конверсий не было, и выгружать оттуда нечего.
+      exportCsv:()=>this.exportCsv(unit),
+      cols:['Токен','Лид','Клик','Старт бота','Конверсия','Сумма'],
+      rows: leads.length ? leads.map(a=>({
+        token:a.ref_token, lead:'#' + a.lead_id, click:'—', start:'—',
+        conv:a.converted_at || '—', sum:a.amount ? String(a.amount) : '—',
+        c:'#8A8F9E', open:()=>{}
+      })) : [{token:note || 'нет данных', lead:'—', click:'—', start:'—',
+              conv:'—', sum:'—', c:'#8A8F9E', open:()=>{}}],
+      // Порядок обязан совпадать с порядком ячеек в шаблоне выше:
+      // ch, leads, ans, conv, rev, cost.
+      unitCols:['Канал','Лидов','Ответов','Конверсий','Выручка','Сообщений'],
+      // Юнит-экономика по каналам считается из настоящих сообщений и лидов;
+      // выручка нулевая честно — отправок ещё не было.
+      unit:unit.map(u=>({
+        ch:u.channel, leads:String(u.leads), ans:String(u.answered),
+        conv:String(u.converted), rev:(u.revenue || 0).toFixed(2),
+        cost:String(u.messages)
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

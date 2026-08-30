@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Conversations</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="6">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="4">
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+          <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.who }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.last }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.acct }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.state }}</span></td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.wait }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+
+  <div style="border:1px dashed rgba(19,30,95,0.24);padding:14px 16px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Панель ответа</div>
+    <div style="margin-top:8px;font:400 13px/1.6 'JetBrains Mono',monospace;color:#184153">{{ panelNote }}</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+    <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.who }}</div>
+        <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.state }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.last }} · {{ r.acct }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, states:[], note:'', loading:true, error:null };
+
+  // Поиска нет: в таблице диалогов нет текстовых полей, по которым его вести —
+  // имя собеседника хранится у лида, а не здесь.
+  //
+  // Каждая сортируемая колонка сортирует ровно по тому, что в ней написано.
+  // Первая показывает имя и под ним время последнего сообщения — по нему и
+  // сортируется; имя пришло бы из другой таблицы, и сортировать по нему нечем.
+  // «Аккаунт» — идентификатор, порядок по нему ничего не значит.
+  COLUMNS = [
+    {label:'Собеседник · последнее', sort:'last'},
+    {label:'Аккаунт', sort:null},
+    {label:'Состояние', sort:'state'},
+    {label:'Отправлено', sort:'sent'},
+  ];
+
+  STATE_LABEL = {new:'новый', awaiting_reply:'ждёт ответа', replied:'ответил',
+                 handed_off:'передан человеку', closed:'закрыт'};
+  LABELS_ORDER = ['new', 'awaiting_reply', 'replied', 'handed_off', 'closed'];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      key:'conversations', size:50, sort:'created', order:'desc',
+      sorts:[{key:'created'}, {key:'sent'}, {key:'last'}, {key:'state'}],
+      filters:{state:''},
+    });
+    this.table.attach(()=>this.load());
+    this.load();
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/conversations', this.table.query());
+      this.setState({rows:data.rows, total:data.total, states:data.states || [],
+                     note:data.note || '', loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const rows = S.rows || [];
+
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              rows:[], cols:[], pages:[], sizes:[], stateFilters:[],
+              range:'загрузка…', panelNote:'', reload:()=>{},
+              prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+    }
+
+    // Строим чипсы фильтра по состояниям.
+    const stateFilters = [{k:'', label:'Все'}].concat(
+      this.LABELS_ORDER.map(k=>({k, label:this.STATE_LABEL[k]})))
+      .map(f=>{
+        const c = S.states.find(x=>x.key === f.k);
+        return {label:f.label,
+                count: f.k && c ? '· ' + c.count : '',
+                bg: (this.table.filters.state || '') === f.k ? '#131E5F' : 'transparent',
+                fg: (this.table.filters.state || '') === f.k ? '#F8F3E0' : '#156479',
+                pick:()=>this.table.setFilter('state', f.k)};
+      });
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      stateFilters,
+      panelNote: rows.length
+        ? 'Выберите диалог в таблице. Ответ собирается и отправляется '
+          + 'только после переключения системы в режим LIVE.'
+        : (S.note || 'Появится вместе с первым диалогом. Пока система в сухом прогоне, '
+           + 'ни одно сообщение не отправляется, отвечать не на что.'),
+      rows:rows.map(c=>({
+        who:(c.peer_name || '—') + ' ' + (c.peer_username || ''),
+        acct:'acc-' + c.account,
+        state:this.STATE_LABEL[c.state] || c.state,
+        c: c.state === 'replied' ? '#2E7D57' : '#C98A1E',
+        wait:String(c.sent_count) + ' отправлено',
+        last:(c.last_sent_at || '—').slice(0, 16).replace('T', ' '),
+        open:()=>api.drill && api.drill({
+          title:c.peer_name || ('Диалог #' + c.id),
+          subtitle:'лид #' + c.lead_id + ' · аккаунт acc-' + c.account,
+          rows:[{k:'Состояние', v:this.STATE_LABEL[c.state] || c.state},
+                {k:'Отправлено сообщений', v:String(c.sent_count)},
+                {k:'Последнее сообщение', v:c.last_sent_at || '—'}],
+          json:JSON.stringify(c, null, 2)})
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

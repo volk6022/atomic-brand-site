@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Drafts · {{ headline }}</div>
+    <div style="display:flex;border:1px solid rgba(19,30,95,0.24)">
+      <div onClick="{{ goQueue }}" style="cursor:pointer;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">Очередь</div>
+      <div style="padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace;background:#131E5F;color:#F8F3E0">Таблица</div>
+    </div>
+    <div style="flex:1"></div>
+    <button onClick="{{ reload }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">↻ обновить</button>
+  </div>
+
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="поиск по автору или тексту" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
+    <select value="{{ channel }}" onChange="{{ setChannel }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ channels }}" as="c" hint-placeholder-count="5">
+        <option value="{{ c.value }}">{{ c.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ minScore }}" onChange="{{ setMinScore }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ scores }}" as="s" hint-placeholder-count="4">
+        <option value="{{ s.value }}">{{ s.label }}</option>
+      </sc-for>
+    </select>
+    <div onClick="{{ resetFilters }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="8">
+          <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E;width:52px">{{ r.id }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
+              <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.username }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:160px">{{ r.channel }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">{{ r.pain }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);font:400 15px/1 'JetBrains Mono',monospace;color:#131E5F;width:60px">{{ r.score }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:130px">
+              <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.state }}</span>
+              <sc-if value="{{ r.edited }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:4px;font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E">правлено вручную</div>
+              </sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.text }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ shown }} · клик по строке открывает черновик в разделе Drafts</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+      <div onClick="{{ f.pick }}" style="padding:8px 12px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+  </div>
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+    <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:3px 6px">{{ r.state }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.text }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { d:null, loading:true, error:null,
+            filter:'all', query:'', channel:'', minScore:0 };
+
+  componentDidMount(){ this.load(); }
+
+  async load(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const S = this.state;
+      // Фильтры считает сервер: очередь черновиков растёт вместе с ингестом, и
+      // отбирать по уже загруженной странице значило бы фильтровать не то.
+      const params = {limit:200};
+      if(S.filter !== 'all') params.state = S.filter;
+      if(S.query) params.q = S.query;
+      if(S.channel) params.channel = S.channel;
+      if(S.minScore) params.min_score = S.minScore;
+
+      // `/channels/options` вместо `/channels`: нужен только список названий для
+      // выпадающего фильтра, а тяжёлая ручка считает по каждому каналу количество
+      // сообщений и долю прошедших. К тому же она теперь отдаёт конверт со
+      // страницей, а не массив, — и этот экран об этом не знал и падал на `.filter`.
+      const [d, channels] = await Promise.all([
+        get('/drafts/list', params),
+        this.state.channelList ? Promise.resolve(this.state.channelList)
+                               : get('/channels/options')
+      ]);
+      this.setState({d, channelList:channels, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  set(patch){ this.setState({...patch, loading:true}, ()=>this.load()); }
+
+  STATE_LABEL = {pending:'на ревью', approved:'одобрен', rejected:'отклонён'};
+  STATE_COLOR = {pending:'#C98A1E', approved:'#2E7D57', rejected:'#DA501C'};
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state, d = S.d || {};
+    const rows = d.rows || [];
+    const counts = d.states || {};
+    const total = d.total || 0;
+
+    const headline = S.loading ? 'загрузка…'
+                   : (S.error || (total + ' черновиков'));
+
+    // Показываем все каналы, а не только давшие лидов: справочник `options` про
+    // лиды не знает, а второй тяжёлый запрос ради того, чтобы спрятать из списка
+    // пару строк, того не стоит. Фильтр уходит по названию — так его понимает
+    // `/drafts/list`.
+    const channels = [{value:'', label:'все каналы'}].concat(
+      (S.channelList || []).map(c=>({value:c.title, label:c.title})));
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      headline,
+      shown: rows.length ? ('Показано ' + rows.length + ' из ' + total)
+                         : (S.error || 'Под фильтр ничего не подошло'),
+      reload:()=>this.set({}),
+      cols:['#','Автор','Канал','Боль','Скор','Статус','Текст'],
+
+      filters:[{k:'all', label:'Все'}, {k:'pending', label:'На ревью'},
+               {k:'approved', label:'Одобренные'}, {k:'rejected', label:'Отклонённые'}]
+        .map(f=>({label:f.label,
+                  count: f.k === 'all'
+                    ? '' : '· ' + (counts[f.k] === undefined ? '—' : counts[f.k]),
+                  bg: S.filter === f.k ? '#131E5F' : 'transparent',
+                  fg: S.filter === f.k ? '#F8F3E0' : '#156479',
+                  pick:()=>this.set({filter:f.k})})),
+
+      // Очередь и таблица — один раздел в двух видах, поэтому переход между ними
+      // не выход из раздела: пункт меню остаётся тем же и остаётся подсвеченным.
+      goQueue:()=>api.go && api.go('drafts'),
+
+      query:S.query, setQuery:(e)=>this.set({query:e.target.value}),
+      channel:S.channel, setChannel:(e)=>this.set({channel:e.target.value}),
+      channels,
+      minScore:String(S.minScore),
+      scores:[{value:'0', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
+              {value:'40', label:'скор ≥ 40'}, {value:'50', label:'скор ≥ 50'}],
+      setMinScore:(e)=>this.set({minScore:+e.target.value}),
+      resetFilters:()=>this.set({filter:'all', query:'', channel:'', minScore:0}),
+
+      rows:rows.map(r=>({
+        id:'#' + r.id,
+        author:r.author_name, username:r.author_username || '',
+        channel:r.channel, pain:r.pain || '—', score:String(r.score),
+        state:this.STATE_LABEL[r.state] || r.state,
+        c:this.STATE_COLOR[r.state] || '#8A8F9E',
+        edited:r.edited,
+        text:(r.text || '').slice(0, 150) + ((r.text || '').length > 150 ? '…' : ''),
+        // Переход в очередь именно на этот черновик — иначе из таблицы некуда
+        // нажать, и она остаётся справочником, из которого ничего не сделать.
+        open:()=>api.go && api.go('drafts', {focusDraft:r.id})
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

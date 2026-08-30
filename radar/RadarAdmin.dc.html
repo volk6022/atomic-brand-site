@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
+  <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Admin</div>
+  <div style="display:flex;border-bottom:1px solid rgba(19,30,95,0.16);flex-wrap:wrap">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+      <div onClick="{{ t.pick }}" style="padding:9px 14px;cursor:pointer;font:400 12px/1 'JetBrains Mono',monospace;color:{{ t.fg }};background:{{ t.bg }}">{{ t.label }}</div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isUsers }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+      <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+        <thead><tr>
+          <sc-for list="{{ userCols }}" as="c" hint-placeholder-count="5">
+            <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+          </sc-for>
+        </tr></thead>
+        <tbody>
+          <sc-for list="{{ users }}" as="u" hint-placeholder-count="2">
+            <tr onClick="{{ u.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ u.name }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ u.email }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#156479">{{ u.role }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ u.totp }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#2E7D57">{{ u.st }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isAudit }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по email и действию" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+      <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    </div>
+
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+      <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+        <thead><tr>
+          <sc-for list="{{ auditCols }}" as="c" hint-placeholder-count="4">
+            <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+          </sc-for>
+        </tr></thead>
+        <tbody>
+          <sc-for list="{{ audit }}" as="a" hint-placeholder-count="4">
+            <tr>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E">{{ a.t }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ a.who }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ a.what }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E">{{ a.ip }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+      <div style="flex:1"></div>
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+      <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+        <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+      </sc-for>
+      <div style="width:12px"></div>
+      <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+      <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+        <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+      </sc-for>
+      <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { users:[], rows:[], total:0, loading:true, error:null, tab:'users' };
+
+  // На вкладке Аудит: таблица с сортировкой по времени (created), пользователю (user),
+  // действию (action). Поиск по email и действию.
+  AUDIT_COLUMNS = [
+    {label:'Время', sort:'created'},
+    {label:'Кто', sort:'user'},
+    {label:'Действие', sort:'action'},
+    {label:'IP', sort:null},
+  ];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      key:'audit', size:50, sort:'created', order:'desc',
+      sorts:[{key:'created'}, {key:'user'}, {key:'action'}],
+    });
+
+    // Пользователей загружаем один раз (не пагинируются).
+    try {
+      const { get } = await import('./radar-api.js');
+      const users = await get('/users');
+      this.setState({users});
+    } catch (e) { /* пользователей нет — не критично */ }
+
+    this.table.attach(()=>this.load());
+    this.load();
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/audit', this.table.query());
+      this.setState({rows:data.rows, total:data.total, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const tab = (k, label)=>({label, bg: S.tab === k ? '#131E5F' : 'transparent',
+                              fg: S.tab === k ? '#F8F3E0' : '#156479',
+                              pick:()=>this.setState({tab:k})});
+    const userNote = S.loading ? 'загрузка…' : (S.error || 'пользователей нет');
+
+    if(!this.table){
+      return {pad: this.props.mobile ? '12px' : '0',
+              tabs:[tab('users', 'Пользователи'), tab('audit', 'Аудит')],
+              isUsers: S.tab === 'users', isAudit: S.tab === 'audit',
+              userCols:['Имя','Email','Роль','2FA','Статус'],
+              users:[], auditCols:[], audit:[],
+              q:'', setQ:()=>{}, resetAll:()=>{},
+              cols:[], rows:[], pages:[], sizes:[],
+              range:'загрузка…', prev:()=>{}, next:()=>{},
+              prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+              reload:()=>{}};
+    }
+
+    return {
+      pad: this.props.mobile ? '12px' : '0',
+      tabs:[tab('users', 'Пользователи'), tab('audit', 'Аудит')],
+      isUsers: S.tab === 'users', isAudit: S.tab === 'audit',
+
+      // Вкладка Пользователи без пагинации: просто список.
+      userCols:['Имя','Email','Роль','2FA','Статус'],
+      users:(S.users || []).length ? S.users.map(u=>({
+        email:u.email, name:u.name || '—', role:u.role,
+        st:u.is_active ? 'активен' : 'выключен',
+        c:u.is_active ? '#2E7D57' : '#8A8F9E',
+        totp:u.totp_confirmed ? 'включён' : 'не подтверждён',
+        open:()=>api.drill && api.drill({
+          title:u.email, subtitle:'роль ' + u.role,
+          rows:[{k:'Имя', v:u.name || '—'}, {k:'Роль', v:u.role},
+                {k:'2FA', v:u.totp_confirmed ? 'подтверждена' : 'не подтверждена'},
+                {k:'Активен', v:u.is_active ? 'да' : 'нет'},
+                {k:'Последний вход', v:u.last_login_at || '—'}],
+          json:JSON.stringify(u, null, 2)})
+      })) : [{email:userNote, name:'—', role:'—', st:'—', c:'#8A8F9E', totp:'—',
+              open:()=>{}}],
+
+      // Вкладка Аудит с пагинацией.
+      auditCols:['Время','Кто','Действие','IP'],
+      ...this.table.vals(S.total, {columns:this.AUDIT_COLUMNS, loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      audit:S.rows.map(a=>({
+        t:(a.created_at || '').slice(0, 16).replace('T', ' '),
+        who:a.user_email || '—',
+        what:a.action + ' ' + JSON.stringify(a.detail || {}).slice(0, 120),
+        ip:a.ip || '—'
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,149 @@
+{
+  "plugins": [
+    "react",
+    "import"
+  ],
+  "rules": {
+    "react/forbid-elements": [
+      "warn",
+      {
+        "forbid": []
+      }
+    ],
+    "no-restricted-imports": [
+      "warn",
+      {
+        "patterns": []
+      }
+    ],
+    "no-restricted-syntax": [
+      "warn",
+      {
+        "selector": "Literal[value=/#[0-9a-fA-F]{3,8}\\b/]",
+        "message": "Raw hex color — use a design-system color token via var()."
+      },
+      {
+        "selector": "Literal[value=/\\b\\d+px\\b/]",
+        "message": "Raw px value — use a design-system spacing token via var()."
+      },
+      {
+        "selector": "Literal[value=/font-family\\s*:\\s*(?!['\\\"]?(?:Architexture|Unifix|JetBrains Mono))/i]",
+        "message": "Font not provided by the design system. Available: Architexture, Unifix, JetBrains Mono."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/index.js"
+      ],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    }
+  ],
+  "x-omelette": {
+    "components": {},
+    "tokens": [
+      "--atomic-cream",
+      "--atomic-deep",
+      "--atomic-ember",
+      "--atomic-foam",
+      "--atomic-gray",
+      "--atomic-ice",
+      "--atomic-mist",
+      "--atomic-navy",
+      "--atomic-navy-08",
+      "--atomic-navy-16",
+      "--atomic-navy-84",
+      "--atomic-sea",
+      "--atomic-sea-64",
+      "--atomic-teal",
+      "--atomic-teal-24",
+      "--atomic-teal-48",
+      "--atomic-white",
+      "--border-hairline",
+      "--dot-node",
+      "--font-display",
+      "--font-display-alt",
+      "--font-mono",
+      "--leading-body",
+      "--leading-tight",
+      "--line-circuit",
+      "--radius-capsule",
+      "--radius-none",
+      "--space-1",
+      "--space-2",
+      "--space-3",
+      "--space-4",
+      "--space-5",
+      "--space-6",
+      "--stroke-circuit",
+      "--surface-card",
+      "--surface-deep",
+      "--surface-page",
+      "--surface-panel",
+      "--text-accent",
+      "--text-body",
+      "--text-caption",
+      "--text-h1",
+      "--text-h2",
+      "--text-inverse",
+      "--text-lead",
+      "--text-primary"
+    ],
+    "tokenKinds": {
+      "--atomic-cream": "color",
+      "--atomic-navy": "color",
+      "--atomic-teal": "color",
+      "--atomic-sea": "color",
+      "--atomic-deep": "color",
+      "--atomic-ember": "color",
+      "--atomic-gray": "color",
+      "--atomic-white": "color",
+      "--atomic-sea-64": "color",
+      "--atomic-ice": "color",
+      "--atomic-mist": "color",
+      "--atomic-foam": "color",
+      "--atomic-teal-24": "color",
+      "--atomic-teal-48": "color",
+      "--atomic-navy-08": "color",
+      "--atomic-navy-16": "color",
+      "--atomic-navy-84": "color",
+      "--surface-page": "color",
+      "--surface-panel": "color",
+      "--surface-deep": "color",
+      "--surface-card": "color",
+      "--text-primary": "font",
+      "--text-body": "font",
+      "--text-inverse": "font",
+      "--text-accent": "font",
+      "--border-hairline": "color",
+      "--line-circuit": "color",
+      "--font-display": "font",
+      "--font-display-alt": "font",
+      "--font-mono": "font",
+      "--text-h1": "font",
+      "--text-h2": "font",
+      "--text-lead": "font",
+      "--text-caption": "font",
+      "--leading-tight": "font",
+      "--leading-body": "font",
+      "--space-1": "spacing",
+      "--space-2": "spacing",
+      "--space-3": "spacing",
+      "--space-4": "spacing",
+      "--space-5": "spacing",
+      "--space-6": "spacing",
+      "--radius-none": "radius",
+      "--radius-capsule": "radius",
+      "--stroke-circuit": "color",
+      "--dot-node": "spacing"
+    },
+    "fontFamilies": [
+      "Architexture",
+      "JetBrains Mono",
+      "Unifix"
+    ]
+  }
+}

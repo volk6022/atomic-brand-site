@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/styles.css">
+  <script src="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/_ds_bundle.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #F8F3E0; }
+    ::selection { background: rgba(218,80,28,0.25); }
+    a { color: #156479; text-decoration-color: rgba(21,100,121,0.4); }
+    a:hover { color: #DA501C; }
+    @keyframes atomicDash { to { stroke-dashoffset: -160; } }
+    @keyframes atomicFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    nav a, footer a, .tlink { transition: color .18s ease, background .18s ease, box-shadow .18s ease; }
+    nav a:not([data-cta]):hover,
+    footer a:not([data-cta]):hover,
+    .tlink:hover { color: #DA501C; background: rgba(148,190,190,0.32); box-shadow: 0 0 0 4px rgba(148,190,190,0.32); }
+  @media (max-width: 1150px) {
+    .mhide { display: none !important; }
+    h1 { font-size: 52px !important; }
+  }
+  @media (max-width: 1150px) {
+    nav { flex-wrap: wrap; row-gap: 10px; }
+    nav > div { gap: 14px 18px !important; flex-wrap: wrap; }
+  }
+  @media (max-width: 760px) {
+    nav { padding: 12px 18px !important; flex-wrap: wrap; row-gap: 10px; }
+    nav > div { gap: 12px 18px !important; flex-wrap: wrap; }
+    nav a[data-cta] { padding: 8px 14px !important; }
+    header, section, footer { padding: 56px 22px !important; }
+    h1 { font-size: 42px !important; }
+    h2 { font-size: 28px !important; }
+    h3 { font-size: 22px !important; }
+    header p { font-size: 17px !important; }
+    header [data-reveal] > div { flex-wrap: wrap; }
+    div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    .mhide { display: none !important; }
+    .sdiv { padding: 0 22px !important; }
+    .diag { aspect-ratio: auto !important; display: grid !important; gap: 18px; margin: 32px 0 0 !important; }
+    .diag > div { position: static !important; width: auto !important; text-align: left !important; }
+    .diag > div:first-child { display: none !important; }
+    .vcap { flex-direction: column !important; margin: 36px 0 0 !important; }
+    .vcap > div:first-child { width: 100% !important; aspect-ratio: auto !important; display: grid !important; gap: 18px; }
+    .vcap > div:first-child > div { position: static !important; width: auto !important; }
+    .vcap > div:first-child > div:nth-child(1), .vcap > div:first-child > div:nth-child(4), .vcap > div:first-child > div:nth-child(5) { display: none !important; }
+  }
+  </style>
+</helmet>
+
+<div data-screen-label="Atomic Vault" style="min-height: 100vh; background: #F8F3E0; font-family: var(--font-display); color: #131E5F;">
+
+  <!-- ══ NAV ══ -->
+  <nav style="position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; background: rgba(248,243,224,0.88); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(19,30,95,0.16);">
+    <a href="index.dc.html" style="display: flex; align-items: center; gap: 14px; text-decoration: none;">
+      <img src="assets/logo/atomic-mark-navy.svg" alt="" style="height: 24px; display: block;">
+      <img src="assets/logo/atomic-wordmark-navy.svg" alt="ATOMIC" style="height: 16px; display: block;">
+    </a>
+    <div style="display: flex; align-items: center; gap: 32px;">
+      <a href="atomic-intel.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">intel</a>
+      <a href="atomic-engage.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">engage</a>
+      <a href="atomic-vault.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #DA501C; text-decoration: none; border-bottom: 1px solid #DA501C; padding-bottom: 2px;">vault</a>
+      <a href="docs.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">документация</a>
+      <a data-cta href="https://t.me/volk6022" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; background: #131E5F; padding: 10px 20px; text-decoration: none; transition: background .25s;" style-hover="background: #DA501C; color: #F8F3E0;">написать в telegram</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <header style="position: relative; overflow: hidden; padding: 100px 48px 96px 92px;">
+    <div class="mhide" style="position: absolute; top: 0; right: 0; width: 260px; height: 100%; background: #131E5F;"></div>
+    <div class="mhide" style="position: absolute; top: 110px; right: 140px; width: 300px; height: 130px; background: #94BEBE; -webkit-mask: url('assets/graphics/circuit-capsule.svg') no-repeat center / contain; mask: url('assets/graphics/circuit-capsule.svg') no-repeat center / contain; animation: atomicFloat 9s ease-in-out infinite;"></div>
+    <div class="mhide" style="position: absolute; bottom: 80px; right: 320px; width: 96px; height: 96px; background: #DA501C;"></div>
+
+    <div data-reveal="" style="position: relative; max-width: 720px;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 24px;"><a href="index.dc.html" class="tlink" style="color: #156479; text-decoration: none;">atomic</a> · vault · 03</div>
+      <h1 style="font-family: var(--font-display-alt); font-size: 68px; line-height: 1.0; margin: 0 0 24px; color: #131E5F;">Atomic Vault</h1>
+      <p style="font-size: 20px; line-height: 1.45; color: #184153; margin: 0 0 36px; max-width: 560px; text-wrap: pretty;">Персональная база знаний на вашем компьютере, изначально спроектированная для работы с нейросетями — в том числе локальными.</p>
+      <div style="display: flex; align-items: center; gap: 20px;">
+        <a href="https://github.com/volk6022/Atomic-Vault" style="font-family: var(--font-mono); font-size: 14px; background: #131E5F; color: #F8F3E0; padding: 14px 26px; text-decoration: none; transition: background .25s;" style-hover="background: #DA501C; color: #F8F3E0;">github →</a>
+        <a href="docs.dc.html" style="font-family: var(--font-mono); font-size: 14px; color: #131E5F; border: 1px solid rgba(19,30,95,0.4); padding: 13px 26px; text-decoration: none; transition: border-color .25s, color .25s;" style-hover="border-color: #DA501C; color: #DA501C;">документация</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- signal divider -->
+  <div class="sdiv" style="padding: 0 92px;">
+    <svg viewBox="0 0 1016 2" preserveAspectRatio="none" style="display: block; width: 100%; height: 2px;">
+      <line x1="0" y1="1" x2="1016" y2="1" stroke="#156479" stroke-opacity="0.35" stroke-width="2" stroke-dasharray="8 12" style="animation: atomicDash 6s linear infinite;"></line>
+    </svg>
+  </div>
+
+  <!-- ══ CAPSULE ══ -->
+  <section data-reveal="" data-screen-label="Капсула" style="background: #131E5F; padding: 88px 92px;">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <h2 style="font-size: 40px; line-height: 1.0; color: #F8F3E0; margin: 0;">Всё — внутри капсулы</h2>
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #94BEBE;">капсула — это ваш компьютер</div>
+    </div>
+    <div class="vcap" style="display: flex; align-items: center; gap: 56px; max-width: 920px; margin: 64px auto 0 auto; margin-bottom: 150px;">
+      <div style="position: relative; aspect-ratio: 339 / 159; width: 62%; flex: none;">
+        <div style="position: absolute; inset: 0; background: #94BEBE; opacity: 0.75; -webkit-mask: url('assets/graphics/circuit-capsule.svg') no-repeat center / 100% 100%; mask: url('assets/graphics/circuit-capsule.svg') no-repeat center / 100% 100%;"></div>
+        <div style="position: absolute; left: 9%; top: 30%; width: 40%;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">01 · база знаний</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">markdown-карточки, история изменений в git</div>
+        </div>
+        <div style="position: absolute; left: 106%; top: 26%; width: 56%;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">02 · локальная LLM</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">работает прямо внутри хранилища — без облачных подписок</div>
+        </div>
+        <div style="position: absolute; left: 87%; top: calc(50% - 1px); right: -58px; height: 2px; background: rgba(148,190,190,0.5);"></div>
+        <div style="position: absolute; left: 20%; top: 100%; height: 44px; width: 2px; background: rgba(148,190,190,0.5);"></div>
+        <div style="position: absolute; left: 4%; top: calc(100% + 56px); width: 70%;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">03 · граница данных</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">наружу ничего не уходит без вашего решения</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ WHY ══ -->
+  <section style="padding: 88px 92px;">
+    <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 16px;">суть</div>
+    <h2 style="font-size: 40px; line-height: 1.0; margin: 0 0 44px; color: #131E5F;">База знаний, которую понимают LLM</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 32px; transition: border-color .3s;" style-hover="border-color: #DA501C;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 14px;">●</div>
+        <div style="font-size: 20px; color: #131E5F; margin-bottom: 10px;">Спроектирована для нейросетей</div>
+        <p style="font-size: 15px; line-height: 1.5; color: #184153; margin: 0;">LLM не просто ищут информацию — понимают структуру, обновляют данные, анализируют материалы и помогают решать задачи.</p>
+      </div>
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 32px; transition: border-color .3s;" style-hover="border-color: #DA501C;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 14px;">●</div>
+        <div style="font-size: 20px; color: #131E5F; margin-bottom: 10px;">Работает локально</div>
+        <p style="font-size: 15px; line-height: 1.5; color: #184153; margin: 0;">Отлично работает с локальными нейросетями: многие задачи выполняются прямо на вашем компьютере, без облачных подписок.</p>
+      </div>
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 32px; transition: border-color .3s;" style-hover="border-color: #DA501C;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 14px;">●</div>
+        <div style="font-size: 20px; color: #131E5F; margin-bottom: 10px;">Ваши данные — у вас</div>
+        <p style="font-size: 15px; line-height: 1.5; color: #184153; margin: 0;">Всё хранится на вашем компьютере. Полный контроль над данными — редкость среди готовых решений такого уровня.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ OPEN + INTEL ══ -->
+  <section data-reveal="" style="background: #131E5F; padding: 88px 92px; position: relative; overflow: hidden;">
+    <div class="mhide" style="position: absolute; right: 60px; bottom: 40px; width: 380px; height: 150px; background: rgba(148,190,190,0.35); -webkit-mask: url('assets/graphics/circuit-rail.svg') no-repeat center / contain; mask: url('assets/graphics/circuit-rail.svg') no-repeat center / contain;"></div>
+    <div style="position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start;">
+      <div>
+        <div style="font-family: var(--font-mono); font-size: 13px; color: #94BEBE; letter-spacing: 0.08em; margin-bottom: 16px;">открытая структура</div>
+        <h2 style="font-size: 40px; line-height: 1.05; color: #F8F3E0; margin: 0 0 20px; text-wrap: balance;">Структура бесплатна. Продаётся внедрение</h2>
+        <p style="font-size: 16px; line-height: 1.5; color: #94BEBE; margin: 0; text-wrap: pretty;">Сама база знаний — в открытом доступе на GitHub. Я помогаю поставить систему, настроить локальную нейросеть, подключить автоматизацию и адаптировать всё под ваши задачи, чтобы польза была сразу.</p>
+      </div>
+      <div style="display: grid; gap: 0; font-family: var(--font-mono); font-size: 14px; color: #F8F3E0;">
+        <div style="padding: 16px 0; border-bottom: 1px solid rgba(148,190,190,0.3); display: flex; gap: 16px;"><span style="color: #DA501C;">01</span> установка системы на компьютер</div>
+        <div style="padding: 16px 0; border-bottom: 1px solid rgba(148,190,190,0.3); display: flex; gap: 16px;"><span style="color: #DA501C;">02</span> настройка локальной нейросети</div>
+        <div style="padding: 16px 0; border-bottom: 1px solid rgba(148,190,190,0.3); display: flex; gap: 16px;"><span style="color: #DA501C;">03</span> подключение автоматизации</div>
+        <div style="padding: 16px 0; display: flex; gap: 16px;"><span style="color: #DA501C;">04</span> адаптация под ваши задачи</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ INTEGRATION ══ -->
+  <section style="padding: 88px 92px 104px;">
+    <div data-reveal="" style="background: #94BEBE; padding: 48px 44px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center;">
+      <div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #131E5F; letter-spacing: 0.08em; margin-bottom: 16px;">в связке с intel</div>
+        <h3 style="font-size: 30px; line-height: 1.05; color: #131E5F; margin: 0 0 16px; text-wrap: balance;">База пополняется сама</h3>
+        <p style="font-size: 15px; line-height: 1.5; color: #131E5F; margin: 0;">Результаты автоматического поиска и исследований <a href="atomic-intel.dc.html" class="tlink" style="color: #131E5F;">Atomic Intel</a> попадают прямо в базу — она становится полезнее без ручной работы.</p>
+      </div>
+      <div style="height: 120px; background: #131E5F; -webkit-mask: url('assets/graphics/circuit-branch.svg') no-repeat center / contain; mask: url('assets/graphics/circuit-branch.svg') no-repeat center / contain;"></div>
+    </div>
+  </section>
+
+  <!-- ══ CTA ══ -->
+  <footer style="background: #131E5F; padding: 72px 92px 48px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 40px; flex-wrap: wrap;">
+      <div>
+        <h2 style="font-size: 36px; line-height: 1.05; color: #F8F3E0; margin: 0 0 10px;">Хотите собственную умную базу знаний?</h2>
+        <p style="font-family: var(--font-mono); font-size: 14px; color: #94BEBE; margin: 0;">расскажу, как это будет работать именно у вас</p>
+      </div>
+      <a data-cta href="https://t.me/volk6022" style="font-family: var(--font-mono); font-size: 14px; background: #DA501C; color: #F8F3E0; padding: 15px 28px; text-decoration: none; white-space: nowrap; transition: background .25s;" style-hover="background: #94BEBE; color: #131E5F;">написать в telegram →</a>
+    </div>
+    <div style="margin-top: 56px; padding-top: 24px; border-top: 1px solid rgba(148,190,190,0.3); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: #94BEBE;">
+      <a href="atomic-engage.dc.html" style="color: #94BEBE; text-decoration: none;" style-hover="color: #DA501C;">← atomic engage</a>
+      <a href="docs.dc.html" style="color: #94BEBE; text-decoration: none;" style-hover="color: #DA501C;">документация →</a>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+
+  componentDidMount() {
+    const els = document.querySelectorAll('[data-reveal]');
+    els.forEach((el) => {
+      el.style.opacity = '0';
+      el.style.transform = (el.style.transform ? el.style.transform + ' ' : '') + 'translateY(16px)';
+      el.style.transition = 'opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1)';
+    });
+    const show = (el) => {
+      el.style.opacity = '1';
+      el.style.transform = el.style.transform.replace(' translateY(16px)', '').replace('translateY(16px)', '');
+    };
+    this.ioFired = false;
+    this.observer = new IntersectionObserver((entries) => {
+      this.ioFired = true;
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          show(e.target);
+          this.observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    els.forEach((el) => this.observer.observe(el));
+    const vh = window.innerHeight || 800;
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < vh && r.bottom > 0) setTimeout(() => show(el), 80);
+    });
+    this.revealTimer = setTimeout(() => { if (!this.ioFired) els.forEach(show); }, 1500);
+  }
+
+  componentWillUnmount() {
+    if (this.observer) this.observer.disconnect();
+  }
+}
+</script>
+</body>
+</html>

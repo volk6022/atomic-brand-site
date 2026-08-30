@@ -1,0 +1,15 @@
+Found 13 hardcoded data values:
+================================================================================
+L 221 | "{n:1, label:'Не та боль'},{n:2, label:'Не тот человек'},{n:3" | Hardcoded rejection reason label shown in UI
+L 222 | "{n:4, label:'Слишком длинно'},{n:5, label:'Фактическая ошибк" | Hardcoded rejection reason label shown in UI
+L 223 | "{n:7, label:'Дублирует отправленное'},{n:8, label:'Ссылка в " | Hardcoded rejection reason label shown in UI
+L 361 | "return send.allowed ? ' · отправка разрешена' : ' · не отпра" | Hardcoded verdict message shown to user
+L 453 | "prompt:'Ты пишешь короткое нативное сообщение человеку, кото" | Hardcoded default prompt text displayed in trace
+L 464 | "const word = s < 0.3 ? 'низкий' : (s < 0.6 ? 'средний' : 'вы" | Hardcoded spam level label shown to user
+L 508 | "{k:'J / K', d:'следующий / предыдущий лид'},{k:'1 2 3', d:'п" | Hardcoded hotkey description shown to user
+L 509 | "{k:'A', d:'одобрить активный вариант'},{k:'E', d:'редактиров" | Hardcoded hotkey description shown to user
+L 511 | "{k:'G', d:'открыть ветку в Telegram'},{k:'L', d:'показать LL" | Hardcoded hotkey description shown to user
+L 512 | "{k:'Esc', d:'закрыть панель'},{k:'⌘/Ctrl+K', d:'командная па" | Hardcoded hotkey description shown to user
+L 532 | "{text:'нет ссылок в первом сообщении', bad:/https?:\\/\\/|t\\.m" | Hardcoded lint rule label shown in UI
+L 533 | "{text:'без капса', bad:/[А-ЯA-Z]{4,}/.test(raw.text)}," | Hardcoded lint rule label shown in UI
+L 534 | "{text:'без эмодзи-спама', bad:false}," | Hardcoded lint rule label shown in UI

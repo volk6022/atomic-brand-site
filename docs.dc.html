@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/styles.css">
+  <script src="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/_ds_bundle.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #F8F3E0; }
+    ::selection { background: rgba(218,80,28,0.25); }
+    a { color: #156479; text-decoration-color: rgba(21,100,121,0.4); }
+    a:hover { color: #DA501C; }
+    @keyframes atomicDash { to { stroke-dashoffset: -160; } }
+    nav a, footer a, .tlink { transition: color .18s ease, background .18s ease, box-shadow .18s ease; }
+    nav a:not([data-cta]):hover,
+    footer a:not([data-cta]):hover,
+    .tlink:hover { color: #DA501C; background: rgba(148,190,190,0.32); box-shadow: 0 0 0 4px rgba(148,190,190,0.32); }
+  @media (max-width: 1150px) {
+    nav { flex-wrap: wrap; row-gap: 10px; }
+    nav > div { gap: 14px 18px !important; flex-wrap: wrap; }
+  }
+  @media (max-width: 760px) {
+    nav { padding: 12px 18px !important; flex-wrap: wrap; row-gap: 10px; }
+    nav > div { gap: 12px 18px !important; flex-wrap: wrap; }
+    nav a[data-cta] { padding: 8px 14px !important; }
+    header, section, footer { padding: 56px 22px !important; }
+    h1 { font-size: 42px !important; }
+    h2 { font-size: 28px !important; }
+    h3 { font-size: 22px !important; }
+    header p { font-size: 17px !important; }
+    header [data-reveal] > div { flex-wrap: wrap; }
+    div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    .mhide { display: none !important; }
+    .sdiv { padding: 0 22px !important; }
+    .diag { aspect-ratio: auto !important; display: grid !important; gap: 18px; margin: 32px 0 0 !important; }
+    .diag > div { position: static !important; width: auto !important; text-align: left !important; }
+    .diag > div:first-child { display: none !important; }
+    section > div:last-child { flex-wrap: wrap; }
+  }
+  </style>
+</helmet>
+
+<div data-screen-label="Документация" style="min-height: 100vh; background: #F8F3E0; font-family: var(--font-display); color: #131E5F; display: flex; flex-direction: column;">
+
+  <!-- ══ NAV ══ -->
+  <nav style="position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; background: rgba(248,243,224,0.88); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(19,30,95,0.16);">
+    <a href="index.dc.html" style="display: flex; align-items: center; gap: 14px; text-decoration: none;">
+      <img src="assets/logo/atomic-mark-navy.svg" alt="" style="height: 24px; display: block;">
+      <img src="assets/logo/atomic-wordmark-navy.svg" alt="ATOMIC" style="height: 16px; display: block;">
+    </a>
+    <div style="display: flex; align-items: center; gap: 32px;">
+      <a href="atomic-intel.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">intel</a>
+      <a href="atomic-engage.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">engage</a>
+      <a href="atomic-vault.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">vault</a>
+      <a href="docs.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #DA501C; text-decoration: none; border-bottom: 1px solid #DA501C; padding-bottom: 2px;">документация</a>
+      <a data-cta href="https://t.me/volk6022" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; background: #131E5F; padding: 10px 20px; text-decoration: none; transition: background .25s;" style-hover="background: #DA501C; color: #F8F3E0;">написать в telegram</a>
+    </div>
+  </nav>
+
+  <!-- ══ BODY ══ -->
+  <section style="flex: 1; padding: 100px 92px 120px;">
+    <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 24px;"><a href="index.dc.html" class="tlink" style="color: #156479; text-decoration: none;">atomic</a> · документация</div>
+    <h1 style="font-size: 56px; line-height: 1.0; margin: 0 0 20px; color: #131E5F;">Документация</h1>
+    <p style="font-size: 18px; line-height: 1.5; color: #184153; margin: 0 0 56px; max-width: 560px; text-wrap: pretty;">Раздел в работе. Пока техническая документация живёт в репозиториях — код и структура открыты.</p>
+
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1016px;">
+      <a href="https://github.com/volk6022/Atomic-Intel" style="display: block; background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 28px; text-decoration: none; transition: transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s;" style-hover="transform: translateY(-4px); border-color: #DA501C;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 12px;">github · readme</div>
+        <div style="font-family: var(--font-display-alt); font-size: 22px; color: #131E5F; margin-bottom: 8px;">Atomic Intel</div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C;">volk6022/Atomic-Intel →</div>
+      </a>
+      <a href="https://github.com/volk6022/Atomic-Engage" style="display: block; background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 28px; text-decoration: none; transition: transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s;" style-hover="transform: translateY(-4px); border-color: #DA501C;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 12px;">github · readme</div>
+        <div style="font-family: var(--font-display-alt); font-size: 22px; color: #131E5F; margin-bottom: 8px;">Atomic Engage</div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C;">volk6022/Atomic-Engage →</div>
+      </a>
+      <a href="https://github.com/volk6022/Atomic-Vault" style="display: block; background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 28px; text-decoration: none; transition: transform .3s cubic-bezier(.2,.8,.2,1), border-color .3s;" style-hover="transform: translateY(-4px); border-color: #DA501C;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 12px;">github · readme</div>
+        <div style="font-family: var(--font-display-alt); font-size: 22px; color: #131E5F; margin-bottom: 8px;">Atomic Vault</div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C;">volk6022/Atomic-Vault →</div>
+      </a>
+    </div>
+
+    <div style="margin-top: 64px; display: flex; align-items: center; gap: 20px;">
+      <div style="width: 120px; height: 46px; background: #156479; -webkit-mask: url('assets/graphics/circuit-run.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-run.svg') no-repeat left center / contain;"></div>
+      <span style="font-family: var(--font-mono); font-size: 13px; color: #156479;">гайды и инструкции появятся здесь · следите за обновлениями</span>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER ══ -->
+  <footer style="background: #131E5F; padding: 40px 92px;">
+    <div style="display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: #94BEBE;">
+      <a href="index.dc.html" style="color: #94BEBE; text-decoration: none;" style-hover="color: #DA501C;">← atomic</a>
+      <span>интеллект · данные · системы</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/fonts.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/colors.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/typography.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/spacing.css">
+  <link rel="stylesheet" href="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/styles.css">
+  <script src="_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/_ds_bundle.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; background: #F8F3E0; }
+    ::selection { background: rgba(218,80,28,0.25); }
+    a { color: #156479; text-decoration-color: rgba(21,100,121,0.4); }
+    a:hover { color: #DA501C; }
+    html { scroll-behavior: smooth; }
+    @keyframes atomicFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes atomicFloatB { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+    nav a, footer a, .tlink { transition: color .18s ease, background .18s ease, box-shadow .18s ease; }
+    nav a:not([data-cta]):hover,
+    footer a:not([data-cta]):hover,
+    .tlink:hover { color: #DA501C; background: rgba(148,190,190,0.32); box-shadow: 0 0 0 4px rgba(148,190,190,0.32); }
+  @media (max-width: 1150px) {
+    .mhide { display: none !important; }
+    h1 { font-size: 52px !important; }
+  }
+  @media (max-width: 1150px) {
+    nav { flex-wrap: wrap; row-gap: 10px; }
+    nav > div { gap: 14px 18px !important; flex-wrap: wrap; }
+  }
+  @media (max-width: 760px) {
+    nav { padding: 12px 18px !important; flex-wrap: wrap; row-gap: 10px; }
+    nav > div { gap: 12px 18px !important; flex-wrap: wrap; }
+    nav a[data-cta] { padding: 8px 14px !important; }
+    header, section, footer { padding: 56px 22px !important; }
+    h1 { font-size: 42px !important; }
+    h2 { font-size: 28px !important; }
+    h3 { font-size: 22px !important; }
+    header p { font-size: 17px !important; }
+    header [data-reveal] > div { flex-wrap: wrap; }
+    div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+    .mhide { display: none !important; }
+    .sdiv { padding: 0 22px !important; }
+    .diag { aspect-ratio: auto !important; display: grid !important; gap: 18px; margin: 32px 0 0 !important; }
+    .diag > div { position: static !important; width: auto !important; text-align: left !important; }
+    .diag > div:first-child { display: none !important; }
+    #graph { padding: 48px 0 40px !important; }
+    #graph > div { padding: 0 22px !important; flex-direction: column; gap: 8px; }
+    #pricing div[data-reveal] { padding: 28px 18px !important; }
+    section[data-screen-label="Границы"] > div { padding: 28px 20px !important; }
+    footer img { height: 64px !important; }
+  }
+  </style>
+</helmet>
+
+<div data-screen-label="Главная" style="min-height: 100vh; background: #F8F3E0; font-family: var(--font-display); color: #131E5F;">
+
+  <!-- ══ NAV ══ -->
+  <nav style="position: sticky; top: 0; z-index: 50; display: flex; align-items: center; justify-content: space-between; padding: 18px 48px; background: rgba(248,243,224,0.88); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(19,30,95,0.16);">
+    <a href="index.dc.html" style="display: flex; align-items: center; gap: 14px; text-decoration: none;">
+      <img src="assets/logo/atomic-mark-navy.svg" alt="" style="height: 24px; display: block;">
+      <img src="assets/logo/atomic-wordmark-navy.svg" alt="ATOMIC" style="height: 16px; display: block;">
+    </a>
+    <div style="display: flex; align-items: center; gap: 32px;">
+      <a href="atomic-intel.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">intel</a>
+      <a href="atomic-engage.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">engage</a>
+      <a href="atomic-vault.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">vault</a>
+      <a href="docs.dc.html" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">документация</a>
+      <a href="#pricing" class="tlink" style="font-family: var(--font-mono); font-size: 13px; color: #184153; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">стоимость</a>
+      <a data-cta="" href="https://t.me/volk6022" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; background: #131E5F; padding: 10px 20px; text-decoration: none; transition: background .25s;" style-hover="background: #DA501C; color: #F8F3E0;">написать в telegram</a>
+    </div>
+  </nav>
+
+  <!-- ══ HERO ══ -->
+  <header style="position: relative; overflow: hidden; padding: 110px 48px 120px 92px;">
+    <div class="mhide" style="position: absolute; top: 0; right: 0; width: 300px; height: 100%; background: #94BEBE;"></div>
+    <div class="mhide" style="position: absolute; top: 120px; right: 180px; width: 260px; height: 340px; background: rgba(21,100,121,0.64);"></div>
+    <div class="mhide" style="position: absolute; bottom: 90px; right: 400px; width: 120px; height: 120px; background: #DA501C; animation: atomicFloatB 7s ease-in-out infinite;"></div>
+    <div class="mhide" style="position: absolute; top: 150px; right: 90px; width: 340px; height: 130px; background: #131E5F; -webkit-mask: url('assets/graphics/circuit-branch.svg') no-repeat center / contain; mask: url('assets/graphics/circuit-branch.svg') no-repeat center / contain; animation: atomicFloat 9s ease-in-out infinite;"></div>
+
+    <div data-reveal="" style="position: relative; max-width: 760px;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 28px;">интеллект · данные · системы</div>
+      <h1 style="font-size: 64px; line-height: 1.0; margin: 0 0 28px; color: #131E5F; text-wrap: balance;">Сложные технологии — понятные инструменты</h1>
+      <p style="font-size: 20px; line-height: 1.45; color: #184153; margin: 0 0 40px; max-width: 560px; text-wrap: pretty;">ATOMIC объединяет поиск клиентов, автоматизацию Telegram и базы знаний в одну экосистему. Каждый сервис решает конкретную задачу — без магии и завышенных обещаний.</p>
+      <div style="display: flex; align-items: center; gap: 24px;">
+        <a href="https://t.me/volk6022" style="font-family: var(--font-mono); font-size: 14px; background: #DA501C; color: #F8F3E0; padding: 15px 28px; text-decoration: none; transition: background .25s;" style-hover="background: #131E5F; color: #F8F3E0;">написать в telegram →</a>
+        <a href="#graph" class="tlink" style="font-family: var(--font-mono); font-size: 14px; color: #131E5F; text-decoration: none; border-bottom: 1px solid rgba(19,30,95,0.4); padding-bottom: 3px; transition: color .2s;" style-hover="color: #DA501C;">карта экосистемы ↓</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ GRAPH ══ -->
+  <section id="graph" data-screen-label="Граф экосистемы" style="background: #131E5F; padding: 88px 0 64px;">
+    <div style="padding: 0 92px; display: flex; align-items: baseline; justify-content: space-between;">
+      <h2 style="font-size: 40px; line-height: 1.0; color: #F8F3E0; margin: 0;">Карта экосистемы</h2>
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #94BEBE;">узлы можно тянуть · клик открывает раздел</div>
+    </div>
+    <svg ref="{{ svgRef }}" viewBox="0 0 1200 620" style="display: block; width: 100%; height: auto; touch-action: pan-y; user-select: none;"></svg>
+  </section>
+
+  <!-- ══ PRODUCTS ══ -->
+  <section data-screen-label="Продукты" style="padding: 96px 92px 104px;">
+    <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 16px;">три продукта · один принцип</div>
+    <h2 style="font-size: 40px; line-height: 1.0; margin: 0 0 48px; color: #131E5F;">Экосистема ATOMIC</h2>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+
+      <a data-reveal="" href="atomic-intel.dc.html" style="display: block; background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 36px 32px 40px; text-decoration: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s;" style-hover="transform: translateY(-6px); border-color: #DA501C;">
+        <div style="width: 88px; height: 36px; background: #156479; -webkit-mask: url('assets/graphics/circuit-branch.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-branch.svg') no-repeat left center / contain; margin-bottom: 28px;"></div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 12px;">01 · поиск и данные</div>
+        <h3 style="font-family: var(--font-display-alt); font-size: 26px; margin: 0 0 14px; color: #131E5F;">Atomic Intel</h3>
+        <p style="font-size: 15px; line-height: 1.45; color: #184153; margin: 0 0 22px; text-wrap: pretty;">Поиск клиентов и сбор данных: Яндекс.Карты и восемь профильных площадок, обогащение контактов, research-агент.</p>
+        <span style="font-family: var(--font-mono); font-size: 13px; color: #DA501C;">подробнее →</span>
+      </a>
+
+      <a data-reveal="" href="atomic-engage.dc.html" style="display: block; background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 36px 32px 40px; text-decoration: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s;" style-hover="transform: translateY(-6px); border-color: #DA501C;">
+        <div style="width: 88px; height: 36px; background: #156479; -webkit-mask: url('assets/graphics/circuit-run.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-run.svg') no-repeat left center / contain; margin-bottom: 28px;"></div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 12px;">02 · коммуникация</div>
+        <h3 style="font-family: var(--font-display-alt); font-size: 26px; margin: 0 0 14px; color: #131E5F;">Atomic Engage</h3>
+        <p style="font-size: 15px; line-height: 1.45; color: #184153; margin: 0 0 22px; text-wrap: pretty;">Доступ к Telegram через личный аккаунт: первые касания, follow-up, чтение каналов — с жёсткими лимитами безопасности, чтобы аккаунты жили.</p>
+        <span style="font-family: var(--font-mono); font-size: 13px; color: #DA501C;">подробнее →</span>
+      </a>
+
+      <a data-reveal="" href="atomic-vault.dc.html" style="display: block; background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 36px 32px 40px; text-decoration: none; transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s;" style-hover="transform: translateY(-6px); border-color: #DA501C;">
+        <div style="width: 88px; height: 36px; background: #156479; -webkit-mask: url('assets/graphics/circuit-capsule.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-capsule.svg') no-repeat left center / contain; margin-bottom: 28px;"></div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 12px;">03 · знания</div>
+        <h3 style="font-family: var(--font-display-alt); font-size: 26px; margin: 0 0 14px; color: #131E5F;">Atomic Vault</h3>
+        <p style="font-size: 15px; line-height: 1.45; color: #184153; margin: 0 0 22px; text-wrap: pretty;">Локальная база знаний, спроектированная для работы с LLM. Открытая структура, полный контроль над данными.</p>
+        <span style="font-family: var(--font-mono); font-size: 13px; color: #DA501C;">подробнее →</span>
+      </a>
+
+    </div>
+  </section>
+
+  <!-- ══ STORY ══ -->
+  <section data-reveal="" data-screen-label="Зачем это всё" style="background: #94BEBE; padding: 96px 92px; position: relative; overflow: hidden;">
+    <div style="display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 72px; align-items: center;">
+      <div>
+        <div style="font-family: var(--font-mono); font-size: 13px; color: #131E5F; letter-spacing: 0.08em; margin-bottom: 20px;">зачем это всё</div>
+        <h2 style="font-size: 40px; line-height: 1.05; color: #131E5F; margin: 0 0 20px; text-wrap: balance;">Такие задачи больше не требуют героизма</h2>
+        <p style="font-size: 17px; line-height: 1.5; color: #131E5F; margin: 0 0 16px; text-wrap: pretty;">Этот проект начался с одной маленькой компании: два человека, живой бизнес — и массивы данных, которые владелец перебирал вручную, вечерами. Времени разбираться в коде у него нет и не будет, делегировать некому.</p>
+        <p style="font-size: 17px; line-height: 1.5; color: #131E5F; margin: 0; text-wrap: pretty;">Раньше выбор был такой: нанимать разработчика, месяцами вникать самому — или отложить. Мы делаем нормой третий вариант: решение приходит уже работающим, мы помогаем встроить его в процессы и остаёмся на связи. Это по силам и совсем небольшой команде.</p>
+      </div>
+      <div style="display: grid; justify-items: center; gap: 22px;">
+        <div style="width: 100%; max-width: 360px; aspect-ratio: 339 / 159; background: #131E5F; -webkit-mask: url('assets/graphics/circuit-capsule.svg') no-repeat center / contain; mask: url('assets/graphics/circuit-capsule.svg') no-repeat center / contain;"></div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #131E5F; letter-spacing: 0.06em;">готовое решение · настроено под задачу · работает</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ CASES ══ -->
+  <section data-screen-label="Ситуации" style="padding: 96px 92px 104px;">
+    <div style="max-width: 720px;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 16px;">боль · решение · результат</div>
+      <h2 style="font-size: 40px; line-height: 1.0; margin: 0 0 16px; color: #131E5F;">Три знакомые ситуации</h2>
+      <p style="font-size: 17px; line-height: 1.5; color: #184153; margin: 0; max-width: 560px; text-wrap: pretty;">Как меняется работа, когда часть её забирают сервисы. Без обещаний в процентах — просто по шагам.</p>
+    </div>
+    <div data-reveal="" style="width: 100%; height: 72px; margin: 20px 0 36px; background: #156479; -webkit-mask: url('assets/graphics/circuit-rail.svg') no-repeat center / 100% 100%; mask: url('assets/graphics/circuit-rail.svg') no-repeat center / 100% 100%;"></div>
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 32px 28px 36px;">
+        <h3 style="font-size: 20px; color: #131E5F; margin: 0 0 24px;">Нужна база по новой нише</h3>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #184153; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #184153; margin-bottom: 6px;">боль</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Аналитик неделями собирает компании вручную, потом ещё верифицирует каждую строку.</p>
+          </div>
+        </div>
+        <div style="width: 3px; height: 24px; background: rgba(21,100,121,0.35); margin-left: 5.5px;"></div>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #156479; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #156479; margin-bottom: 6px;">решение</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Intel: поиск по Яндекс.Картам — до 65 полей на организацию, обогащение контактов, каталог с тегами.</p>
+          </div>
+        </div>
+        <div style="width: 3px; height: 24px; background: rgba(21,100,121,0.35); margin-left: 5.5px;"></div>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #DA501C; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #DA501C; margin-bottom: 6px;">результат</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Сбор занимает дни, а не недели. Человек проверяет и решает — вместо того чтобы переписывать строки.</p>
+          </div>
+        </div>
+      </div>
+
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 32px 28px 36px;">
+        <h3 style="font-size: 20px; color: #131E5F; margin: 0 0 24px;">Знания живут в головах</h3>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #184153; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #184153; margin-bottom: 6px;">боль</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Сотрудник уходит — вместе с ним уходят история клиентов, скрипты и договорённости.</p>
+          </div>
+        </div>
+        <div style="width: 3px; height: 24px; background: rgba(21,100,121,0.35); margin-left: 5.5px;"></div>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #156479; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #156479; margin-bottom: 6px;">решение</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Vault: домены знаний, отметки свежести и достоверности на каждой карточке, еженедельная проверка базы.</p>
+          </div>
+        </div>
+        <div style="width: 3px; height: 24px; background: rgba(21,100,121,0.35); margin-left: 5.5px;"></div>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #DA501C; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #DA501C; margin-bottom: 6px;">результат</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Память компании хранится в git и сама сообщает, что устарело. Уход человека перестаёт быть катастрофой.</p>
+          </div>
+        </div>
+      </div>
+
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 32px 28px 36px;">
+        <h3 style="font-size: 20px; color: #131E5F; margin: 0 0 24px;">Канал то живёт, то замирает</h3>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #184153; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #184153; margin-bottom: 6px;">боль</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Контент есть, но публикации держатся на одном занятом человеке.</p>
+          </div>
+        </div>
+        <div style="width: 3px; height: 24px; background: rgba(21,100,121,0.35); margin-left: 5.5px;"></div>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #156479; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #156479; margin-bottom: 6px;">решение</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Engage публикует по расписанию (n8n или cron), читает комментарии и передаёт важное людям.</p>
+          </div>
+        </div>
+        <div style="width: 3px; height: 24px; background: rgba(21,100,121,0.35); margin-left: 5.5px;"></div>
+        <div style="display: flex; gap: 14px;">
+          <div style="flex: none; width: 14px; height: 14px; border-radius: 50%; background: #DA501C; margin-top: 4px;"></div>
+          <div>
+            <div style="font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: #DA501C; margin-bottom: 6px;">результат</div>
+            <p style="font-size: 14px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">Один человек спокойно ведёт несколько каналов — и остаётся редактором, а не диспетчером.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══ SCENARIOS ══ -->
+  <section data-screen-label="Как это работает" style="background: #131E5F; padding: 96px 92px 88px;">
+    <div style="max-width: 720px;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #94BEBE; letter-spacing: 0.08em; margin-bottom: 16px;">как это работает</div>
+      <h2 style="font-size: 40px; line-height: 1.0; margin: 0 0 16px; color: #F8F3E0;">Сценарии из готовых частей</h2>
+      <p style="font-size: 17px; line-height: 1.5; color: #94BEBE; margin: 0; max-width: 600px; text-wrap: pretty;">Каждый сценарий собирается из существующих функций трёх сервисов. Расписания и связки — снаружи: n8n или обычный cron, своими силами или с нашей помощью.</p>
+    </div>
+
+    <div data-reveal="" style="max-width: 1000px; margin: 64px auto 0;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #DA501C; letter-spacing: 0.06em; margin-bottom: 24px;">сценарий A · от холодного поиска до тёплого диалога</div>
+      <div class="diag" style="position: relative; aspect-ratio: 896 / 464;">
+        <div style="position: absolute; inset: 0; background: #94BEBE; opacity: 0.75; -webkit-mask: url('assets/graphics/circuit-run.svg') no-repeat center / 100% 100%; mask: url('assets/graphics/circuit-run.svg') no-repeat center / 100% 100%;"></div>
+        <div style="position: absolute; left: 2%; top: 36%; width: 29%;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">01 · atomic intel</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">поиск по нише и гео: карточки компаний с телефонами, адресами, ИНН</div>
+        </div>
+        <div style="position: absolute; left: 71%; top: 25%; width: 28%;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">02 · обогащение</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">почта, сайт, размер компании, контакты ЛПР</div>
+        </div>
+        <div style="position: absolute; left: 41%; top: 57%; width: 26%;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">03 · каталог</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">структурированная база с фильтрами, готовая к работе</div>
+        </div>
+        <div style="position: absolute; left: 24%; top: 78%; width: 37%; text-align: right;">
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; margin-bottom: 6px;">04 · atomic engage</div>
+          <div style="font-family: var(--font-mono); font-size: 13px; line-height: 1.5; color: #F8F3E0;">первые касания и follow-up в человеческом темпе</div>
+        </div>
+      </div>
+      <div style="font-family: var(--font-mono); font-size: 12px; color: #94BEBE; margin-top: 20px; text-align: right;">ответы фиксируются webhook-событиями → CRM получает уже живой диалог</div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 56px;">
+      <div data-reveal="" style="border: 1px solid rgba(148,190,190,0.35); padding: 28px 28px 32px;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; letter-spacing: 0.06em; margin-bottom: 10px;">сценарий C</div>
+        <h3 style="font-size: 20px; color: #F8F3E0; margin: 0 0 20px;">Дайджест отрасли каждое утро</h3>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #94BEBE;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">Intel · research по списку тем — по расписанию</span></div>
+        <div style="width: 2px; height: 14px; background: rgba(148,190,190,0.4); margin-left: 4px;"></div>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #94BEBE;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">структурированный отчёт по каждой теме</span></div>
+        <div style="width: 2px; height: 14px; background: rgba(148,190,190,0.4); margin-left: 4px;"></div>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #94BEBE;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">Engage · дайджест в рабочий канал к началу дня</span></div>
+        <div style="width: 2px; height: 14px; background: rgba(148,190,190,0.4); margin-left: 4px;"></div>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #DA501C;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">копия в Vault — база знаний растёт сама</span></div>
+        <p style="font-size: 14px; line-height: 1.5; color: #94BEBE; margin: 20px 0 0;">Команда начинает день с одной и той же картины рынка.</p>
+      </div>
+      <div data-reveal="" style="border: 1px solid rgba(148,190,190,0.35); padding: 28px 28px 32px;">
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #DA501C; letter-spacing: 0.06em; margin-bottom: 10px;">сценарий D</div>
+        <h3 style="font-size: 20px; color: #F8F3E0; margin: 0 0 20px;">Контент-фабрика</h3>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #94BEBE;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">Engage · чтение каналов инфополя</span></div>
+        <div style="width: 2px; height: 14px; background: rgba(148,190,190,0.4); margin-left: 4px;"></div>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #94BEBE;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">Intel · углубление по выбранной теме</span></div>
+        <div style="width: 2px; height: 14px; background: rgba(148,190,190,0.4); margin-left: 4px;"></div>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #94BEBE;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">Vault · материал с цитатами и источниками</span></div>
+        <div style="width: 2px; height: 14px; background: rgba(148,190,190,0.4); margin-left: 4px;"></div>
+        <div style="display: flex; gap: 12px; align-items: baseline;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; background: #DA501C;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0;">копирайтер правит — и публикует</span></div>
+        <p style="font-size: 14px; line-height: 1.5; color: #94BEBE; margin: 20px 0 0;">Черновики приходят сами. Человек остаётся редактором.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ LIMITS ══ -->
+  <section data-reveal="" data-screen-label="Границы" style="padding: 88px 92px 0;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: start; border: 1px solid rgba(19,30,95,0.16); background: #FFFFFF; padding: 48px;">
+      <div>
+        <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 16px;">честные границы</div>
+        <h2 style="font-size: 32px; line-height: 1.05; color: #131E5F; margin: 0 0 16px;">Чего стек не делает</h2>
+        <p style="font-size: 15px; line-height: 1.5; color: #184153; margin: 0; text-wrap: pretty;">ATOMIC — слой данных и автоматизации: он собирает, обогащает и доставляет данные и события в инструменты, которые делают остальное.</p>
+      </div>
+      <div style="display: grid; gap: 14px; padding-top: 8px;">
+        <div style="display: flex; gap: 12px; align-items: center;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #156479;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #184153;">email- и SMS-рассылки</span></div>
+        <div style="display: flex; gap: 12px; align-items: center;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #156479;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #184153;">BI-дашборды и атрибуция по каналам</span></div>
+        <div style="display: flex; gap: 12px; align-items: center;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #156479;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #184153;">A/B-тесты лендингов</span></div>
+        <div style="display: flex; gap: 12px; align-items: center;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #156479;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #184153;">генерация картинок и видео</span></div>
+        <div style="display: flex; gap: 12px; align-items: center;"><div style="flex: none; width: 10px; height: 10px; border-radius: 50%; border: 2px solid #156479;"></div><span style="font-family: var(--font-mono); font-size: 13px; color: #184153;">SEO-аудит сайтов</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ PRICING ══ -->
+  <section id="pricing" data-screen-label="Стоимость" style="padding: 96px 92px 104px;">
+    <div style="max-width: 720px; margin-bottom: 56px;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #156479; letter-spacing: 0.08em; margin-bottom: 16px;">стоимость</div>
+      <h2 style="font-size: 40px; line-height: 1.0; margin: 0 0 16px; color: #131E5F;">Ориентиры по стоимости</h2>
+      <p style="font-size: 17px; line-height: 1.5; color: #184153; margin: 0 0 12px; text-wrap: pretty;">Все вилки сверены с рынком: с ценами агентств, сервисов и интеграторов на похожие задачи (июль 2026). Это ориентиры, а не прайс — точную цифру называем после короткого разговора о задаче.</p>
+      <p style="font-size: 15px; line-height: 1.5; color: #156479; margin: 0; text-wrap: pretty;">Обещаний окупаемости здесь нет — она у каждого бизнеса своя.</p>
+    </div>
+
+    <div style="display: grid; gap: 24px;">
+
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 40px 40px 36px;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+          <div style="width: 66px; height: 26px; background: #156479; -webkit-mask: url('assets/graphics/circuit-branch.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-branch.svg') no-repeat left center / contain;"></div>
+          <h3 style="font-family: var(--font-display-alt); font-size: 24px; color: #131E5F; margin: 0;">Atomic Intel</h3>
+          <span style="font-family: var(--font-mono); font-size: 12px; color: #156479;">два способа войти</span>
+        </div>
+        <div style="position: relative; margin-top: 36px;">
+          <div class="mhide" style="position: absolute; top: 6px; left: 25%; right: 25%; height: 3px; background: rgba(19,30,95,0.25);"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #DA501C;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">роялти · малый бизнес</div>
+              <div style="font-size: 26px; color: #131E5F;">5–15 тыс ₽/мес</div>
+              <div style="font-size: 15px; color: #DA501C; margin-top: 4px;">+ 500–2 500 ₽ за лида</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 380px; text-wrap: pretty;">Фикс покрывает инфраструктуру — серверы, прокси, LLM. Дальше — оплата за доставленных лидов, по сегментам.</p>
+            </div>
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #131E5F;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">под ключ · большие задачи</div>
+              <div style="font-size: 26px; color: #131E5F;">150–600 тыс ₽ / проект</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 16px auto 0; max-width: 380px; text-wrap: pretty;">Обследование, настройка под вас, деплой на вашем сервере и обучение. Поддержка — 15–25% в год, по желанию.</p>
+            </div>
+          </div>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-top: 32px; padding-top: 16px; border-top: 1px dashed rgba(19,30,95,0.2);">для сравнения: холодный B2B-контакт на рынке — от ~700 ₽ · квалифицированный лид — 10–15 тыс ₽</div>
+      </div>
+
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 40px 40px 36px;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+          <div style="width: 66px; height: 30px; background: #156479; -webkit-mask: url('assets/graphics/circuit-run.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-run.svg') no-repeat left center / contain;"></div>
+          <h3 style="font-family: var(--font-display-alt); font-size: 24px; color: #131E5F; margin: 0;">Atomic Engage</h3>
+          <span style="font-family: var(--font-mono); font-size: 12px; color: #156479;">managed-инстанс · отдельный на каждого клиента</span>
+        </div>
+        <div style="position: relative; margin-top: 36px;">
+          <div class="mhide" style="position: absolute; top: 6px; left: 16.6%; right: 16.6%; height: 3px; background: rgba(19,30,95,0.25);"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px;">
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #131E5F;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">entry</div>
+              <div style="font-size: 26px; color: #131E5F;">5–8 тыс ₽/мес</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 300px; text-wrap: pretty;">Небольшие объёмы: первые касания и чтение каналов.</p>
+            </div>
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #DA501C;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">pro</div>
+              <div style="font-size: 26px; color: #131E5F;">12–20 тыс ₽/мес</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 300px; text-wrap: pretty;">Рабочий режим: выделенный инстанс, прокси-пул, сопровождение.</p>
+            </div>
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #131E5F;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">premium</div>
+              <div style="font-size: 26px; color: #131E5F;">25–40 тыс ₽/мес</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 300px; text-wrap: pretty;">Объёмные сценарии — обсуждаем по итогам пилота.</p>
+            </div>
+          </div>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-top: 32px; padding-top: 16px; border-top: 1px dashed rgba(19,30,95,0.2); line-height: 1.7;">для сравнения: массовые TG-сервисы — 1–5 тыс ₽/мес на общей инфраструктуре, без изоляции · здесь — отдельный инстанс и лимиты безопасности; при старте — разовая настройка<br>код открыт (MIT): можно развернуть самостоятельно — поможем с настройкой лимитов и прогрева под нишу</div>
+      </div>
+
+      <div data-reveal="" style="background: #FFFFFF; border: 1px solid rgba(19,30,95,0.16); padding: 40px 40px 36px;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+          <div style="width: 56px; height: 26px; background: #156479; -webkit-mask: url('assets/graphics/circuit-capsule.svg') no-repeat left center / contain; mask: url('assets/graphics/circuit-capsule.svg') no-repeat left center / contain;"></div>
+          <h3 style="font-family: var(--font-display-alt); font-size: 24px; color: #131E5F; margin: 0;">Atomic Vault</h3>
+          <span style="font-family: var(--font-mono); font-size: 12px; color: #156479;">структура открыта — оплачиваются внедрение и руки</span>
+        </div>
+        <div style="position: relative; margin-top: 36px;">
+          <div class="mhide" style="position: absolute; top: 6px; left: 16.6%; right: 16.6%; height: 3px; background: rgba(19,30,95,0.25);"></div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px;">
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #DA501C;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">внедрение</div>
+              <div style="font-size: 26px; color: #131E5F;">120–400 тыс ₽</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 300px; text-wrap: pretty;">Малый и средний проект: структура, наполнение, обучение команды.</p>
+            </div>
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #131E5F;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">консультация</div>
+              <div style="font-size: 26px; color: #131E5F;">10–15 тыс ₽/час</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 300px; text-wrap: pretty;">Разбор задачи, проектирование доменов знаний.</p>
+            </div>
+            <div style="position: relative; padding-top: 34px; text-align: center;">
+              <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 15px; height: 15px; border-radius: 50%; background: #131E5F;"></div>
+              <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-bottom: 8px;">сопровождение</div>
+              <div style="font-size: 26px; color: #131E5F;">5–30 тыс ₽/мес</div>
+              <p style="font-size: 13.5px; line-height: 1.5; color: #184153; margin: 12px auto 0; max-width: 300px; text-wrap: pretty;">Курирование и верификация базы: от лёгкого до активного.</p>
+            </div>
+          </div>
+        </div>
+        <div style="font-family: var(--font-mono); font-size: 12px; color: #156479; margin-top: 32px; padding-top: 16px; border-top: 1px dashed rgba(19,30,95,0.2);">для сравнения: внедрение корпоративной базы знаний у интеграторов — 50–500 тыс ₽</div>
+      </div>
+
+    </div>
+
+    <div style="margin-top: 40px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <span style="font-family: var(--font-mono); font-size: 13px; color: #184153;">оформление — как удобно: договор с самозанятым · фриланс-биржа · покупка API в TG-боте</span>
+      <a href="https://t.me/volk6022" class="tlink" style="font-family: var(--font-mono); font-size: 14px; color: #131E5F; text-decoration: none; border-bottom: 1px solid rgba(19,30,95,0.4); padding-bottom: 3px; transition: color .2s;" style-hover="color: #DA501C;">обсудить задачу →</a>
+    </div>
+  </section>
+
+  <!-- ══ PRINCIPLE ══ -->
+  <section data-reveal="" data-screen-label="Принцип" style="background: #94BEBE; padding: 88px 92px; position: relative; overflow: hidden;">
+    <div class="mhide" style="position: absolute; top: 210px; transform: translateY(-50%); width: 420px; height: 170px; background: rgba(19,30,95,0.9); -webkit-mask: url('assets/graphics/circuit-rail.svg') no-repeat center / contain; mask: url('assets/graphics/circuit-rail.svg') no-repeat center / contain; left: 746px"></div>
+    <div style="position: relative; max-width: 640px;">
+      <div style="font-family: var(--font-mono); font-size: 13px; color: #131E5F; letter-spacing: 0.08em; margin-bottom: 20px;">принцип</div>
+      <h2 style="font-size: 40px; line-height: 1.05; color: #131E5F; margin: 0 0 20px; text-wrap: balance;">Прозрачные технологии для роста бизнеса</h2>
+      <p style="font-size: 17px; line-height: 1.5; color: #131E5F; margin: 0; text-wrap: pretty;">Наши сервисы помогают находить клиентов, собирать данные и автоматизировать процессы без лишней технической сложности. Мы делаем технологии понятными: вы сохраняете контроль над процессами и понимаете, как система работает и за счёт чего приносит результат.</p>
+    </div>
+  </section>
+
+  <!-- ══ FOOTER / CONTACTS ══ -->
+  <footer id="contacts" data-screen-label="Контакты" style="background: #131E5F; padding: 88px 92px 56px; color: #F8F3E0;">
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 64px; align-items: start;">
+      <div>
+        <img src="assets/logo/atomic-lockup-cream.svg" alt="ATOMIC — автоматизация бизнеса" style="height: 96px; display: block; margin-bottom: 36px;">
+        <p style="font-size: 17px; line-height: 1.5; color: #94BEBE; margin: 0 0 32px; max-width: 420px; text-wrap: pretty;">Расскажите о задаче — предложим, какой инструмент её решит. Коротко и по делу.</p>
+        <a data-cta="" href="https://t.me/volk6022" style="display: inline-block; font-family: var(--font-mono); font-size: 14px; background: #DA501C; color: #F8F3E0; padding: 15px 28px; text-decoration: none; transition: background .25s;" style-hover="background: #94BEBE; color: #131E5F;">написать в telegram →</a>
+      </div>
+      <div style="display: grid; gap: 32px;">
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #94BEBE; letter-spacing: 0.08em; margin-bottom: 14px;">контакты</div>
+          <div style="display: grid; gap: 10px;">
+            <a href="https://t.me/volk6022" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">telegram · @volk6022</a>
+            <a href="mailto:volk6932@gmail.com" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">volk6932@gmail.com</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #94BEBE; letter-spacing: 0.08em; margin-bottom: 14px;">github</div>
+          <div style="display: grid; gap: 10px;">
+            <a href="https://github.com/volk6022/Atomic-Intel" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">volk6022/Atomic-Intel</a>
+            <a href="https://github.com/volk6022/Atomic-Engage" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">volk6022/Atomic-Engage</a>
+            <a href="https://github.com/volk6022/Atomic-Vault" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">volk6022/Atomic-Vault</a>
+          </div>
+        </div>
+        <div>
+          <div style="font-family: var(--font-mono); font-size: 12px; color: #94BEBE; letter-spacing: 0.08em; margin-bottom: 14px;">услуги на биржах</div>
+          <div style="display: flex; gap: 24px;">
+            <a href="#" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">kwork</a>
+            <a href="#" style="font-family: var(--font-mono); font-size: 13px; color: #F8F3E0; text-decoration: none; transition: color .2s;" style-hover="color: #DA501C;">fl.ru</a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top: 64px; padding-top: 24px; border-top: 1px solid rgba(148,190,190,0.3); display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 12px; color: #94BEBE;">
+      <span>ATOMIC · автоматизация бизнеса</span>
+      <span>интеллект · данные · системы</span>
+    </div>
+  </footer>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;motion&quot;: {&quot;editor&quot;: &quot;range&quot;, &quot;default&quot;: 1, &quot;min&quot;: 0, &quot;max&quot;: 2, &quot;step&quot;: 0.1, &quot;tsType&quot;: &quot;number&quot;, &quot;section&quot;: &quot;Граф&quot;}, &quot;signals&quot;: {&quot;editor&quot;: &quot;boolean&quot;, &quot;default&quot;: true, &quot;tsType&quot;: &quot;boolean&quot;, &quot;section&quot;: &quot;Граф&quot;}}">
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.svgRef = React.createRef();
+  }
+
+  renderVals() {
+    return { svgRef: this.svgRef };
+  }
+
+  componentDidMount() {
+    this.initReveal();
+    this.initGraph();
+  }
+
+  componentWillUnmount() {
+    if (this.raf) cancelAnimationFrame(this.raf);
+    if (this.observer) this.observer.disconnect();
+  }
+
+  initReveal() {
+    const els = document.querySelectorAll('[data-reveal]');
+    els.forEach((el) => {
+      el.style.opacity = '0';
+      el.style.transform = (el.style.transform ? el.style.transform + ' ' : '') + 'translateY(16px)';
+      el.style.transition = 'opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1)';
+    });
+    const show = (el) => {
+      el.style.opacity = '1';
+      el.style.transform = el.style.transform.replace(' translateY(16px)', '').replace('translateY(16px)', '');
+    };
+    this.ioFired = false;
+    this.observer = new IntersectionObserver((entries) => {
+      this.ioFired = true;
+      entries.forEach((e) => {
+        if (e.isIntersecting) {
+          show(e.target);
+          this.observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    els.forEach((el) => this.observer.observe(el));
+    const vh = window.innerHeight || 800;
+    els.forEach((el) => {
+      const r = el.getBoundingClientRect();
+      if (r.top < vh && r.bottom > 0) setTimeout(() => show(el), 80);
+    });
+    this.revealTimer = setTimeout(() => { if (!this.ioFired) els.forEach(show); }, 1500);
+  }
+
+  initGraph() {
+    const svg = this.svgRef.current;
+    if (!svg) return;
+    const NS = 'http://www.w3.org/2000/svg';
+    const mobile = (window.innerWidth || 1200) < 760;
+    const W = mobile ? 700 : 1200, H = mobile ? 760 : 620;
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+
+    const CREAM = '#F8F3E0', TEAL = '#94BEBE', EMBER = '#DA501C', NAVY = '#131E5F';
+
+    const mk = (tag, attrs, parent) => {
+      const el = document.createElementNS(NS, tag);
+      for (const k in attrs) el.setAttribute(k, attrs[k]);
+      parent.appendChild(el);
+      return el;
+    };
+
+    const defs = [
+      { id: 'atomic',   x: 600, y: 300, r: 52, fill: CREAM, label: 'ATOMIC', inside: true, href: null },
+      { id: 'intel',    x: 320, y: 200, r: 34, fill: TEAL,  label: 'Atomic Intel',  href: 'atomic-intel.dc.html' },
+      { id: 'engage',   x: 880, y: 190, r: 34, fill: TEAL,  label: 'Atomic Engage', href: 'atomic-engage.dc.html' },
+      { id: 'vault',    x: 640, y: 500, r: 34, fill: TEAL,  label: 'Atomic Vault',  href: 'atomic-vault.dc.html' },
+      { id: 'docs',     x: 950, y: 440, r: 24, fill: 'none', stroke: CREAM, label: 'Документация', href: 'docs.dc.html' },
+      { id: 'contacts', x: 300, y: 470, r: 24, fill: EMBER, label: 'Контакты', href: '#contacts' },
+      { id: 's1', x: 170, y: 110, r: 7, fill: TEAL, small: true, label: 'лидогенерация' },
+      { id: 's2', x: 120, y: 260, r: 7, fill: TEAL, small: true, label: 'парсинг · я.карты' },
+      { id: 's3', x: 320, y: 60,  r: 7, fill: TEAL, small: true, label: 'мониторинг площадок' },
+      { id: 's4', x: 470, y: 90,  r: 7, fill: TEAL, small: true, label: 'enrichment' },
+      { id: 's5', x: 1030, y: 90, r: 7, fill: TEAL, small: true, label: 'первые касания' },
+      { id: 's6', x: 760, y: 70,  r: 7, fill: TEAL, small: true, label: 'follow-up' },
+      { id: 's7', x: 1080, y: 250, r: 7, fill: TEAL, small: true, label: 'мониторинг каналов' },
+      { id: 's8', x: 520, y: 580, r: 7, fill: TEAL, small: true, label: 'локальные llm' },
+      { id: 's9', x: 800, y: 560, r: 7, fill: TEAL, small: true, label: 'база знаний' }
+    ];
+
+    const MOBILE_POS = { atomic: [350,350], intel: [160,190], engage: [540,190], vault: [350,580], docs: [585,480], contacts: [115,480], s1: [95,90], s2: [85,285], s3: [240,52], s4: [390,95], s5: [630,90], s6: [470,52], s7: [620,300], s8: [160,668], s9: [545,690] };
+    if (mobile) defs.forEach((d) => { d.x = MOBILE_POS[d.id][0]; d.y = MOBILE_POS[d.id][1]; });
+
+    const linkDefs = [
+      ['atomic', 'intel'], ['atomic', 'engage'], ['atomic', 'vault'],
+      ['atomic', 'docs'], ['atomic', 'contacts'],
+      ['intel', 'engage'], ['intel', 'vault'],
+      ['intel', 's1'], ['intel', 's2'], ['intel', 's3'], ['intel', 's4'],
+      ['engage', 's5'], ['engage', 's6'], ['engage', 's7'],
+      ['vault', 's8'], ['vault', 's9']
+    ];
+
+    const gLinks = mk('g', {}, svg);
+    const gSignals = mk('g', {}, svg);
+    const gNodes = mk('g', {}, svg);
+
+    const nodes = {};
+    defs.forEach((d) => {
+      nodes[d.id] = {
+        ...d, ax: d.x, ay: d.y, vx: 0, vy: 0,
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.5 + Math.random() * 0.5,
+        hover: false, scale: 1
+      };
+    });
+
+    const links = linkDefs.map(([a, b]) => {
+      const na = nodes[a], nb = nodes[b];
+      const rest = Math.hypot(na.ax - nb.ax, na.ay - nb.ay);
+      const line = mk('line', { stroke: TEAL, 'stroke-opacity': 0.3, 'stroke-width': 1.5 }, gLinks);
+      const main = !nodes[a].small && !nodes[b].small;
+      let dot = null;
+      if (main) dot = mk('circle', { r: 3.5, fill: EMBER }, gSignals);
+      return { a: na, b: nb, rest, line, dot, t: Math.random(), dir: 1 };
+    });
+
+    defs.forEach((d) => {
+      const n = nodes[d.id];
+      const g = mk('g', { style: 'touch-action: none; cursor:' + (d.href ? 'pointer' : 'grab') }, gNodes);
+      n.circle = mk('circle', {
+        r: d.r, fill: d.fill, stroke: d.stroke || (d.small ? 'none' : NAVY),
+        'stroke-width': d.stroke ? 1.5 : 0
+      }, g);
+      if (d.inside) {
+        const iw = 74, ih = iw * (90.225 / 527);
+        mk('image', {
+          href: 'assets/logo/atomic-wordmark-navy.svg',
+          x: -iw / 2, y: -ih / 2, width: iw, height: ih
+        }, g);
+      } else {
+        n.text = mk('text', {
+          'text-anchor': 'middle', y: d.r + (d.small ? 16 : 22),
+          fill: d.small ? TEAL : CREAM,
+          'font-family': d.small ? 'JetBrains Mono, monospace' : 'Architexture, sans-serif',
+          'font-size': d.small ? '11' : '15',
+          'fill-opacity': d.small ? 0.75 : 1
+        }, g);
+        n.text.textContent = d.label;
+      }
+      n.g = g;
+
+      g.addEventListener('pointerenter', () => { n.hover = true; });
+      g.addEventListener('pointerleave', () => { n.hover = false; });
+      g.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        this.drag = { n, moved: 0, px: e.clientX, py: e.clientY };
+        g.setPointerCapture(e.pointerId);
+      });
+      g.addEventListener('pointermove', (e) => {
+        if (!this.drag || this.drag.n !== n) return;
+        const pt = this.svgPoint(svg, e.clientX, e.clientY);
+        this.drag.moved += Math.abs(e.clientX - this.drag.px) + Math.abs(e.clientY - this.drag.py);
+        this.drag.px = e.clientX; this.drag.py = e.clientY;
+        n.x = pt.x; n.y = pt.y; n.vx = 0; n.vy = 0;
+        n.dragged = true;
+      });
+      g.addEventListener('pointerup', () => {
+        if (this.drag && this.drag.n === n) {
+          if (this.drag.moved < 6 && d.href) {
+            if (d.href.startsWith('#')) {
+              const target = document.querySelector(d.href);
+              if (target) window.scrollTo({ top: target.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+            } else {
+              window.location.href = d.href;
+            }
+          }
+          n.dragged = false;
+          this.drag = null;
+        }
+      });
+    });
+
+    let time = 0;
+    const step = () => {
+      const motion = (this.props.motion != null ? this.props.motion : 1);
+      const showSignals = (this.props.signals != null ? this.props.signals : true);
+      time += 0.016;
+
+      for (const id in nodes) {
+        const n = nodes[id];
+        if (n.dragged) continue;
+        // spring to anchor
+        n.vx += (n.ax - n.x) * 0.012;
+        n.vy += (n.ay - n.y) * 0.012;
+        // gentle float
+        n.vx += Math.cos(time * n.speed + n.phase) * 0.012 * motion;
+        n.vy += Math.sin(time * n.speed * 0.8 + n.phase) * 0.016 * motion;
+        n.vx *= 0.92; n.vy *= 0.92;
+        n.x += n.vx; n.y += n.vy;
+      }
+      // link springs
+      links.forEach((l) => {
+        const dx = l.b.x - l.a.x, dy = l.b.y - l.a.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        const f = (dist - l.rest) * 0.002;
+        const fx = (dx / dist) * f, fy = (dy / dist) * f;
+        if (!l.a.dragged) { l.a.vx += fx; l.a.vy += fy; }
+        if (!l.b.dragged) { l.b.vx -= fx; l.b.vy -= fy; }
+      });
+
+      links.forEach((l) => {
+        l.line.setAttribute('x1', l.a.x); l.line.setAttribute('y1', l.a.y);
+        l.line.setAttribute('x2', l.b.x); l.line.setAttribute('y2', l.b.y);
+        const hot = l.a.hover || l.b.hover;
+        l.line.setAttribute('stroke', hot ? EMBER : TEAL);
+        l.line.setAttribute('stroke-opacity', hot ? 0.85 : 0.3);
+        if (l.dot) {
+          if (showSignals) {
+            l.dot.setAttribute('display', '');
+            l.t += 0.0035 * motion;
+            if (l.t > 1) l.t -= 1;
+            l.dot.setAttribute('cx', l.a.x + (l.b.x - l.a.x) * l.t);
+            l.dot.setAttribute('cy', l.a.y + (l.b.y - l.a.y) * l.t);
+          } else {
+            l.dot.setAttribute('display', 'none');
+          }
+        }
+      });
+
+      for (const id in nodes) {
+        const n = nodes[id];
+        const target = n.hover ? 1.12 : 1;
+        n.scale += (target - n.scale) * 0.15;
+        n.g.setAttribute('transform', 'translate(' + n.x + ' ' + n.y + ') scale(' + n.scale + ')');
+        if (n.hover && !n.small) n.circle.setAttribute('stroke', EMBER);
+        else n.circle.setAttribute('stroke', n.stroke || (n.small ? 'none' : NAVY));
+      }
+
+      this.raf = requestAnimationFrame(step);
+    };
+    step();
+  }
+
+  svgPoint(svg, cx, cy) {
+    const pt = svg.createSVGPoint();
+    pt.x = cx; pt.y = cy;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+}
+</script>
+</body>
+</html>

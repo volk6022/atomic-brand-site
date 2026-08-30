@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">{{ title }} · {{ queueLabel }}</div>
+    <sc-if value="{{ hasTableView }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;border:1px solid rgba(19,30,95,0.24)">
+      <div style="padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace;background:#131E5F;color:#F8F3E0">Очередь</div>
+      <div onClick="{{ goTable }}" style="cursor:pointer;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">Таблица</div>
+    </div>
+    </sc-if>
+    <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ d.author }} ({{ d.pos }})</div>
+    <div style="flex:1"></div>
+    <button onClick="{{ prev }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 11px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">K ↑</button>
+    <button onClick="{{ next }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 11px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">J ↓</button>
+    <button onClick="{{ toggleHelp }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 11px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">? хоткеи</button>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#8A8F9E;margin-right:4px">Срез</div>
+    <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }}</div>
+    </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:minmax(320px,0.85fr) 1.15fr;gap:18px;align-items:start">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+      <div style="padding:10px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Исходное сообщение и контекст</div>
+      <div style="padding:14px">
+        <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Канал</div>
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ d.channel }}</div>
+        <div style="margin-top:10px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ d.addressLabel }}</div>
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ d.author }} <span style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ d.username }}</span></div>
+        <div style="margin-top:16px;border-top:1px solid rgba(19,30,95,0.12);padding-top:14px;display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ d.thread }}" as="t" hint-placeholder-count="4">
+            <div style="border-left:3px solid {{ t.mark }};padding-left:10px;background:{{ t.bg }}">
+              <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ t.meta }}</div>
+              <div style="font:400 13px/1.45 'JetBrains Mono',monospace;color:{{ t.fg }}">{{ t.text }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <button onClick="{{ openTelegram }}" style="margin-top:16px;border:1px solid rgba(19,30,95,0.24);background:transparent;padding:8px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;width:100%">{{ openLinkLabel }}</button>
+        <div style="margin-top:16px;border-top:1px solid rgba(19,30,95,0.12);padding-top:14px">
+          <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Боль</div>
+          <div style="font:400 13px/1.3 'JetBrains Mono',monospace;color:#131E5F">{{ d.pain }}</div>
+          <div style="margin-top:12px;display:flex;align-items:baseline;gap:8px">
+            <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Скор</div>
+            <div style="font:400 22px/1 'JetBrains Mono',monospace;color:#131E5F">{{ d.score }}</div>
+          </div>
+          <div style="margin-top:8px;display:flex;height:12px;width:100%">
+            <sc-for list="{{ d.parts }}" as="p" hint-placeholder-count="5">
+              <div onClick="{{ p.open }}" style="height:12px;width:{{ p.w }};background:{{ p.c }};cursor:pointer"></div>
+            </sc-for>
+          </div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:4px">
+            <sc-for list="{{ d.parts }}" as="p" hint-placeholder-count="5">
+              <div style="display:flex;justify-content:space-between;font:400 11px/1.4 'JetBrains Mono',monospace;color:#184153"><span>{{ p.label }}</span><span>{{ p.value }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+      <div style="padding:10px 14px;border-bottom:1px solid rgba(19,30,95,0.16);display:flex;align-items:center;gap:10px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479;flex:1">Вариант {{ variantNo }} из {{ variantCount }}</div>
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+          <div onClick="{{ t.pick }}" style="cursor:pointer;width:28px;height:28px;display:grid;place-items:center;background:{{ t.bg }};color:{{ t.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ t.n }}</div>
+        </sc-for>
+      </div>
+      <div style="padding:16px">
+        <div style="border:2px solid {{ variant.frame }};padding:14px;background:#F8F3E0">
+          <sc-if value="{{ editing }}" hint-placeholder-val="{{ false }}">
+            <textarea value="{{ editText }}" onChange="{{ setEditText }}" style="width:100%;height:110px;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:10px;font:400 14px/1.55 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+            <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+              <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E;flex:1">{{ editLen }}/300</div>
+              <button onClick="{{ saveEdit }}" style="border:0;background:#156479;color:#F8F3E0;padding:8px 12px;font:400 12px/1 'JetBrains Mono',monospace">Сохранить и одобрить</button>
+              <button onClick="{{ saveEditOnly }}" style="border:1px solid #C98A1E;background:transparent;padding:8px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#C98A1E">Сохранить с пометкой</button>
+              <button onClick="{{ cancelEdit }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:8px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Отмена</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{ notEditing }}" hint-placeholder-val="{{ true }}">
+            <div style="font:400 15px/1.6 'JetBrains Mono',monospace;color:#131E5F">{{ variant.text }}</div>
+          </sc-if>
+        </div>
+        <div style="margin-top:10px;display:flex;gap:16px;font:400 11px/1 'JetBrains Mono',monospace;color:#184153">
+          <span>Длина: {{ variant.len }}/300</span>
+          <span>Спам-скор: {{ variant.spam }}</span>
+          <span>Версия промпта: {{ variant.prompt }}</span>
+          <sc-if value="{{ variant.edited }}" hint-placeholder-val="{{ false }}">
+            <span style="color:#DA501C">отредактировано человеком</span>
+          </sc-if>
+        </div>
+        <div style="margin-top:16px;border-top:1px solid rgba(19,30,95,0.12);padding-top:12px">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Линтер политики</div>
+          <div style="margin-top:8px;display:flex;flex-direction:column;gap:5px">
+            <sc-for list="{{ variant.lint }}" as="l" hint-placeholder-count="5">
+              <div style="display:flex;gap:8px;font:400 12px/1.4 'JetBrains Mono',monospace;color:{{ l.c }}"><span>{{ l.mark }}</span><span>{{ l.text }}</span></div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="margin-top:14px;border-top:1px solid rgba(19,30,95,0.12);padding-top:12px">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Самокритика · {{ variant.critic }}</div>
+          <div style="margin-top:6px;font:400 13px/1.5 'Architexture',sans-serif;color:#184153">{{ variant.criticText }}</div>
+        </div>
+        <div onClick="{{ openTrace }}" style="margin-top:14px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">Показать LLM-трейс · L</div>
+
+        <sc-if value="{{ rejecting }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;border:1px solid #DA501C;padding:12px">
+            <div style="font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#DA501C">Причина отклонения · клавиши 1–9</div>
+            <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="9">
+                <div onClick="{{ r.pick }}" style="display:flex;gap:8px;padding:7px 9px;border:1px solid rgba(19,30,95,0.16);cursor:pointer;font:400 12px/1.2 'JetBrains Mono',monospace;color:#184153" style-hover="background:#FBEEE8">
+                  <span style="color:#DA501C">{{ r.n }}</span><span>{{ r.label }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <div style="margin-top:18px;display:flex;gap:10px">
+          <button onClick="{{ approve }}" style="flex:1;border:0;background:#156479;color:#F8F3E0;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#131E5F">A · Одобрить</button>
+          <button onClick="{{ startEdit }}" style="flex:1;border:1px solid #131E5F;background:transparent;color:#131E5F;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#EDF4F3">E · Редактировать</button>
+          <button onClick="{{ startReject }}" style="flex:1;border:1px solid #DA501C;background:transparent;color:#DA501C;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#FBEEE8">R · Отклонить</button>
+        </div>
+      </div>
+      <div style="border-top:1px solid rgba(19,30,95,0.16);padding:12px 16px;display:flex;gap:12px">
+        <sc-for list="{{ collapsed }}" as="cv" hint-placeholder-count="2">
+          <div onClick="{{ cv.pick }}" style="flex:1;border:1px solid rgba(19,30,95,0.16);padding:10px;cursor:pointer;background:#F8F3E0" style-hover="background:#EDF4F3">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">Вариант {{ cv.n }} из {{ variantCount }}</div>
+            <div style="margin-top:6px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ cv.preview }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;height:100%">
+  <div style="padding:14px">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ queueLabel }}</div>
+    <div style="margin-top:10px;font:400 15px/1.2 'Architexture',sans-serif;color:#131E5F">{{ d.channel }}</div>
+    <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#156479">{{ d.author }} {{ d.username }}</div>
+    <div onClick="{{ toggleContext }}" style="margin-top:12px;border:1px solid rgba(19,30,95,0.24);padding:12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;display:flex;justify-content:space-between;cursor:pointer"><span>Контекст ветки</span><span>{{ contextArrow }}</span></div>
+    <sc-if value="{{ contextOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="border:1px solid rgba(19,30,95,0.16);border-top:0;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff">
+        <sc-for list="{{ d.thread }}" as="t" hint-placeholder-count="4">
+          <div style="border-left:3px solid {{ t.mark }};padding-left:10px">
+            <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ t.meta }}</div>
+            <div style="font:400 12px/1.45 'JetBrains Mono',monospace;color:{{ t.fg }}">{{ t.text }}</div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <div style="margin-top:12px;display:flex;gap:12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">
+      <span>Боль: {{ d.pain }}</span><span>Скор: {{ d.score }}</span>
+    </div>
+    <div style="margin-top:14px;display:flex;gap:8px;align-items:center">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Вариант</div>
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+        <div onClick="{{ t.pick }}" style="width:44px;height:44px;display:grid;place-items:center;background:{{ t.bg }};color:{{ t.fg }};font:400 13px/1 'JetBrains Mono',monospace">{{ t.n }}</div>
+      </sc-for>
+    </div>
+    <div style="margin-top:10px;border:2px solid {{ variant.frame }};background:#fff;padding:12px;font:400 14px/1.55 'JetBrains Mono',monospace;color:#131E5F">{{ variant.text }}</div>
+    <div style="margin-top:8px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#184153">{{ variant.len }}/300 · спам {{ variant.spam }}<br>Линтер: {{ variant.lintSummary }}<br>Самокритика: {{ variant.critic }}</div>
+    <sc-if value="{{ rejecting }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:12px;border:1px solid #DA501C;padding:10px;display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="9">
+          <div onClick="{{ r.pick }}" style="padding:12px 10px;border:1px solid rgba(19,30,95,0.16);font:400 13px/1 'JetBrains Mono',monospace;color:#184153">{{ r.n }} · {{ r.label }}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+  <div style="padding:10px 14px;border-top:1px solid rgba(19,30,95,0.16);background:#F8F3E0">
+    <button onClick="{{ approve }}" style="width:100%;border:0;background:#156479;color:#F8F3E0;padding:16px;font:400 15px/1 'Architexture',sans-serif">Одобрить</button>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <button onClick="{{ startEdit }}" style="flex:1;border:1px solid #131E5F;background:transparent;color:#131E5F;padding:14px;font:400 14px/1 'Architexture',sans-serif">Править</button>
+      <button onClick="{{ startReject }}" style="flex:1;border:1px solid #DA501C;background:transparent;color:#DA501C;padding:14px;font:400 14px/1 'Architexture',sans-serif">Отклонить</button>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ help }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ toggleHelp }}" style="position:fixed;inset:0;background:rgba(19,30,95,0.5);z-index:80;display:grid;place-items:center;padding:24px">
+    <div style="width:min(520px,96vw);background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:20px">
+      <div style="font:400 19px/1.2 'Architexture',sans-serif;color:#131E5F">Горячие клавиши · Drafts</div>
+      <div style="margin-top:14px;display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ hotkeys }}" as="h" hint-placeholder-count="10">
+          <div style="display:grid;grid-template-columns:100px 1fr;gap:12px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153"><span style="color:#DA501C">{{ h.k }}</span><span>{{ h.d }}</span></div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:760},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;workflowTitle&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = {
+    draft:null, remaining:0, reasons:null, loading:true, error:null, busy:false,
+    variant:0, rejecting:false, editing:false, editText:'', help:false, contextOpen:false,
+    // Срез очереди. По умолчанию неразобранные — ради них экран и существует,
+    // но одобренные надо иметь возможность перечитать, не идя в базу.
+    filter:'pending'
+  };
+
+  // Курсорная очередь: сервер отдаёт «следующий после указанного id», предыдущего у
+  // него нет. Поэтому историю просмотренных ведём здесь — K возвращает по ней назад.
+  _seen = [];
+
+  // Очередь личных сообщений и очередь публичных ответов — один экран. Пустой
+  // `workflow` оставляет прежнее поведение дословно: те же ручки, те же ответы.
+  //
+  // Ручки сценария намеренно повторяют форму старых до ключа — и конверт курсора,
+  // и `thread`, и имена полей варианта. Иначе экрану пришлось бы знать, из какого
+  // он контура, в каждом втором месте, а знать он должен ровно в одном: здесь.
+  wf(){ return this.props.workflow || ''; }
+
+  base(){ return this.wf() ? '/workflows/' + this.wf() : ''; }
+
+  // Цвета слагаемых скора считаются здесь: сервер отдаёт только label и value.
+  // Палитра не должна ездить по сети, иначе смена темы становится миграцией.
+  PART_COLORS = ['#131E5F', '#156479', '#94BEBE', '#C98A1E', '#DA501C'];
+
+  // Запасной справочник причин на случай, если запрос за ним не прошёл. Источник
+  // правды — сервер: отклонение он всё равно валидирует по своему списку.
+  FALLBACK_REASONS = [
+    {n:1, label:'Не та боль'},{n:2, label:'Не тот человек'},{n:3, label:'Звучит как реклама'},
+    {n:4, label:'Слишком длинно'},{n:5, label:'Фактическая ошибка'},{n:6, label:'Неверный тон'},
+    {n:7, label:'Дублирует отправленное'},{n:8, label:'Ссылка в первом сообщении'},{n:9, label:'Другое'}
+  ];
+
+  async componentDidMount(){
+    // Клавиши читаются по e.code — это физическая клавиша, а не символ. При
+    // русской раскладке e.key даёт «о» вместо J и «ф» вместо A, и все хоткеи
+    // молча переставали работать. Сопоставлять кириллицу вручную бессмысленно:
+    // раскладок больше двух, а физическая клавиша одна.
+    this._key = (e)=>{
+      const t = e.target && e.target.tagName;
+      if(t === 'INPUT' || t === 'TEXTAREA') return;
+      if(e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const code = e.code;
+      const digit = /^(?:Digit|Numpad)([1-9])$/.exec(code);
+      const reasons = this.state.reasons || this.FALLBACK_REASONS;
+
+      if(this.state.rejecting && digit){
+        const r = reasons[+digit[1] - 1];
+        if(r) this.reject(r);
+        return;
+      }
+      if(code === 'KeyJ') this.next();
+      else if(code === 'KeyK') this.prev();
+      else if(digit && +digit[1] <= 3) this.pickVariant(+digit[1] - 1);
+      else if(code === 'KeyA') this.approve();
+      else if(code === 'KeyE') this.startEdit();
+      else if(code === 'KeyR') this.setState({rejecting:true});
+      else if(code === 'KeyL') this.openTrace();
+      else if(code === 'KeyG') this.openTelegram();
+      // «?» — Shift+/ в латинице и Shift+7 в кириллице, поэтому смотрим и символ.
+      else if(e.key === '?' || (e.shiftKey && code === 'Slash')) this.setState({help:true});
+      else if(code === 'Escape') this.setState({help:false, rejecting:false, editing:false});
+    };
+    window.addEventListener('keydown', this._key);
+
+    try {
+      const { get } = await import('./radar-api.js');
+      const focus = this.props.focusDraft;
+      this._appliedFocus = focus || 0;
+      const [reasons, queue] = await Promise.all([
+        // Справочник причин не критичен: если он не приехал, работает запасной
+        // список, а отклонение сервер всё равно валидирует по своему.
+        // Справочник причин один на все сценарии и лежит по общему адресу: вторая
+        // копия начала бы расходиться, а причина отказа уже проставлена у
+        // разобранных черновиков обоих контуров.
+        get('/drafts/reasons').catch(()=>null),
+        // Переход из полной таблицы открывает конкретный черновик, в том числе
+        // уже разобранный: иначе по строке таблицы просто некуда нажать.
+        focus ? get(this.base() + '/drafts/' + focus)
+              : get(this.base() + '/drafts/next', {state:this.state.filter})
+      ]);
+      this.setState({reasons:reasons || this.FALLBACK_REASONS, draft:queue.draft,
+                     remaining:queue.remaining, loading:false});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  componentDidUpdate(prev){
+    // Смена блока в сайдбаре не пересоздаёт экран: место в разметке одно и то же,
+    // меняется только пропс. Курсор и история просмотренных при этом обязаны
+    // обнулиться — id из чужой очереди в `after` вернул бы не тот черновик.
+    if((prev.workflow || '') !== this.wf()){
+      this._seen = [];
+      this._appliedFocus = this.props.focusDraft || 0;
+      this.setState({draft:null, remaining:0, variant:0, rejecting:false,
+                     editing:false, loading:true, error:null},
+                    ()=>this.load(null));
+      return;
+    }
+
+    // Клик по строке в таблице черновиков ведёт на этот экран с новым id.
+    //
+    // Сравнивать с prevProps нельзя: параметр перехода живёт в оболочке и приходит
+    // одинаковым при каждом обновлении, поэтому «изменился ли он» определяется по
+    // тому, применяли ли мы его сами. Иначе экран переоткрывал тот же черновик
+    // после каждого setState — и J/K переставали двигать очередь, откатывая её
+    // на исходный черновик мгновенно после перехода.
+    const focus = this.props.focusDraft;
+    if(focus && focus !== this._appliedFocus){
+      this._appliedFocus = focus;
+      this.openById(focus);
+    }
+  }
+
+  async openById(id){
+    try {
+      const { get } = await import('./radar-api.js');
+      const r = await get(this.base() + '/drafts/' + id);
+      this._seen = [];
+      this.setState({draft:r.draft, remaining:r.remaining, variant:0,
+                     rejecting:false, editing:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.t(describe(e), '#DA501C');
+    }
+  }
+  componentWillUnmount(){ window.removeEventListener('keydown', this._key); }
+
+  t(text, c){ const api = this.props.api || {}; if(api.toast) api.toast(text, c); }
+
+  // ── очередь ────────────────────────────────────────────────────────────────
+
+  async load(after){
+    try {
+      const { get } = await import('./radar-api.js');
+      const params = {state:this.state.filter};
+      if(after != null) params.after = after;
+      const q = await get(this.base() + '/drafts/next', params);
+      this.setState({draft:q.draft, remaining:q.remaining, variant:0,
+                     rejecting:false, editing:false, busy:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), busy:false});
+      this.t(describe(e), '#DA501C');
+    }
+  }
+
+  setFilter(f){
+    this._seen = [];
+    this.setState({filter:f, loading:true}, ()=>this.load(null));
+  }
+
+  next(){
+    const d = this.state.draft;
+    if(!d) return;
+    this._seen.push(d.id);
+    this.load(d.id);
+  }
+
+  prev(){
+    // Предыдущего в курсорном API нет, поэтому шаг назад делаем по своей истории:
+    // берём id перед предыдущим и просим «следующий после» него.
+    if(this._seen.length === 0){ this.t('Это первый черновик в очереди', '#156479'); return; }
+    this._seen.pop();
+    const before = this._seen.length ? this._seen[this._seen.length - 1] : null;
+    this.load(before);
+  }
+
+  pickVariant(i){
+    const d = this.state.draft;
+    if(!d || i >= d.variants.length) return;
+    this.setState({variant:i, rejecting:false, editing:false});
+  }
+
+  // ── решения ────────────────────────────────────────────────────────────────
+
+  // После одобрения показываем вердикт гейта, а не «отправлено». В сухом прогоне
+  // отправки не происходит, и экран обязан говорить об этом прямо: молчаливое
+  // «одобрено» оператор прочитает как «ушло человеку».
+  verdictText(send){
+    if(!send) return '';
+    return send.allowed ? ' · отправка разрешена' : ' · не отправлено (' + (send.reasons || []).join('; ') + ')';
+  }
+
+  async decide(path, body, ok, color){
+    const d = this.state.draft;
+    if(!d || this.state.busy) return;
+    this.setState({busy:true});
+    try {
+      const { post } = await import('./radar-api.js');
+      const res = await post(this.base() + '/drafts/' + d.id + path, body);
+      this.t(ok(res), color);
+      this._seen.push(d.id);
+      await this.load(d.id);
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({busy:false});
+      this.t(describe(e), '#DA501C');
+    }
+  }
+
+  approve(){
+    const d = this.state.draft;
+    if(!d) return;
+    this.decide('/approve', {variant_index:this.state.variant},
+      (r)=>'Одобрен вариант ' + (r.variant_index + 1) + this.verdictText(r.send), '#2E7D57');
+  }
+
+  startEdit(){
+    const d = this.state.draft;
+    if(!d) return;
+    this.setState({editing:true, rejecting:false, editText:d.variants[this.state.variant].text});
+  }
+
+  saveEdit(){
+    const text = this.state.editText.trim();
+    if(!text){ this.t('Пустой текст отправить нельзя', '#DA501C'); return; }
+    this.decide('/approve', {variant_index:this.state.variant, text},
+      (r)=>'Правка сохранена как обучающий пример · одобрено' + this.verdictText(r.send), '#2E7D57');
+  }
+
+  // Сохранить правку, НЕ принимая решения. Отдельное действие, потому что
+  // «поправил, ещё думаю» — нормальное состояние работы, и заставлять человека
+  // одобрять только чтобы не потерять текст значит подталкивать его к решению.
+  async saveEditOnly(){
+    const d = this.state.draft;
+    const text = this.state.editText.trim();
+    if(!d || this.state.busy) return;
+    if(!text){ this.t('Пустой текст сохранить нельзя', '#DA501C'); return; }
+
+    this.setState({busy:true});
+    try {
+      const { post } = await import('./radar-api.js');
+      await post(this.base() + '/drafts/' + d.id + '/edit',
+                 {variant_index:this.state.variant, text});
+      // Перечитываем черновик, чтобы на экране была именно сохранённая правка,
+      // а не то, что осталось в поле ввода.
+      await this.openById(d.id);
+      this.setState({busy:false, editing:false});
+      this.t('Правка сохранена с пометкой о ручном редактировании · решение не принято',
+             '#C98A1E');
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({busy:false});
+      this.t(describe(e), '#DA501C');
+    }
+  }
+
+  reject(reason){
+    this.setState({rejecting:false});
+    this.decide('/reject', {reason_n:reason.n},
+      (r)=>'Отклонено: ' + r.reason + ' · записано в eval-датасет', '#DA501C');
+  }
+
+  openTelegram(){
+    const d = this.state.draft;
+    if(!d) return;
+    // Ссылка теперь настоящая — приходит с черновиком, а не подставляется тостом.
+    if(d.source_message_link) window.open(d.source_message_link, '_blank', 'noopener');
+    else this.t('У черновика нет ссылки на исходное сообщение', '#C98A1E');
+  }
+
+  openTrace(){
+    const api = this.props.api || {};
+    const d = this.state.draft;
+    if(!api.trace || !d) return;
+    const v = d.variants[this.state.variant];
+    api.trace({
+      title:'LLM-трейс · генерация', subtitle:'draft_' + d.id + '_v' + (this.state.variant + 1),
+      rows:[{k:'Тип вызова', v:'генерация'},{k:'Версия промпта', v:v.prompt_version}],
+      json:JSON.stringify({call:'draft.generate', draft_id:d.id, model:'qwen3.5-9b-q5',
+        prompt_version:v.prompt_version, spam_score:v.spam_score, lint_ok:v.lint_ok}, null, 2),
+      llm:{
+        prompt:'Ты пишешь короткое нативное сообщение человеку, который в открытом чате проговорил проблему. Не рекламируй, не обещай, не давай ссылок в первом сообщении.',
+        response:v.text, model:'qwen3.5-9b-q5', temp:'0.7', tokens:'—', latency:'—',
+        cost:'—', version:v.prompt_version
+      }
+    });
+  }
+
+  // ── подготовка к отрисовке ────────────────────────────────────────────────
+
+  spamLabel(score){
+    const s = Number(score);
+    const word = s < 0.3 ? 'низкий' : (s < 0.6 ? 'средний' : 'высокий');
+    return s.toFixed(2) + ' (' + word + ')';
+  }
+
+  // Пустой каркас: экран рисует один черновик, и без него шаблону нечего показать.
+  // Причина (загрузка / ошибка / очередь разобрана) уходит в заголовок и в поле
+  // варианта, чтобы пустой экран не выглядел сломанным.
+  blank(message){
+    return {
+      d:{author:'—', username:'', channel:'—', pain:'—', score:'—', pos:message,
+         addressLabel:'—', thread:[], parts:[]},
+      variant:{text:message, len:'0', spam:'—', prompt:'—', frame:'rgba(19,30,95,0.16)',
+               edited:false, critic:'—', criticText:'', lintSummary:'—', lint:[]},
+      variantNo:'—', variantCount:'—', tabs:[], collapsed:[]
+    };
+  }
+
+  renderVals(){
+    const S = this.state, api = this.props.api || {};
+    const reasons = S.reasons || this.FALLBACK_REASONS;
+
+    // Адресация решает две подписи сразу: чем назван блок слева и куда ведёт
+    // кнопка. У цели-человека это автор и его личка, у публичной — сообщение в
+    // треде и ветка обсуждения. Форму считает сервер, экран показывает как есть.
+    const addressing = (S.draft && S.draft.addressing) || null;
+    const toThread = !!addressing && addressing.kind === 'message';
+
+    const shell = {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      // Общая очередь остаётся «Drafts»: переименовывать существующий раздел
+      // заодно с этой работой незачем.
+      title: this.wf()
+        ? 'Черновики · ' + (this.props.workflowTitle || this.wf())
+        : 'Drafts',
+      openLinkLabel: toThread ? 'Открыть ветку · G' : 'Открыть в Telegram · G',
+      // Переход в табличный вид того же раздела. Живёт именно в `shell`, потому что
+      // обе ветки ниже его расстилают: когда очередь пуста, переключатель нужен
+      // ровно так же — а из ветки «очередь разобрана» он бы иначе выпал и кнопка
+      // в шапке перестала бы нажиматься.
+      //
+      // У сценария переключателя нет, и это не забывчивость. Экран `draftsTable`
+      // про сценарии не знает: он читает общую таблицу черновиков и показал бы
+      // числа, не относящиеся к тому конвейеру, из которого на него нажали. Кнопка,
+      // молча уводящая в чужие данные, хуже отсутствующей — по той же причине, по
+      // которой в блок сценария не попали разделы без ручек. Появится табличный
+      // вид, знающий сценарий, — переключатель вернётся сам.
+      hasTableView: !this.wf(),
+      goTable:()=>api.go && api.go('draftsTable'),
+      editing:S.editing, notEditing: !S.editing, editText:S.editText,
+      editLen:String(S.editText.length),
+      setEditText:(e)=>this.setState({editText:e.target.value}),
+      saveEdit:()=>this.saveEdit(),
+      saveEditOnly:()=>this.saveEditOnly(),
+      cancelEdit:()=>this.setState({editing:false}),
+      filters:[{k:'pending', label:'На ревью'}, {k:'approved', label:'Одобренные'},
+               {k:'rejected', label:'Отклонённые'}, {k:'all', label:'Все'}]
+        .map(f=>({label:f.label,
+                  bg: S.filter === f.k ? '#131E5F' : 'transparent',
+                  fg: S.filter === f.k ? '#F8F3E0' : '#156479',
+                  pick:()=>this.setFilter(f.k)})),
+      startEdit:()=>this.startEdit(), approve:()=>this.approve(),
+      startReject:()=>this.setState({rejecting: !S.rejecting}), rejecting:S.rejecting,
+      reasons:reasons.map(r=>({n:String(r.n), label:r.label, pick:()=>this.reject(r)})),
+      next:()=>this.next(), prev:()=>this.prev(),
+      openTrace:()=>this.openTrace(), openTelegram:()=>this.openTelegram(),
+      help:S.help, toggleHelp:()=>this.setState({help: !S.help}),
+      contextOpen:S.contextOpen, contextArrow:S.contextOpen ? '▴' : '▾',
+      toggleContext:()=>this.setState({contextOpen: !S.contextOpen}),
+      hotkeys:[
+        {k:'J / K', d:'следующий / предыдущий лид'},{k:'1 2 3', d:'переключить вариант'},
+        {k:'A', d:'одобрить активный вариант'},{k:'E', d:'редактировать вариант'},
+        {k:'R', d:'выбор причины отклонения'},{k:'1…9 после R', d:'типизированная причина'},
+        {k:'G', d:'открыть ветку в Telegram'},{k:'L', d:'показать LLM-трейс'},
+        {k:'Esc', d:'закрыть панель'},{k:'⌘/Ctrl+K', d:'командная палитра'},
+        {k:'раскладка', d:'клавиши работают и в русской раскладке'}
+      ]
+    };
+
+    if(!S.draft){
+      const why = S.loading ? 'загрузка…' : (S.error || 'очередь разобрана');
+      return {...shell, queueLabel:why, ...this.blank(why)};
+    }
+
+    const d = S.draft;
+    const idx = Math.min(S.variant, d.variants.length - 1);
+    const raw = d.variants[idx];
+    // Если человек уже правил текст, показываем его правку, а не генерацию:
+    // иначе после «сохранить» на экране снова появится исходный вариант, и
+    // правка будет выглядеть потерянной.
+    const edited = !!d.final_text && d.chosen_variant === idx;
+    const shownText = edited ? d.final_text : raw.text;
+    const decided = d.state && d.state !== 'pending';
+    // Каждая строка проверки обязана что-то проверять. Две из пяти были
+    // прибиты к `bad:false` — то есть всегда горели зелёным независимо от текста,
+    // а одна вдобавок ссылалась на «настройку профиля», которой не существует.
+    // Зелёная галочка на экране, где человек решает, отправлять ли сообщение
+    // живому человеку, обязана означать пройденную проверку, а не украшение.
+    const emoji = (raw.text.match(/\p{Extended_Pictographic}/gu) || []).length;
+    const lint = [
+      {text:'нет ссылок в первом сообщении', bad:/https?:\/\/|t\.me\/|www\./i.test(raw.text)},
+      {text:'без капса', bad:/[А-ЯA-Z]{4,}/.test(raw.text)},
+      {text:'без эмодзи-спама', bad: emoji >= 3},
+      {text:'без обещаний', bad: !raw.lint_ok},
+      // Тексты пишутся на «ты» по требованию заказчика: сообщение должно читаться
+      // как рекомендация знакомого. Ищем формальные обороты, а не верим на слово.
+      // Границы слова заданы явно, а не через \b: в JS \b работает только по
+      // латинице, и с ним «Если Вы ещё ищете» проходило проверку, а «выбрал» —
+      // наоборот, ловилось бы как «вы».
+      {text:'обращение на «ты»',
+       bad:/(^|[^а-яёa-z])(вы|вас|вам|вами|ваш(а|е|и|у|его|ему|ей|им|ими|ем)?)(?![а-яёa-z])/i
+             .test(raw.text)}
+    ];
+
+    return {
+      ...shell,
+      queueLabel: decided
+        ? (d.state === 'approved' ? 'одобрен' : 'отклонён: ' + (d.reject_reason || '—'))
+          + (d.decided_by ? ' · ' + d.decided_by : '')
+        : S.remaining + ' в очереди',
+      d:{
+        // У публичной цели автора может не быть вовсе (пост анонимного админа
+        // комментировать можно), поэтому в блоке стоит адресация, а не автор.
+        author: addressing ? addressing.value : d.author_name,
+        username:d.author_username, channel:d.channel,
+        addressLabel: addressing ? addressing.label : 'Автор',
+        pain:d.pain, score:String(d.score), pos:'осталось ' + S.remaining,
+        thread:(d.thread || []).map(t=>({
+          meta:t.meta, text:t.text,
+          mark:t.target ? '#DA501C' : 'rgba(19,30,95,0.16)',
+          bg:t.target ? '#F8F3E0' : 'transparent',
+          fg:t.target ? '#131E5F' : '#184153'
+        })),
+        parts:(d.score_breakdown || []).map((p, i)=>({
+          label:p.label, value:String(p.value), w:p.value + '%',
+          c:this.PART_COLORS[i % this.PART_COLORS.length],
+          open:()=>this.t(p.label + ': ' + p.value + ' баллов из 100', '#156479')
+        }))
+      },
+      variantNo:String(idx + 1), variantCount:String(d.variants.length),
+      tabs:d.variants.map((v, i)=>({
+        n:String(i + 1),
+        bg: i === idx ? '#131E5F' : 'transparent',
+        fg: i === idx ? '#F8F3E0' : '#156479',
+        pick:()=>this.pickVariant(i)
+      })),
+      collapsed:d.variants.map((v, i)=>({v, i})).filter(x=>x.i !== idx).map(x=>({
+        n:String(x.i + 1), preview:x.v.text.slice(0, 64) + '…',
+        pick:()=>this.pickVariant(x.i)
+      })),
+      variant:{
+        text:shownText, len:String(shownText.length),
+        spam:this.spamLabel(raw.spam_score), prompt:raw.prompt_version,
+        frame: raw.lint_ok ? 'rgba(19,30,95,0.16)' : '#DA501C',
+        edited:edited,
+        // Три состояния, а не два. Критик пока не запускается ни в одном контуре
+        // (`critic_passed` приходит null), и до этой правки экран показывал крест —
+        // то есть заявлял провал проверки, которой не было. Красный крест там, где
+        // человек решает, отправлять ли сообщение живому человеку, обязан означать
+        // непройденную проверку, а не отсутствующую.
+        critic: raw.critic_passed === true ? '✓ пройдено'
+              : (raw.critic_passed === false ? '✗ не пройдено' : '— не запускался'),
+        criticText:raw.critic_text,
+        lintSummary: raw.lint_ok ? '✓ всё пройдено' : '✗ не прошло линтер',
+        lint:lint.map(l=>({text:l.text, mark: l.bad ? '✗' : '✓', c: l.bad ? '#DA501C' : '#2E7D57'}))
+      }
+    };
+  }
+}
+</script>
+</body>
+</html>

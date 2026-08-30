@@ -1,0 +1,20 @@
+/* ATOMIC typography tokens.
+   Architexture — заголовки и основной массив текста.
+   JetBrains Mono — код, технические подписи, вставки в документации.
+   Размеры из Figma: 48 / 40 / 32 / 15. */
+:root {
+  --font-display: "Architexture", -apple-system, "Segoe UI", sans-serif;
+  --font-display-alt: "Unifix", "Architexture", -apple-system, "Segoe UI", sans-serif; /* заголовки — вариант */
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+  --text-h1: 48px;
+  --text-h2: 40px;
+  --text-lead: 32px;
+  --text-caption: 26px;
+
+  --leading-tight: 1.0;   /* line-height 100% — фирменная плотность */
+  --leading-body: 1.35;
+}
+
+a { color: var(--atomic-sea, #156479); text-decoration-color: rgba(21,100,121,0.4); }
+a:hover { color: var(--atomic-ember, #DA501C); }

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">{{ title }}</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+    <button onClick="{{ exportCsv }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Экспорт страницы</button>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ statusChips }}" as="s" hint-placeholder-count="5">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ s.label }} {{ s.count }}</div>
+    </sc-for>
+    <div style="width:8px"></div>
+    <select value="{{ channel }}" onChange="{{ setChannel }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ channels }}" as="c" hint-placeholder-count="5">
+        <option value="{{ c.value }}">{{ c.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ pain }}" onChange="{{ setPain }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ pains }}" as="p" hint-placeholder-count="4">
+        <option value="{{ p.value }}">{{ p.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ minScore }}" onChange="{{ setMinScore }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ scores }}" as="s" hint-placeholder-count="4">
+        <option value="{{ s.value }}">{{ s.label }}</option>
+      </sc-for>
+    </select>
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="автор, цитата, боль" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+    <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+  </div>
+
+  <sc-if value="{{ hasSelection }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:10px 12px">
+      <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F">{{ selectionLabel }}</div>
+      <div onClick="{{ selectMatching }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479;text-decoration:underline">{{ selectMatchingLabel }}</div>
+      <div style="flex:1"></div>
+      <select value="{{ bulkReason }}" onChange="{{ setBulkReason }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="9">
+          <option value="{{ r.value }}">{{ r.label }}</option>
+        </sc-for>
+      </select>
+      <button onClick="{{ bulkReject }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:7px 14px;font:400 12px/1 'JetBrains Mono',monospace">Отклонить</button>
+      <div onClick="{{ clearSelection }}" style="cursor:pointer;padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">Снять выделение</div>
+    </div>
+  </sc-if>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <th onClick="{{ toggleAll }}" style="padding:8px 12px;width:34px;cursor:pointer;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24)">{{ allMark }}</th>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="5">
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="l" hint-placeholder-count="6">
+          <tr style-hover="background:#EDF4F3">
+            <td onClick="{{ l.toggle }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ l.mark }}</td>
+            <td onClick="{{ l.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ l.author }}</div>
+              <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#8A8F9E">{{ l.username }}</div>
+            </td>
+            <td onClick="{{ l.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">{{ l.channel }}</td>
+            <td onClick="{{ l.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">{{ l.pain }}</td>
+            <td onClick="{{ l.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer;font:400 15px/1 'JetBrains Mono',monospace;color:#131E5F;width:70px">{{ l.score }}</td>
+            <td onClick="{{ l.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer;width:130px"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ l.c }};border:1px solid {{ l.c }};padding:4px 7px">{{ l.status }}</span></td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ rows }}" as="l" hint-placeholder-count="6">
+    <div onClick="{{ l.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ l.author }}</div>
+        <div style="font:400 15px/1 'JetBrains Mono',monospace;color:#131E5F">{{ l.score }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ l.pain }} · {{ l.channel }}</div>
+      <div style="margin-top:8px;font:400 11px/1 'JetBrains Mono',monospace;color:{{ l.c }};border:1px solid {{ l.c }};padding:4px 7px;display:inline-block">{{ l.status }}</div>
+    </div>
+  </sc-for>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 2px">
+    <div onClick="{{ prev }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">← назад</div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div onClick="{{ next }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">вперёд →</div>
+  </div>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;workflowTitle&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, states:[], loading:true, error:null,
+            channels:[], pains:[], reasons:[], reasonN:1,
+            // Как подписана колонка адресации и какого вида цели в этом сценарии.
+            // Приходит с сервера: «Кому» против «Под каким сообщением» — следствие
+            // оси `target_kind`, то есть свойство сценария, а не оформление.
+            addressLabel:'Автор', targetKind:'user',
+            // Выбранные строки и отдельный флаг «выбрано всё под фильтром».
+            // Это разные вещи: во втором случае действие уйдёт на сервер срезом,
+            // а не перечислением, и затронет в том числе строки с других страниц.
+            picked:{}, allMatching:false };
+
+  // Экран лидов и экран целей сценария — один экран. Цель есть обобщение лида:
+  // у лида адресат всегда человек, у цели — либо человек, либо сообщение в треде.
+  // Пустой `workflow` оставляет прежнее поведение дословно.
+  wf(){ return this.props.workflow || ''; }
+
+  endpoint(){ return this.wf() ? '/workflows/' + this.wf() + '/targets' : '/leads'; }
+
+  bulkEndpoint(){
+    return this.wf() ? '/workflows/' + this.wf() + '/targets/bulk' : '/leads/bulk';
+  }
+
+  // Свой ключ на каждый вид: иначе фильтр и страница, набранные в одном конвейере,
+  // приезжают в другой, и человек видит чужой срез под именем своего сценария.
+  tableKey(){ return this.wf() ? 'targets:' + this.wf() : 'leads'; }
+
+  COLUMNS = [
+    {label:'Автор', sort:'author'},
+    {label:'Канал', sort:'channel'},
+    {label:'Боль', sort:'pain'},
+    {label:'Скор', sort:'score'},
+    {label:'Статус', sort:'status'},
+  ];
+
+  // Первая колонка называется тем, что в ней на самом деле стоит. Сортировка по
+  // ней остаётся только у целей-людей: у публичной цели автора может не быть
+  // вовсе, и «сортировать по автору» разложило бы список по пустоте.
+  columns(){
+    if(!this.wf()) return this.COLUMNS;
+    const S = this.state;
+    return [{label:S.addressLabel || 'Кому',
+             sort: S.targetKind === 'user' ? 'author' : null}]
+      .concat(this.COLUMNS.slice(1));
+  }
+
+  STATUS_LABEL = {new:'новый', in_review:'в ревью', approved:'одобрен',
+                  rejected:'отклонён'};
+  // Цвет выводится здесь, а не приходит с сервера: палитре не место в базе.
+  STATUS_COLOR = {new:'#156479', in_review:'#C98A1E', approved:'#2E7D57',
+                  rejected:'#DA501C'};
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.Table = Table;
+    this.build();
+  }
+
+  // Смена блока в сайдбаре не пересоздаёт экран — место в разметке одно и то же,
+  // меняется только пропс. Без этого цели публичного контура показывались бы
+  // строками личного до первого нажатия «обновить», причём молча.
+  componentDidUpdate(prev){
+    if(!this.Table) return;
+    if((prev.workflow || '') === this.wf()) return;
+    this.setState({rows:[], total:0, states:[], picked:{}, allMatching:false,
+                   loading:true, error:null});
+    this.build();
+  }
+
+  build(){
+    this.table = new this.Table({
+      key:this.tableKey(), size:50, sort:'score', order:'desc',
+      sorts:[{key:'author'}, {key:'channel'}, {key:'pain'}, {key:'score'},
+             {key:'status'}],
+      filters:{status:'', channel_id:'', pain:'', min_score:''},
+    });
+    this.table.attach(()=>this.load());
+    this.loadRefs();
+    this.load();
+  }
+
+  // Боли считаются по своему конвейеру: показывать в фильтре боль, которой в этом
+  // сценарии ни разу не было, значит предлагать заведомо пустой отбор.
+  // Формы ответов разные, поэтому приводятся к одной здесь, а не в разметке.
+  async loadRefs(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const painsPath = this.wf() ? '/workflows/' + this.wf() + '/pains'
+                                  : '/leads/pains';
+      const [channels, pains, reasons] = await Promise.all([
+        get('/channels/options'), get(painsPath), get('/drafts/reasons')]);
+      const list = this.wf()
+        ? ((pains && pains.rows) || []).map(p=>({value:p.pain, label:p.pain,
+                                                 count:p.count}))
+        : pains;
+      this.setState({channels, pains:list, reasons});
+    } catch (e) { /* без справочников экран работает, фильтры просто пустые */ }
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const d = await get(this.endpoint(), this.table.query());
+      // Выделение сбрасывается при любой перезагрузке: отмеченные строки могли
+      // уехать на другую страницу, и «отклонить выбранные» отправило бы не тех.
+      this.setState({rows:d.rows, total:d.total, states:d.states || [],
+                     addressLabel:d.addressing_label || 'Автор',
+                     targetKind:d.target_kind || 'user',
+                     loading:false, error:null, picked:{}, allMatching:false});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  toggle(id){
+    const picked = Object.assign({}, this.state.picked);
+    if(picked[id]) delete picked[id]; else picked[id] = true;
+    this.setState({picked, allMatching:false});
+  }
+
+  toggleAll(){
+    const rows = this.state.rows || [];
+    const all = rows.length && rows.every(r=>this.state.picked[r.id]);
+    const picked = {};
+    if(!all) for(const r of rows) picked[r.id] = true;
+    this.setState({picked, allMatching:false});
+  }
+
+  async bulkReject(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const ids = Object.keys(this.state.picked).map(Number);
+    const reason = (this.state.reasons.find(r=>r.n === this.state.reasonN) || {}).label;
+    if(!reason) return t('Не выбрана причина отклонения', '#C98A1E');
+
+    // Два режима. Перечислением — когда отмечены конкретные строки. Срезом —
+    // когда человек попросил «все, что под фильтром»: тогда сервер сам решит,
+    // что в него входит, и сверит количество с тем, что видел экран.
+    //
+    // В срез уходят только условия отбора — без страницы, размера и сортировки:
+    // они определяют, что человек видит, а не что он выбрал.
+    const f = this.table.filters;
+    const body = this.state.allMatching
+      ? {action:'reject', reason, expect:this.state.total,
+         filter:{status:f.status || null, channel_id:f.channel_id || null,
+                 pain:f.pain || null, min_score:f.min_score || null}}
+      : {action:'reject', reason, ids, expect:ids.length};
+    if(!this.state.allMatching && !ids.length) return t('Ничего не выбрано', '#C98A1E');
+
+    try {
+      const { post } = await import('./radar-api.js');
+      const r = await post(this.bulkEndpoint(), body);
+      let msg = 'Отклонено ' + (this.wf() ? 'целей: ' : 'лидов: ') + r.changed;
+      if(r.drafts_changed) msg += ', черновиков: ' + r.drafts_changed;
+      if((r.skipped_sent || []).length){
+        msg += '. Пропущено (уже отправлено): ' + r.skipped_sent.length;
+      }
+      t(msg, '#2E7D57');
+      this.load();
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      // Сервер отказывает осмысленно — «выборка изменилась», «нужна причина»,
+      // «за раз не больше 25». Показываем его текст, а не «ошибка 409».
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  async exportCsv(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const rows = this.state.rows || [];
+    if(!rows.length) return t('Выгружать нечего: на экране пусто', '#C98A1E');
+    const { downloadCsv } = await import('./radar-api.js');
+    const name = this.wf() ? 'radar-targets-' + this.wf() + '.csv' : 'radar-leads.csv';
+    downloadCsv(name, [
+      {label:'ID', get:r=>r.id},
+      {label:(this.state.addressLabel || 'Автор'),
+       get:r=>(r.addressing ? r.addressing.value : r.author_name)},
+      {label:'Username', get:r=>r.author_username || ''},
+      {label:'Канал', get:r=>r.channel},
+      {label:'Боль', get:r=>r.pain},
+      {label:'Скор', get:r=>r.score},
+      {label:'Статус', get:r=>r.status},
+      {label:'Причина отказа', get:r=>r.reject_reason || ''},
+      {label:'Цитата', get:r=>r.quote},
+    ], rows);
+    t('Выгружено строк: ' + rows.length
+      + (this.wf() ? ' (страница, не все цели)' : ' (страница, не все лиды)'),
+      '#2E7D57');
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const S = this.state;
+    const rows = S.rows || [];
+
+    // Общий экран остаётся «Leads»: переименовывать существующий раздел заодно с
+    // этой работой незачем. У сценария заголовок называет конвейер — экранов
+    // теперь несколько и по виду они одинаковы.
+    const title = this.wf()
+      ? 'Цели · ' + (this.props.workflowTitle || this.wf())
+      : 'Leads';
+
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              title,
+              rows:[], cols:[], pages:[], sizes:[], channels:[], pains:[],
+              scores:[], reasons:[], statusChips:[], range:'загрузка…', q:'',
+              channel:'', pain:'', minScore:'', bulkReason:'1', allMark:'☐',
+              hasSelection:false, selectionLabel:'', selectMatchingLabel:'',
+              reload:()=>{}, exportCsv:()=>{}, setQ:()=>{}, resetAll:()=>{},
+              setChannel:()=>{}, setPain:()=>{}, setMinScore:()=>{},
+              setBulkReason:()=>{}, bulkReject:()=>{}, clearSelection:()=>{},
+              selectMatching:()=>{}, toggleAll:()=>{}, prev:()=>{}, next:()=>{},
+              prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+    }
+
+    const f = this.table.filters;
+    const count = (k)=>{
+      const s = (S.states || []).find(x=>x.key === k);
+      return s ? '· ' + s.count : '';
+    };
+    const chip = (k, label)=>({
+      label, count: k ? count(k) : '',
+      bg: (f.status || '') === k ? '#131E5F' : 'transparent',
+      fg: (f.status || '') === k ? '#F8F3E0' : '#156479',
+      pick:()=>this.table.setFilter('status', k),
+    });
+
+    const pickedIds = Object.keys(S.picked);
+    const allOnPage = rows.length && rows.every(r=>S.picked[r.id]);
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      title,
+      ...this.table.vals(S.total, {columns:this.columns(), loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      exportCsv:()=>this.exportCsv(),
+
+      statusChips:[chip('', 'Все'), chip('new', 'новые'),
+                   chip('in_review', 'в ревью'), chip('approved', 'одобренные'),
+                   chip('rejected', 'отклонённые')],
+      channels:[{value:'', label:'все каналы'}].concat(
+        (S.channels || []).map(c=>({value:String(c.id), label:c.title}))),
+      channel:String(f.channel_id || ''),
+      setChannel:(e)=>this.table.setFilter('channel_id', e.target.value),
+      pains:[{value:'', label:'все боли'}].concat(
+        (S.pains || []).map(p=>({value:p.value, label:p.label + ' · ' + p.count}))),
+      pain:String(f.pain || ''),
+      setPain:(e)=>this.table.setFilter('pain', e.target.value),
+      scores:[{value:'', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
+              {value:'40', label:'скор ≥ 40'}, {value:'50', label:'скор ≥ 50'}],
+      minScore:String(f.min_score || ''),
+      setMinScore:(e)=>this.table.setFilter('min_score', e.target.value),
+
+      allMark: allOnPage ? '☑' : '☐',
+      toggleAll:()=>this.toggleAll(),
+      hasSelection: pickedIds.length > 0 || S.allMatching,
+      selectionLabel: S.allMatching
+        ? ('Выбраны все ' + S.total + ' под фильтром')
+        : ('Выбрано строк: ' + pickedIds.length),
+      // Предложение расширить выделение появляется только когда оно осмысленно:
+      // на странице отмечено всё, а под фильтром строк больше.
+      selectMatchingLabel: (!S.allMatching && allOnPage && S.total > rows.length)
+        ? ('выбрать все ' + S.total + ' под фильтром') : '',
+      selectMatching:()=>{
+        if(this.state.allMatching || !allOnPage) return;
+        this.setState({allMatching:true});
+      },
+      clearSelection:()=>this.setState({picked:{}, allMatching:false}),
+      reasons:(S.reasons || []).map(r=>({value:String(r.n), label:r.label})),
+      bulkReason:String(S.reasonN),
+      setBulkReason:(e)=>this.setState({reasonN:+e.target.value}),
+      bulkReject:()=>this.bulkReject(),
+
+      rows:rows.map(l=>({
+        // В первой колонке стоит адресация, а не автор. Совпадают они только у
+        // целей-людей; у публичного ответа адресат — сообщение в треде, и автора
+        // может не быть вовсе. Считает адресацию сервер, экран показывает как есть.
+        author:(l.addressing ? l.addressing.value : l.author_name),
+        username:l.author_username || '',
+        channel:l.channel, pain:l.pain || '—', score:String(l.score),
+        status:this.STATUS_LABEL[l.status] || l.status,
+        c:this.STATUS_COLOR[l.status] || '#94BEBE',
+        mark: S.picked[l.id] ? '☑' : '☐',
+        toggle:()=>this.toggle(l.id),
+        open:()=>api.drill && api.drill({
+          title:(l.addressing ? l.addressing.value
+                              : ((l.author_name || '—') + ' ' + (l.author_username || ''))),
+          subtitle:l.channel + ' · скор ' + l.score,
+          rows:[
+            {k:(l.addressing ? l.addressing.label : 'Автор'),
+             v:(l.addressing ? l.addressing.value
+                             : ((l.author_name || '—') + ' ' + (l.author_username || '')))},
+            {k:'Боль', v:l.pain || '—'},
+            {k:'Цитата-обоснование', v:l.quote ? ('«' + l.quote + '»') : '—'},
+            {k:'Скор', v:String(l.score) + ((l.score_breakdown || []).length
+                ? ' = ' + l.score_breakdown.map(b=>b.label + ' ' + b.value).join(' + ')
+                : '')},
+            {k:'Статус', v:this.STATUS_LABEL[l.status] || l.status},
+            {k:'Причина отказа', v:l.reject_reason || '—'},
+            // Здесь стояла строка «7 сообщений в 2 каналах» — одна и та же для
+            // любого лида, ниоткуда не бравшаяся. История автора по каналам
+            // сервером не считается, и пока не считается — про неё молчим.
+            {k:'Дисквалификаторы', v:(l.disqualifiers || []).length
+                ? l.disqualifiers.join(', ') : 'не найдено'}
+          ],
+          actions:[
+            {label:'Открыть очередь черновиков', c:'#156479',
+             run:()=>api.go && api.go(this.wf() ? 'wf:' + this.wf() + ':drafts'
+                                                : 'drafts')}
+          ],
+          // Настоящий объект, а не собранная руками строка с выдуманным
+          // «lead_4821»: панель JSON нужна, чтобы увидеть, что реально пришло.
+          json:JSON.stringify(l, null, 2)
+        })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
+  <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Observability</div>
+  <div style="display:flex;border-bottom:1px solid rgba(19,30,95,0.16);flex-wrap:wrap">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+      <div onClick="{{ t.pick }}" style="padding:9px 14px;cursor:pointer;font:400 12px/1 'JetBrains Mono',monospace;color:{{ t.fg }};background:{{ t.bg }}">{{ t.label }}</div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isTraces }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по ступени и модели" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+      <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    </div>
+
+    <div style="display:flex;gap:22px;flex-wrap:wrap;background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px">
+      <sc-for list="{{ summary }}" as="s" hint-placeholder-count="4">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">{{ s.k }}</div>
+          <div style="font:400 18px/1 'JetBrains Mono',monospace;color:#131E5F">{{ s.v }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+      <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+        <thead><tr>
+          <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+            <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+          </sc-for>
+        </tr></thead>
+        <tbody>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+            <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E">{{ r.time }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ r.type }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.model }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.tokens }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.lat }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.cost }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+      <div style="flex:1"></div>
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+      <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+        <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+      </sc-for>
+      <div style="width:12px"></div>
+      <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+      <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+        <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+      </sc-for>
+      <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isHw }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px;display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ models }}" as="m" hint-placeholder-count="2">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <div style="font:400 14px/1.4 'JetBrains Mono',monospace;color:#131E5F">{{ m.name }} — <span style="color:{{ m.c }}">{{ m.status }}</span></div>
+          <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ m.note }}</div>
+        </div>
+      </sc-for>
+      <div style="border-top:1px solid rgba(19,30,95,0.12);padding-top:12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Загрузку GPU и VRAM Radar не собирает: модели живут на другой машине, и рисовать их метрики отсюда было бы гаданием. Смотреть там: <span style="color:#156479">nvidia-smi</span>, <span style="color:#156479">pm2 logs llama-server</span>.</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isLogs }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#131E5F;padding:14px;overflow:auto">
+      <pre style="margin:0;font:400 12px/1.7 'JetBrains Mono',monospace;color:#94BEBE;white-space:pre-wrap">{{ logs }}</pre>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, dash:null, loading:true, error:null, tab:'traces' };
+
+  // На вкладке LLM-трейсы: таблица с сортировкой по времени (created), задержке
+  // (latency), токенам (tokens) и ступени (stage). Поиск по ступени и модели.
+  COLUMNS = [
+    {label:'Время', sort:'created'},
+    {label:'Этап', sort:'stage'},
+    {label:'Модель', sort:null},
+    {label:'Токены', sort:'tokens'},
+    {label:'Задержка', sort:'latency'},
+    {label:'Стоимость', sort:null},
+  ];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      key:'traces', size:50, sort:'created', order:'desc',
+      sorts:[{key:'created'}, {key:'latency'}, {key:'tokens'}, {key:'stage'}],
+    });
+    this.table.attach(()=>this.load());
+
+    // Загружаем статусы моделей отдельно (не пагинируются).
+    try {
+      const { get } = await import('./radar-api.js');
+      const dash = await get('/dashboard').catch(()=>null);
+      this.setState({dash});
+    } catch (e) { /* статусы не критичны */ }
+
+    this.load();
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/traces', this.table.query());
+      this.setState({rows:data.rows, total:data.total, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  num(v){ return (v === null || v === undefined) ? '—' : Number(v).toLocaleString('ru-RU'); }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const rows = S.rows || [];
+
+    if(!this.table){
+      return {pad: this.props.mobile ? '12px' : '0',
+              tabs:[], isTraces:true, isLogs:false, isHw:false,
+              cols:[], rows:[], pages:[], sizes:[],
+              summary:[], models:[],
+              q:'', setQ:()=>{}, resetAll:()=>{},
+              range:'загрузка…', prev:()=>{}, next:()=>{},
+              prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+              logs:'', reload:()=>{}};
+    }
+
+    const tab = (k, label)=>({label, bg: S.tab === k ? '#131E5F' : 'transparent',
+                              fg: S.tab === k ? '#F8F3E0' : '#156479',
+                              pick:()=>this.setState({tab:k})});
+
+    const summary = S.d || {};
+    const services = ((S.dash || {}).services || []);
+    const svc = k => (services.find(s=>s.name === k) || {}).status || 'неизвестно';
+    const model = (name, key, note)=>{
+      const st = svc(key);
+      return {name, status: st === 'off' ? 'выключена' : st, note,
+              c: st === 'ok' ? '#2E7D57' : (st === 'off' ? '#8A8F9E' : '#DA501C')};
+    };
+
+    // Суммарные метрики берём из данных трейсов или пустые.
+    const avgLat = (rows || []).length > 0
+      ? rows.reduce((sum, r)=>sum + (r.latency_ms || 0), 0) / rows.length
+      : 0;
+
+    return {
+      pad: this.props.mobile ? '12px' : '0',
+      tabs:[tab('traces', 'LLM-трейсы'), tab('logs', 'Логи'), tab('hw', 'Модели')],
+      isTraces: S.tab === 'traces', isLogs: S.tab === 'logs', isHw: S.tab === 'hw',
+      ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      summary:[
+        {k:'вызовов модели', v:this.num(S.total)},
+        {k:'средняя задержка', v: S.total ? this.num(Math.round(avgLat)) + ' мс' : '—'},
+        {k:'худшая задержка', v: rows.length ? this.num(Math.max(...rows.map(r=>r.latency_ms || 0))) + ' мс' : '—'},
+        {k:'токенов вход/выход', v:this.num(rows.reduce((s,r)=>s+(r.tokens_in || 0), 0)) + ' / ' + this.num(rows.reduce((s,r)=>s+(r.tokens_out || 0), 0))},
+        {k:'стоимость', v:'$0 (своя модель)'},
+      ],
+      models:[
+        model('Qwen3.5-9B · вердикт L3', 'llm',
+              'Разбирает сообщения, дошедшие до L3: настоящая ли проблема, тот ли человек.'),
+        model('bge-m3 · эмбеддинги L2', 'embeddings',
+              'Считает близость сообщения к эталонам боли и шума. 1024 измерения.'),
+      ],
+      rows:rows.map(t=>({
+        time:(t.created_at || '—').slice(11, 16), type:t.stage, model:t.model,
+        tokens:(t.tokens_in || 0) + ' / ' + (t.tokens_out || 0),
+        lat:(t.latency_ms || 0) + ' мс',
+        cost:'$' + (t.cost_usd || 0).toFixed(4),
+        open:()=>api.drill && api.drill({
+          title:t.stage + ' · ' + t.model, subtitle:t.created_at || '',
+          rows:[{k:'Версия промпта', v:t.prompt_version || '—'},
+                {k:'Токены', v:(t.tokens_in || 0) + ' вход / ' + (t.tokens_out || 0) + ' выход'},
+                {k:'Задержка', v:(t.latency_ms || 0) + ' мс'},
+                {k:'Ответ модели', v:t.response || '—'}],
+          json:JSON.stringify(t, null, 2)})
+      })),
+      logs:'Логи сервисов сюда пока не стекают. Смотреть: docker logs api-radar на сервере.'
+    };
+  }
+}
+</script>
+</body>
+</html>

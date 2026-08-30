@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Ручные отправки · {{ headline }}</div>
+    <div style="flex:1"></div>
+    <select value="{{ wfValue }}" onChange="{{ setWorkflow }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ workflows }}" as="w" hint-placeholder-count="2">
+        <option value="{{ w.value }}">{{ w.label }}</option>
+      </sc-for>
+    </select>
+    <button onClick="{{ reload }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">↻ обновить</button>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px;display:flex;flex-direction:column;gap:12px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Записать отправленное</div>
+
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div style="width:340px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <input value="{{ query }}" onInput="{{ setQuery }}" placeholder="поиск наводки: имя, @ник, слова" style="flex:1;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <div onClick="{{ clearTarget }}" style="cursor:pointer;padding:7px 10px;border:1px solid rgba(19,30,95,0.24);background:{{ noTargetBg }};color:{{ noTargetFg }};font:400 11px/1 'JetBrains Mono',monospace;white-space:nowrap">без наводки</div>
+        </div>
+        <div style="border:1px solid rgba(19,30,95,0.16);max-height:270px;overflow:auto">
+          <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="4">
+            <div onClick="{{ c.pick }}" style="cursor:pointer;padding:9px 11px;border-bottom:1px solid rgba(19,30,95,0.08);background:{{ c.bg }}">
+              <div style="display:flex;gap:8px;align-items:baseline">
+                <div style="font:400 13px/1.2 'Architexture',sans-serif;color:{{ c.fg }}">{{ c.author }}</div>
+                <div style="font:400 11px/1.2 'JetBrains Mono',monospace;color:#8A8F9E">{{ c.username }}</div>
+                <div style="flex:1"></div>
+                <div style="font:400 13px/1 'JetBrains Mono',monospace;color:#131E5F">{{ c.score }}</div>
+              </div>
+              <div style="margin-top:3px;font:400 11px/1.3 'JetBrains Mono',monospace;color:#156479">{{ c.channel }} · {{ c.pain }}</div>
+              <div style="margin-top:4px;font:400 11px/1.45 'JetBrains Mono',monospace;color:#8A8F9E">{{ c.quote }}</div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ candidatesNote }}</div>
+      </div>
+
+      <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+        <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#184153">Кому: {{ pickedLabel }}</div>
+
+        <sc-if value="{{ hasSuggestion }}" hint-placeholder-val="{{ true }}">
+          <div style="border-left:3px solid #156479;background:#EDF4F3;padding:10px 12px">
+            <div style="font:400 9px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Radar предлагал</div>
+            <div style="margin-top:6px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap">{{ suggestedText }}</div>
+            <div onClick="{{ useSuggestion }}" style="margin-top:8px;cursor:pointer;display:inline-block;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);font:400 11px/1 'JetBrains Mono',monospace;color:#156479">взять за основу</div>
+          </div>
+        </sc-if>
+
+        <textarea value="{{ text }}" onChange="{{ setText }}" placeholder="что вы отправили на самом деле" style="width:100%;height:140px;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:10px;font:400 14px/1.55 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <select value="{{ accountValue }}" onChange="{{ setAccount }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;min-width:170px">
+            <sc-for list="{{ accounts }}" as="a" hint-placeholder-count="3">
+              <option value="{{ a.value }}">{{ a.label }}</option>
+            </sc-for>
+          </select>
+          <input value="{{ sentAt }}" onInput="{{ setSentAt }}" type="datetime-local" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <input value="{{ note }}" onInput="{{ setNote }}" placeholder="заметка (необязательно)" style="flex:1;min-width:200px;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </div>
+        <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:{{ accountsNoteFg }}">{{ accountsNote }}</div>
+
+        <sc-if value="{{ hasFormError }}" hint-placeholder-val="{{ false }}">
+          <div style="border-left:3px solid #DA501C;background:#FBEEE8;padding:9px 12px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8F2F0C">{{ formError }}</div>
+        </sc-if>
+
+        <div style="display:flex;gap:10px;align-items:center">
+          <button onClick="{{ submit }}" style="border:0;background:{{ submitBg }};color:#F8F3E0;padding:10px 20px;font:400 13px/1 'Architexture',sans-serif">{{ submitLabel }}</button>
+          <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ submitHint }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+          <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
+              <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.username }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">{{ r.channel }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">{{ r.pain }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.text }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:110px">
+              <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.matchC }};border:1px solid {{ r.matchC }};padding:4px 7px">{{ r.match }}</span>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px;color:#8A8F9E">{{ r.when }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:170px;color:#8A8F9E">{{ r.by }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ shown }}</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:10px">
+  <div style="font:400 17px/1 'Architexture',sans-serif;color:#131E5F">Ручные отправки</div>
+  <select value="{{ wfValue }}" onChange="{{ setWorkflow }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:8px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+    <sc-for list="{{ workflows }}" as="w" hint-placeholder-count="2">
+      <option value="{{ w.value }}">{{ w.label }}</option>
+    </sc-for>
+  </select>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px;display:flex;flex-direction:column;gap:8px">
+    <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#184153">Кому: {{ pickedLabel }}</div>
+    <input value="{{ query }}" onInput="{{ setQuery }}" placeholder="поиск наводки" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:8px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+    <div style="border:1px solid rgba(19,30,95,0.16);max-height:190px;overflow:auto">
+      <sc-for list="{{ candidates }}" as="c" hint-placeholder-count="3">
+        <div onClick="{{ c.pick }}" style="padding:9px 11px;border-bottom:1px solid rgba(19,30,95,0.08);background:{{ c.bg }}">
+          <div style="font:400 13px/1.2 'Architexture',sans-serif;color:{{ c.fg }}">{{ c.author }}</div>
+          <div style="margin-top:3px;font:400 11px/1.3 'JetBrains Mono',monospace;color:#156479">{{ c.channel }} · {{ c.pain }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <sc-if value="{{ hasSuggestion }}" hint-placeholder-val="{{ true }}">
+      <div style="border-left:3px solid #156479;background:#EDF4F3;padding:9px 11px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap">{{ suggestedText }}</div>
+    </sc-if>
+    <textarea value="{{ text }}" onChange="{{ setText }}" placeholder="что вы отправили" style="width:100%;height:120px;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:10px;font:400 13px/1.5 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+    <sc-if value="{{ hasFormError }}" hint-placeholder-val="{{ false }}">
+      <div style="border-left:3px solid #DA501C;background:#FBEEE8;padding:9px 11px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8F2F0C">{{ formError }}</div>
+    </sc-if>
+    <button onClick="{{ submit }}" style="border:0;background:{{ submitBg }};color:#F8F3E0;padding:11px 18px;font:400 13px/1 'Architexture',sans-serif">{{ submitLabel }}</button>
+  </div>
+
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+    <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.matchC }};border:1px solid {{ r.matchC }};padding:3px 6px">{{ r.match }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.text }}</div>
+      <div style="margin-top:6px;font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.when }}</div>
+    </div>
+  </sc-for>
+  <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ shown }}</div>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:640},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  // Смысл экрана — пара «что предложил Radar → что человек написал на самом деле».
+  // Отсюда два запрета, которые здесь важнее любого удобства:
+  //   * `suggested_text` не уходит в POST. Снимок делает сервер; пришли его отсюда —
+  //     и обе половины пары окажутся написаны одной стороной, то есть свидетельства
+  //     не будет. Сервер на попытку отвечает 422, и это правильно.
+  //   * `matches_suggestion` не считается здесь. Его считает сервер, и он же считает
+  //     его в отчётах; посчитав второй раз по-своему, экран однажды разойдётся с ними.
+  state = {
+    form:null, wf:null, cands:[], q:'', accounts:null, hist:null,
+    target:null, text:'', account:'', sentAt:'', note:'',
+    loading:true, error:null, saving:false, formError:null, searching:false,
+    accountsLoading:false
+  };
+
+  componentDidMount(){ this.boot(); }
+
+  async boot(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const form = await get('/manual-sends/form');
+      const list = form.workflows || [];
+      const wf = form.default_workflow_id || (list.length ? list[0].id : null);
+      this.setState({form, wf}, ()=>this.refresh());
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  async refresh(){
+    const S = this.state;
+    if(!S.wf){ this.setState({loading:false}); return; }
+    try {
+      const { get } = await import('./radar-api.js');
+      const search = {workflow_id:S.wf, limit:20};
+      if(S.q) search.q = S.q;
+      // Наводки и история — из нашей базы, приходят за доли секунды. Аккаунты ждут
+      // ответа Engage, и когда тот молчит, ждут его отказа по таймауту: замеры дали
+      // от 4,4 до 5,5 секунды, всё это время экран показывал «загрузка…».
+      //
+      // Поэтому аккаунты вынесены из общего ожидания. Экран открывается сразу и без
+      // них: записать отправку можно и не указав аккаунт, это необязательное поле, —
+      // а недоступность чужого сервиса не повод не показать человеку его историю.
+      const [cands, hist] = await Promise.all([
+        get('/manual-sends/candidates', search),
+        get('/manual-sends/list', {workflow_id:S.wf, limit:50})
+      ]);
+      this.setState({cands:cands.rows || [], hist, loading:false, error:null});
+      this.loadAccounts();
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  // Счётчик у аккаунтов свой, а не общий с поиском: `_seq` растёт на каждую паузу в
+  // наборе, и на общем счётчике ответ Engage, пришедший через пять секунд, отбрасывался
+  // бы всякий раз, когда человек за это время что-то набрал в поиске.
+  async loadAccounts(){
+    const wf = this.state.wf;
+    const seq = (this._accSeq = (this._accSeq || 0) + 1);
+    this.setState({accountsLoading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const accounts = await get('/manual-sends/accounts', {workflow_id:wf});
+      if(seq !== this._accSeq) return;
+      this.setState({accounts, accountsLoading:false});
+    } catch (e) {
+      if(seq !== this._accSeq) return;
+      // Отказ здесь не рушит экран и не идёт в общий `error`: тот значит «показать
+      // нечего», а показать есть что — история и наводки уже пришли. Форма ответа
+      // повторяет ту, которой ручка отвечает на молчащий Engage, чтобы подпись под
+      // полем считалась одним и тем же кодом в обоих случаях.
+      const { describe } = await import('./radar-api.js');
+      this.setState({accounts:{available:false, reason:describe(e), rows:[]},
+                     accountsLoading:false});
+    }
+  }
+
+  set(patch){
+    // Отложенный поиск снимается вместе со сменой контура: его ответ пришёл бы
+    // после общей перезагрузки и подменил бы список наводок чужим контуром.
+    clearTimeout(this._typing);
+    this._seq = (this._seq || 0) + 1;
+    this._accSeq = (this._accSeq || 0) + 1;
+    this.setState({...patch, loading:true, searching:false}, ()=>this.refresh());
+  }
+
+  typed(q){
+    // Раньше каждая набранная буква перезапрашивала все три ручки: «прокси»
+    // стоило восемнадцати запросов, и заголовок на каждой букве срывался в
+    // «загрузка…». Хуже количества то, что среди трёх была `/accounts` — она
+    // ходит в Engage, и когда Engage молчит, каждая буква ждала его отказа.
+    // Строка поиска не меняет ни аккаунты, ни историю; ждём паузы в наборе и
+    // обновляем только наводки.
+    this.setState({q, searching:true});
+    clearTimeout(this._typing);
+    this._typing = setTimeout(()=>this.search(), 300);
+  }
+
+  async search(){
+    const S = this.state;
+    if(!S.wf){ this.setState({searching:false}); return; }
+    const params = {workflow_id:S.wf, limit:20};
+    if(S.q) params.q = S.q;
+    // Номер запроса: ответ на «про», пришедший после ответа на «прокси», показал бы
+    // список не для той строки, которая сейчас в поле. Такой ответ выбрасываем.
+    const seq = (this._seq = (this._seq || 0) + 1);
+    try {
+      const { get } = await import('./radar-api.js');
+      const cands = await get('/manual-sends/candidates', params);
+      if(seq !== this._seq) return;
+      this.setState({cands:cands.rows || [], searching:false, error:null});
+    } catch (e) {
+      if(seq !== this._seq) return;
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), searching:false});
+    }
+  }
+
+  async save(){
+    const S = this.state;
+    if(!S.wf){ this.setState({formError:'Контур не выбран'}); return; }
+    if(!S.text.trim()){ this.setState({formError:'Текст обязателен — записывать нечего'}); return; }
+
+    const body = {workflow_id:S.wf, text:S.text};
+    if(S.target) body.target_id = S.target.target_id;
+    if(S.account) body.engage_account_id = Number(S.account);
+    if(S.note) body.note = S.note;
+    if(S.sentAt){
+      // `datetime-local` отдаёт время без пояса, а сервер такое отвергает: непонятно,
+      // какой момент имеется в виду. Разбираем как местное и отправляем в UTC.
+      const at = new Date(S.sentAt);
+      if(Number.isNaN(at.getTime())){
+        this.setState({formError:'Не разобрать время отправки'}); return;
+      }
+      body.sent_at = at.toISOString();
+    }
+    // Пустое поле времени — это `null`, а не «сейчас». Подставив текущее время за
+    // человека, экран сочинил бы факт, которого тот не сообщал.
+
+    this.setState({saving:true, formError:null});
+    try {
+      const { post } = await import('./radar-api.js');
+      await post('/manual-sends', body);
+      const api = this.props.api || {};
+      this.setState({text:'', note:'', sentAt:'', target:null, saving:false,
+                     formError:null}, ()=>this.refresh());
+      if(api.toast) api.toast('Записано', '#2E7D57');
+    } catch (e) {
+      // 422 приходит с человеческим текстом в `detail` — показываем его, а не «ошибка»:
+      // «наводка принадлежит другому workflow» объясняет, что делать, «ошибка» — нет.
+      const { describe } = await import('./radar-api.js');
+      this.setState({formError:describe(e), saving:false});
+    }
+  }
+
+  stamp(iso){
+    // Сервер отдаёт время в UTC (`…+00:00`), а поле ввода — `datetime-local` —
+    // принимает местное. Показав срез строки как есть, экран возвращал человеку
+    // не то число, которое тот вписал: записал «14:20», прочитал «11:20». Хуже
+    // всего это в единственном месте, где он себя проверяет, — в истории.
+    // Поэтому переводим в пояс браузера, тот же, в котором шёл ввод.
+    if(!iso) return '';
+    const at = new Date(iso);
+    // Время без пояса разобрать нечем: показываем как пришло, а не выдумываем.
+    if(Number.isNaN(at.getTime())) return String(iso).slice(0, 16).replace('T', ' ');
+    const pad = (n)=>String(n).padStart(2, '0');
+    return at.getFullYear() + '-' + pad(at.getMonth() + 1) + '-' + pad(at.getDate()) +
+           ' ' + pad(at.getHours()) + ':' + pad(at.getMinutes());
+  }
+
+  plural(n, one, few, many){
+    // «1 записей» в русском интерфейсе читается как недоделка. Правило обычное:
+    // 11–14 всегда «записей», дальше решает последняя цифра.
+    const t = Math.abs(n) % 100;
+    if(t >= 11 && t <= 14) return many;
+    const d = t % 10;
+    if(d === 1) return one;
+    if(d >= 2 && d <= 4) return few;
+    return many;
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const form = S.form || {};
+    const hist = S.hist || {};
+    const rows = hist.rows || [];
+    const accounts = S.accounts || {};
+    const target = S.target;
+    const suggested = target && target.suggested_text;
+
+    const total = hist.total || 0;
+    const headline = S.loading ? 'загрузка…'
+                   : (S.error || (total + ' ' +
+                      this.plural(total, 'запись', 'записи', 'записей')));
+
+    const wfList = (form.workflows || []).map(w=>({
+      value:String(w.id), label:w.title}));
+
+    const accountRows = [{value:'', label:'без аккаунта'}].concat(
+      (accounts.rows || []).map(a=>({value:String(a.id),
+                                     label:a.label + ' · ' + a.status})));
+    // Поле не исчезает, когда Engage молчит: факт отправки уже произошёл, и терять
+    // запись из-за недоступности чужого сервиса было бы прямым уроном. Причина
+    // печатается рядом, чтобы пустой список не выглядел «аккаунтов нет».
+    const engageDown = accounts.available === false;
+    const accountsNote = S.accountsLoading
+      ? 'Спрашиваем Engage об аккаунтах — записать можно и не дожидаясь'
+      : (engageDown
+         ? ('Engage не ответил: ' + (accounts.reason || 'причина не названа') +
+            ' — запись всё равно сохранится')
+         : 'Аккаунт и время — необязательные поля');
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      headline,
+      reload:()=>this.set({}),
+
+      workflows:wfList,
+      wfValue:S.wf ? String(S.wf) : '',
+      setWorkflow:(e)=>this.set({wf:Number(e.target.value), target:null}),
+
+      query:S.q,
+      setQuery:(e)=>this.typed(e.target.value),
+      clearTarget:()=>this.setState({target:null}),
+      noTargetBg: target ? 'transparent' : '#131E5F',
+      noTargetFg: target ? '#156479' : '#F8F3E0',
+
+      candidates:(S.cands || []).map(c=>({
+        author:c.author_name, username:c.author_username || '',
+        channel:c.channel, pain:c.pain || 'боль не названа',
+        score:String(c.score), quote:(c.quote || '').slice(0, 120),
+        bg: target && target.target_id === c.target_id ? '#EDF4F3' : 'transparent',
+        fg: target && target.target_id === c.target_id ? '#156479' : '#131E5F',
+        pick:()=>this.setState({target:c})
+      })),
+      candidatesNote: S.cands && S.cands.length
+        ? 'Выбор наводки необязателен — писали не по наводке, жмите «без наводки»'
+        : ((S.loading || S.searching) ? 'загрузка…' : 'Под поиск ничего не подошло'),
+
+      pickedLabel: target
+        ? (target.author_name + ' ' + (target.author_username || '') +
+           ' · ' + target.channel)
+        : 'без наводки — тот, кого Radar не находил',
+
+      hasSuggestion: !!suggested,
+      suggestedText: suggested || '',
+      useSuggestion:()=>this.setState({text:suggested || ''}),
+
+      text:S.text, setText:(e)=>this.setState({text:e.target.value}),
+      accounts:accountRows,
+      accountValue:S.account,
+      setAccount:(e)=>this.setState({account:e.target.value}),
+      accountsNote,
+      accountsNoteFg: engageDown ? '#C98A1E' : '#8A8F9E',
+      sentAt:S.sentAt, setSentAt:(e)=>this.setState({sentAt:e.target.value}),
+      note:S.note, setNote:(e)=>this.setState({note:e.target.value}),
+
+      hasFormError: !!S.formError,
+      formError:S.formError || '',
+      submit:()=>this.save(),
+      submitLabel: S.saving ? 'Записываю…' : 'Записать',
+      submitBg: S.saving ? '#8A8F9E' : '#131E5F',
+      submitHint: 'Radar ничего не отправляет — это запись о том, что уже отправлено',
+
+      cols:['Кому','Канал','Боль','Что отправлено','Совпало','Когда','Кто записал'],
+      shown: rows.length
+        ? ('Показано ' + rows.length + ' из ' + (hist.total || rows.length))
+        : (S.error || (S.loading ? 'загрузка…' : 'Записей пока нет')),
+
+      rows:rows.map(r=>({
+        author:r.author_name || '—', username:r.author_username || '',
+        channel:r.channel || '—', pain:r.pain || '—',
+        text:(r.text || '').slice(0, 160) + ((r.text || '').length > 160 ? '…' : ''),
+        // Совпадение посчитал сервер. Здесь оно только переводится на русский.
+        match: r.matches_suggestion ? 'совпало' : (r.suggested_text ? 'своё' : '—'),
+        matchC: r.matches_suggestion ? '#2E7D57' : (r.suggested_text ? '#C98A1E' : '#8A8F9E'),
+        when: r.sent_at ? this.stamp(r.sent_at)
+                        : (this.stamp(r.recorded_at) + ' (запись)'),
+        by:r.recorded_by || '—',
+        open:()=>api.drill && api.drill({
+          title:r.author_name || 'без наводки',
+          subtitle:(r.channel || 'канал неизвестен') + ' · запись #' + r.id,
+          rows:[{k:'Боль', v:r.pain || '—'},
+                {k:'Исходное сообщение', v:r.quote || '—'},
+                {k:'Аккаунт', v:r.engage_account_id ? ('acc-' + r.engage_account_id) : '—'},
+                {k:'Отправлено', v:r.sent_at ? this.stamp(r.sent_at) : 'время не указано'},
+                {k:'Записал', v:r.recorded_by || '—'},
+                {k:'Записано', v:this.stamp(r.recorded_at)},
+                {k:'Заметка', v:r.note || '—'},
+                {k:'Совпало с предложенным', v:r.matches_suggestion ? 'да' : 'нет'}],
+          // Обе половины пары рядом — ради этого экран и сделан. Разнеси их по
+          // разным местам, и сравнивать станет нечего.
+          log:'Radar предлагал:\n' + (r.suggested_text || '— предложения не было —') +
+              '\n\nОтправлено человеком:\n' + (r.text || ''),
+          json:JSON.stringify(r, null, 2)})
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>

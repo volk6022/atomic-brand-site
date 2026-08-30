@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
+  <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Safety</div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Режим системы</div>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div style="padding:12px 22px;background:{{ pill.bg }};color:{{ pill.fg }};font:400 18px/1 'JetBrains Mono',monospace;letter-spacing:.18em;animation:{{ pill.anim }}">{{ pill.text }}</div>
+      <div style="font:400 13px/1.5 'Architexture',sans-serif;color:#184153;flex:1;min-width:240px">В режиме сухого прогона отправка сообщений заблокирована на уровне кода — система не полагается на «мы просто не нажмём».</div>
+    </div>
+    <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+      <button onClick="{{ toggleMode }}" style="border:0;background:{{ btn.bg }};color:#FFFFFF;padding:12px 20px;font:400 14px/1 'Architexture',sans-serif">{{ btn.label }}</button>
+      <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ btn.hint }}</div>
+    </div>
+    <div style="margin-top:18px;border-top:1px solid rgba(19,30,95,0.16);padding-top:16px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#DA501C">Kill switch</div>
+      <button onClick="{{ kill }}" style="margin-top:10px;width:100%;border:0;background:#DA501C;color:#FFFFFF;padding:16px;font:400 15px/1 'Architexture',sans-serif;letter-spacing:.08em">ОСТАНОВИТЬ ОТПРАВКУ ПО ВСЕМУ ФЛОТУ</button>
+      <div style="margin-top:8px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Останавливает отправку менее чем за 5 секунд, не дожидаясь текущих задач.</div>
+    </div>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">Лимиты и пороги</div>
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24)">Параметр</th>
+        <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);width:180px">Значение</th>
+        <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24)">Описание</th>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ limits }}" as="l" hint-placeholder-count="7">
+          <tr onClick="{{ l.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ l.p }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#156479">{{ l.v }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E;font-size:12px">{{ l.d }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="display:grid;grid-template-columns:{{ cols2 }};gap:18px">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+      <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">Блок-листы</div>
+      <sc-for list="{{ blocklists }}" as="b" hint-placeholder-count="4">
+        <div style="padding:10px 14px;border-bottom:1px solid rgba(19,30,95,0.08);display:flex;gap:10px;align-items:baseline">
+          <div style="flex:1"><div style="font:400 13px/1.3 'JetBrains Mono',monospace;color:#131E5F">{{ b.n }}</div><div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ b.s }}</div></div>
+          <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ b.c }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+      <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">Журнал срабатываний</div>
+      <sc-for list="{{ guardLog }}" as="g" hint-placeholder-count="3">
+        <div style="padding:10px 14px;border-bottom:1px solid rgba(19,30,95,0.08);display:flex;gap:10px">
+          <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#8A8F9E;width:44px;flex:none">{{ g.t }}</div>
+          <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ g.who }} → отказ: {{ g.why }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:760},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { d:null, mode:null, loading:true, error:null };
+
+  async componentDidMount(){ this.load(); }
+
+  async load(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const [d, mode] = await Promise.all([get('/limits'), get('/system/mode')]);
+      this.setState({d, mode, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  time(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const d = S.d || {};
+    // Режим берём с сервера. Раньше экран смотрел в props, куда его клал сам
+    // интерфейс, — то есть показывал собственное представление, а не состояние
+    // системы. На экране аварийной остановки это недопустимо.
+    const m = S.mode || {};
+    const live = m.effective_mode === 'LIVE';
+    const killed = !!m.killed;
+    const owner = api.role === 'owner';
+
+    return {
+      pad: this.props.mobile ? '12px' : '0',
+      cols2: this.props.mobile ? '1fr' : '1fr 1fr',
+
+      pill: killed ? {text:'ОСТАНОВЛЕНО', bg:'#DA501C', fg:'#FFFFFF', anim:'none'}
+          : live ? {text:'LIVE', bg:'#DA501C', fg:'#FFFFFF',
+                    anim:'livepulse 1.6s ease-in-out infinite'}
+                 : {text:'DRY RUN', bg:'#131E5F', fg:'#F8F3E0', anim:'none'},
+
+      btn: live
+        ? {label:'Вернуть в сухой прогон', bg:'#131E5F',
+           hint:'Отправка снова блокируется на уровне кода'}
+        : {label: killed ? 'Снять аварийную остановку' : 'Переключить в LIVE',
+           bg:'#DA501C',
+           hint: killed ? 'Режим при этом останется DRY RUN — возврат к отправке отдельным решением'
+               : (owner ? 'Требует подтверждения словом LIVE'
+                        : 'Переключение режима — только для роли owner')},
+
+      toggleMode:()=>{
+        if(!api.modal) return;
+        if(live){
+          api.modal({kind:'dry', title:'Вернуть систему в сухой прогон',
+            lines:[{text:'Отправка личных сообщений будет заблокирована'},
+                   {text:'Очередь черновиков сохранится'}],
+            confirm:'Вернуть в DRY RUN', btnBg:'#131E5F'});
+        } else if(killed){
+          api.modal({kind:'resume', title:'Снять аварийную остановку',
+            lines:[{text:'Причина остановки: ' + (m.killed_reason || '—')},
+                   {text:'Режим останется DRY RUN'}],
+            confirm:'Снять остановку', btnBg:'#131E5F', done:'Остановка снята',
+            run:async ()=>{ const {post} = await import('./radar-api.js');
+                            await post('/system/resume'); await this.load(); }});
+        } else {
+          api.modal({kind:'live', title:'Переключить систему в LIVE', word:'LIVE',
+            confirm:'Переключить в LIVE', btnBg:'#DA501C',
+            lines:[{text:'Аккаунты начнут физически отправлять личные сообщения'},
+                   {text:'Условие заказчика: сначала сухой прогон по истории'},
+                   {text:'Переключение записывается в журнал аудита'}]});
+        }
+      },
+
+      kill:()=>api.modal && api.modal({kind:'kill',
+        title:'Остановить отправку по всему флоту', word:'ОСТАНОВИТЬ',
+        confirm:'Остановить', btnBg:'#DA501C',
+        lines:[{text:'Эффективный режим немедленно станет DRY RUN'},
+               {text:'Гейт спросит режим на следующей же попытке — рестарт не нужен'},
+               {text:'Снятие остановки — отдельное действие'}]}),
+
+      limits:(d.limits || []).map(l=>({
+        p:l.label || l.key,
+        v:String(l.value) + (l.unit ? ' ' + l.unit : ''),
+        d:l.description || '',
+        open:()=>api.drill && api.drill({
+          title:l.label || l.key, subtitle:'гардрейл системы',
+          rows:[{k:'Значение', v:String(l.value) + (l.unit ? ' ' + l.unit : '')},
+                {k:'Смысл', v:l.description || '—'},
+                {k:'Где проверяется', v:'app/core/invariants.py — тот же код, что и у гейта'},
+                {k:'Правится', v:'пока только в коде: экран показывает, но не меняет'}],
+          json:JSON.stringify(l, null, 2)})
+      })),
+
+      blocklists:(d.blocklists || []).map(b=>({
+        n:b.name, s:b.source,
+        c: b.count === null || b.count === undefined ? 'не построен' : b.count + ' записей'
+      })),
+
+      // Журнал гардрейла — настоящие попытки отправки из БД. Пока их нет, экран
+      // говорит об этом строкой, а не показывает выдуманные отказы.
+      guardLog:(d.guard_log || []).length
+        ? d.guard_log.map(g=>({
+            t:this.time(g.at),
+            who:'черновик #' + (g.draft_id || '—'),
+            why:(g.reasons || []).join('; ') || (g.allowed ? 'пропущено гейтом' : '—')}))
+        : [{t:'—', who:'Попыток отправки ещё не было',
+            why:'журнал заполнится, когда оператор начнёт одобрять черновики'}]
+    };
+  }
+}
+</script>
+</body>
+</html>

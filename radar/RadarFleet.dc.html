@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F;flex:1">Fleet · {{ fleetLabel }}</div>
+    <button onClick="{{ filters }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ filterLabel }}</button>
+    <button onClick="{{ exportCsv }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Экспорт</button>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="9">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+          <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ r.acct }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.phone }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <span style="display:inline-flex;align-items:center;gap:6px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ r.c }}"><span style="width:8px;height:8px;background:{{ r.c }};display:inline-block"></span>{{ r.st }}</span>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:{{ r.proxyC }}">{{ r.proxy }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.country }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:{{ r.geoC }}">{{ r.geo }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.warmup }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.usecase }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Данные из Engage · клик по строке открывает панель аккаунта</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+    <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'JetBrains Mono',monospace;color:#131E5F">{{ r.acct }}</div>
+        <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.st }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ r.phone }} · прокси {{ r.proxy }}<br>{{ r.warmup }} · {{ r.usecase }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:420},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], loading:true, error:null, status:null };
+
+  // Фильтр по статусу перебором, а не выпадающим списком: значений столько, сколько
+  // их реально есть в ответе Engage, и список статусов, которых во флоте нет, только
+  // сбивал бы с толку.
+  cycleStatus(){
+    const all = [...new Set((this.state.rows || []).map(r=>r.status))].sort();
+    const order = [null, ...all];
+    const i = order.indexOf(this.state.status);
+    this.setState({status: order[(i + 1) % order.length]});
+  }
+
+  async exportCsv(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const rows = this.visible();
+    if(!rows.length) return t('Выгружать нечего', '#C98A1E');
+    const { downloadCsv } = await import('./radar-api.js');
+    downloadCsv('radar-fleet.csv', [
+      {label:'Аккаунт', get:r=>r.label},
+      // Телефон уходит маскированным — тем же, что на экране. CSV легко улетает
+      // в переписку, и полный номер аккаунта там не нужен никому.
+      {label:'Телефон (маска)', get:r=>r.phone_masked},
+      {label:'Статус', get:r=>r.status},
+      {label:'Прокси', get:r=>(r.proxy_type || '') + (r.proxy_country ? ' ' + r.proxy_country : '')},
+      {label:'Прокси здоров', get:r=>r.proxy_healthy},
+      {label:'Страна номера', get:r=>r.phone_country},
+      {label:'Гео совпадает', get:r=>r.geo_match},
+      {label:'День прогрева', get:r=>r.warmup_day},
+      {label:'Тир прогрева', get:r=>r.warmup_tier},
+      {label:'Сценарий', get:r=>r.use_case},
+    ], rows);
+    t('Выгружено строк: ' + rows.length, '#2E7D57');
+  }
+
+  visible(){
+    const rows = this.state.rows || [];
+    return this.state.status ? rows.filter(r=>r.status === this.state.status) : rows;
+  }
+
+  async componentDidMount(){
+    try {
+      const { get } = await import('./radar-api.js');
+      this.setState({rows: await get('/accounts'), loading:false});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      // Флот — единственный экран с настоящими данными: за ним живой Engage.
+      // Если он молчит, это и надо показать, а не пустую таблицу.
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  STATUS_COLOR = {active:'#2E7D57', warmup:'#C98A1E', sleeping:'#DA501C',
+                  banned:'#8A8F9E', new:'#156479'};
+
+  renderVals(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const all = this.state.rows || [];
+    const rows = this.visible();
+    const suffix = this.state.status ? (' из ' + all.length) : '';
+    const title = this.state.loading ? 'загрузка…'
+                : (this.state.error ? this.state.error
+                : rows.length + ' аккаунтов' + suffix);
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      stop:(e)=>e.stopPropagation(),
+      fleetLabel:title,
+      filterLabel: this.state.status ? ('Статус: ' + this.state.status) : 'Все статусы',
+      filters:()=>this.cycleStatus(),
+      exportCsv:()=>this.exportCsv(),
+      // Колонки описывают то, что Engage действительно знает. Часового пояса,
+      // израсходованных лимитов и аптайма вотчера у него нет — столбцов под них
+      // тоже нет, вместо прочерков в каждой строке.
+      cols:['Аккаунт','Телефон','Статус','Прокси','Страна номера','Geo','Прогрев','Сценарий'],
+      rows:rows.map(f=>{
+        const geoOk = f.geo_match;
+        const row = {
+          acct:f.label,
+          phone:f.phone_masked,
+          st:f.status,
+          c:this.STATUS_COLOR[f.status] || '#8A8F9E',
+          proxy:(f.proxy_type || '—') + (f.proxy_country ? ' · ' + f.proxy_country : '')
+                + (f.proxy_healthy === false ? ' (сбоит)' : ''),
+          proxyC:f.proxy_healthy === false ? '#DA501C' : '#184153',
+          country:f.phone_country || '—',
+          geo:geoOk ? '✓' : '✗',
+          geoC:geoOk ? '#2E7D57' : '#DA501C',
+          warmup:(f.warmup_day == null ? '—' : 'день ' + f.warmup_day)
+                 + (f.warmup_total ? ' из ' + f.warmup_total : '')
+                 + (f.warmup_tier ? ' · ' + f.warmup_tier : ''),
+          usecase:f.use_case || '—'
+        };
+        row.open = ()=>api.drill && api.drill({
+          title:f.label + ' · ' + f.phone_masked,
+          subtitle:'Telegram-аккаунт в Engage · account_id ' + f.id,
+          rows:[
+            {k:'Статус', v:f.status},
+            {k:'Телефон', v:f.phone_masked + ' (' + (f.phone_country || '—') + ')'},
+            {k:'Прокси', v:row.proxy},
+            {k:'Geo-match', v:geoOk ? 'страна прокси совпадает со страной номера'
+                : 'рассинхрон: номер ' + f.phone_country + ', прокси ' + f.proxy_country},
+            {k:'Прогрев', v:row.warmup},
+            {k:'Сценарий', v:f.use_case || '—'},
+            // Прямо называем, чего мы не знаем. Прочерк без объяснения читается
+            // как «ноль», а это разные вещи.
+            {k:'Лимиты за сутки', v:'— Engage не отдаёт израсходованное по аккаунту'},
+            {k:'Последнее действие', v:'— появится после ингеста'},
+            {k:'Аптайм вотчера', v:'— появится после ингеста'}
+          ],
+          note: geoOk ? null
+              : 'Гейт Engage считает такой рассинхрон критическим и усыпляет аккаунт. '
+                + 'Для аккаунтов Андрея выставлен geo_override — прокси один на всех.',
+          actions:[
+            {label:'Пауза', c:'#DA501C', run:()=>api.modal && api.modal({
+              title:'Поставить аккаунт на паузу',
+              lines:[{text:'Аккаунт перестанет читать каналы'},
+                     {text:'Отправка с него будет запрещена'},
+                     {text:'Статус в Engage станет sleeping'}],
+              confirm:'Поставить на паузу', btnBg:'#DA501C',
+              // Пишущих ручек к Engage у Radar ещё нет, и делать вид, что есть, нельзя.
+              done:'Управление флотом появится после Э8'})}
+          ],
+          json:JSON.stringify(f, null, 2)
+        });
+        return row;
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

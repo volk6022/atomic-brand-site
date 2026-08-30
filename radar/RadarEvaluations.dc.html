@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F;flex:1">Evaluations · {{ headline }}</div>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="5">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="e" hint-placeholder-count="3">
+          <tr onClick="{{ e.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ e.v }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ e.p }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ e.r }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ e.f1 }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Причины отказов · {{ reasonsTotal }}</div>
+    <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:44px;text-align:right;font:400 13px/1 'JetBrains Mono',monospace;color:#131E5F">{{ r.n }}</div>
+          <div style="width:{{ r.w }};height:10px;background:#DA501C"></div>
+          <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ r.name }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="margin-top:14px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ markup }}</div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { d:null, loading:true, error:null };
+
+  async componentDidMount(){
+    try {
+      const { get } = await import('./radar-api.js');
+      this.setState({d: await get('/evaluations'), loading:false});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state, d = S.d || {};
+    const note = S.loading ? 'загрузка…' : (S.error || d.note || '');
+    const rate = d.approval_rate == null ? '—' : Math.round(d.approval_rate * 100) + '%';
+    const decided = (d.approved || 0) + (d.rejected || 0);
+
+    // precision/recall тут неоткуда взять: размеченного датасета нет. Показываем то,
+    // что действительно измеряется, — решения человека по очереди черновиков.
+    const main = {
+      v:d.prompt_version || '—',
+      p:String(d.approved == null ? '—' : d.approved),
+      r:String(d.rejected == null ? '—' : d.rejected),
+      f1:rate,
+      open:()=>api.drill && api.drill({
+        title:'Качество генерации · ' + (d.prompt_version || '—'),
+        subtitle:'по решениям оператора',
+        rows:[{k:'Одобрено', v:String(d.approved)},
+              {k:'Отклонено', v:String(d.rejected)},
+              {k:'В очереди', v:String(d.pending)},
+              {k:'Доля одобрений', v:rate},
+              {k:'Как считается', v:'решения человека в очереди черновиков; '
+                                    + 'precision/recall появятся с размеченным датасетом'}],
+        json:JSON.stringify(d, null, 2)})
+    };
+
+    // Причины отказов приходят с сервера и раньше нигде не показывались: массив был
+    // привязан к кнопке «Прогнать регрессию» вместо колонки, из-за чего кнопка не
+    // нажималась, а колонка «Причины» всегда пустовала. Теперь это столбиковая
+    // разбивка — единственная настоящая обратная связь о качестве генерации.
+    const reasons = (d.reject_reasons || []).slice()
+      .sort((a, b)=>b.count - a.count);
+    const maxN = reasons.reduce((m, x)=>Math.max(m, x.count), 0);
+
+    return {
+      pad: this.props.mobile ? '12px' : '0',
+      headline: decided ? decided + ' решений оператора' : 'решений пока нет',
+      reasonsTotal: reasons.length ? 'всего ' + (d.rejected || 0) : 'отказов нет',
+      reasons: reasons.map(x=>({
+        name:x.reason, n:String(x.count),
+        // Ширина от самой частой причины, а не от общего числа: сравниваем
+        // причины между собой, а не с долей отказов.
+        w:Math.max(4, Math.round(x.count * 180 / (maxN || 1))) + 'px'
+      })),
+      // Здесь был выдуманный пример разметки с выдуманной же уверенностью 0.81.
+      // Настоящая ручная разметка появится вместе с экраном «Качество».
+      markup: decided
+        ? 'Считается по решениям оператора в очереди черновиков. Ручная разметка '
+          + 'сообщений из потока появится отдельным инструментом.'
+        : 'Пока решений нет, мерить нечего: качество считается по тому, что человек '
+          + 'одобрил и что отклонил.',
+      // Пятая колонка «Причины» убрана: она всегда была пустой, а сами причины
+      // теперь показаны разбивкой ниже.
+      cols:['Версия','Одобрено','Отклонено','Доля одобрений'],
+      rows: note && !decided
+        ? [{v:note, p:'—', r:'—', f1:'—', c:'#8A8F9E', open:()=>{}}]
+        : [main]
+    };
+  }
+}
+</script>
+</body>
+</html>

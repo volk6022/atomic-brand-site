@@ -1,0 +1,2869 @@
+{
+  "/accounts": [
+    {
+      "geo_match": false,
+      "id": 12,
+      "label": "acc-12",
+      "phone_country": "RU",
+      "phone_masked": "+7900•••4455",
+      "proxy_country": "DE",
+      "proxy_healthy": true,
+      "proxy_type": "socks5",
+      "status": "active",
+      "use_case": "cold_dm",
+      "warmup_day": 5,
+      "warmup_tier": 2,
+      "warmup_total": 20
+    },
+    {
+      "geo_match": true,
+      "id": 13,
+      "label": "acc-13",
+      "phone_country": "RU",
+      "phone_masked": "+7900•••4433",
+      "proxy_country": "RU",
+      "proxy_healthy": true,
+      "proxy_type": "socks5",
+      "status": "warmup",
+      "use_case": "cold_dm",
+      "warmup_day": 2,
+      "warmup_tier": 1,
+      "warmup_total": 20
+    }
+  ],
+  "/alerts": {
+    "rows": [
+      {
+        "ack": false,
+        "created_at": null,
+        "id": "state:mode",
+        "severity": "info",
+        "text": "Сухой прогон: ни одно сообщение не уходит наружу"
+      },
+      {
+        "ack": false,
+        "created_at": "2026-08-25T21:40:54+00:00",
+        "id": 1,
+        "key": "run_failed",
+        "severity": "error",
+        "text": "задача упала"
+      }
+    ],
+    "unread": 1
+  },
+  "/attribution": {
+    "leads": [
+      {
+        "amount": null,
+        "converted_at": null,
+        "lead_id": 1,
+        "ref_token": "rdr-0001"
+      }
+    ],
+    "note": "Отправок ещё не было — конверсии считать не с чего",
+    "unit_economics": [
+      {
+        "answered": 0,
+        "channel": "VPS Club",
+        "converted": 0,
+        "leads": 0,
+        "messages": 90,
+        "revenue": 0.0
+      },
+      {
+        "answered": 0,
+        "channel": "DevOps Chat",
+        "converted": 0,
+        "leads": 0,
+        "messages": 79,
+        "revenue": 0.0
+      },
+      {
+        "answered": 0,
+        "channel": "Мастерская инженера",
+        "converted": 0,
+        "leads": 0,
+        "messages": 87,
+        "revenue": 0.0
+      },
+      {
+        "answered": 0,
+        "channel": "Инфра для стартапов",
+        "converted": 0,
+        "leads": 0,
+        "messages": 105,
+        "revenue": 0.0
+      },
+      {
+        "answered": 0,
+        "channel": "VPN и Обход",
+        "converted": 0,
+        "leads": 0,
+        "messages": 91,
+        "revenue": 0.0
+      },
+      {
+        "answered": 0,
+        "channel": "Linux Админы",
+        "converted": 0,
+        "leads": 0,
+        "messages": 107,
+        "revenue": 0.0
+      }
+    ]
+  },
+  "/audit": {
+    "limit": 50,
+    "offset": 0,
+    "rows": [],
+    "total": 0
+  },
+  "/auth/me": {
+    "capabilities": [
+      "draft.decide",
+      "draft.reopen",
+      "lead.status",
+      "bulk.decide",
+      "manual_send.record",
+      "config.edit",
+      "config.propose",
+      "config.preview",
+      "config.activate",
+      "templates.edit",
+      "templates.activate",
+      "channel.add",
+      "channel.edit",
+      "channel.assign",
+      "channel.join",
+      "channel.archive",
+      "account.manage",
+      "run.backfill",
+      "run.heavy",
+      "run.eval",
+      "run.export",
+      "run.cancel",
+      "mode.live",
+      "mode.dry_run",
+      "system.kill",
+      "system.resume",
+      "limits.tighten",
+      "limits.loosen",
+      "blocklist.edit",
+      "user.manage",
+      "alert.ack",
+      "alert.rules"
+    ],
+    "email": "owner@local",
+    "initials": "ИВ",
+    "name": "Иван В.",
+    "role": "owner",
+    "sections": [
+      "dashboard",
+      "fleet",
+      "channels",
+      "stream",
+      "leads",
+      "drafts",
+      "conversations",
+      "manual_sends",
+      "profile",
+      "runs",
+      "evals",
+      "attribution",
+      "observability",
+      "safety",
+      "admin"
+    ]
+  },
+  "/channels": {
+    "limit": 50,
+    "offset": 0,
+    "rows": [
+      {
+        "id": 6,
+        "ingest_enabled": false,
+        "is_junk": false,
+        "leads_per_1000": 0.0,
+        "leads_total": 0,
+        "linked_chat_username": null,
+        "members": null,
+        "messages_total": 107,
+        "peer_id": -1501,
+        "prefilter_rate": 0.2243,
+        "title": "Linux Админы",
+        "topic": "Системное администрирование",
+        "username": "linux_admins"
+      },
+      {
+        "id": 5,
+        "ingest_enabled": false,
+        "is_junk": false,
+        "leads_per_1000": 0.0,
+        "leads_total": 0,
+        "linked_chat_username": null,
+        "members": null,
+        "messages_total": 91,
+        "peer_id": -1401,
+        "prefilter_rate": 0.2747,
+        "title": "VPN и Обход",
+        "topic": "Технологии маршрутизации",
+        "username": null
+      },
+      {
+        "id": 4,
+        "ingest_enabled": false,
+        "is_junk": false,
+        "leads_per_1000": 0.0,
+        "leads_total": 0,
+        "linked_chat_username": null,
+        "members": null,
+        "messages_total": 105,
+        "peer_id": -1301,
+        "prefilter_rate": 0.2571,
+        "title": "Инфра для стартапов",
+        "topic": "Облако и боль",
+        "username": "infra_startups"
+      },
+      {
+        "id": 3,
+        "ingest_enabled": false,
+        "is_junk": false,
+        "leads_per_1000": 0.0,
+        "leads_total": 0,
+        "linked_chat_username": null,
+        "members": null,
+        "messages_total": 87,
+        "peer_id": -1201,
+        "prefilter_rate": 0.2299,
+        "title": "Мастерская инженера",
+        "topic": "Техническое обсуждение",
+        "username": null
+      },
+      {
+        "id": 2,
+        "ingest_enabled": false,
+        "is_junk": false,
+        "leads_per_1000": 0.0,
+        "leads_total": 0,
+        "linked_chat_username": null,
+        "members": null,
+        "messages_total": 79,
+        "peer_id": -1101,
+        "prefilter_rate": 0.2532,
+        "title": "DevOps Chat",
+        "topic": "Админство и DevOps",
+        "username": "devops_chat"
+      },
+      {
+        "id": 1,
+        "ingest_enabled": false,
+        "is_junk": false,
+        "leads_per_1000": 0.0,
+        "leads_total": 0,
+        "linked_chat_username": null,
+        "members": null,
+        "messages_total": 90,
+        "peer_id": -1001,
+        "prefilter_rate": 0.2333,
+        "title": "VPS Club",
+        "topic": "Обсуждение хостинга и VPS",
+        "username": "vpsclub"
+      }
+    ],
+    "total": 6
+  },
+  "/channels/options": [
+    {
+      "id": 2,
+      "title": "DevOps Chat",
+      "username": "devops_chat"
+    },
+    {
+      "id": 6,
+      "title": "Linux Админы",
+      "username": "linux_admins"
+    },
+    {
+      "id": 5,
+      "title": "VPN и Обход",
+      "username": null
+    },
+    {
+      "id": 1,
+      "title": "VPS Club",
+      "username": "vpsclub"
+    },
+    {
+      "id": 4,
+      "title": "Инфра для стартапов",
+      "username": "infra_startups"
+    },
+    {
+      "id": 3,
+      "title": "Мастерская инженера",
+      "username": null
+    }
+  ],
+  "/conversations": {
+    "limit": 50,
+    "note": null,
+    "offset": 0,
+    "rows": [
+      {
+        "account": 1,
+        "id": 1,
+        "last_sent_at": "2026-08-25T18:40:54+00:00",
+        "lead_id": 1,
+        "peer_name": "Пётр К.",
+        "peer_username": "@user_23",
+        "sent_count": 1,
+        "state": "awaiting_reply"
+      }
+    ],
+    "state": null,
+    "states": [
+      {
+        "count": 0,
+        "key": "new"
+      },
+      {
+        "count": 1,
+        "key": "awaiting_reply"
+      },
+      {
+        "count": 0,
+        "key": "replied"
+      },
+      {
+        "count": 0,
+        "key": "handed_off"
+      },
+      {
+        "count": 0,
+        "key": "closed"
+      }
+    ],
+    "total": 1
+  },
+  "/counters": {
+    "conversations": 1,
+    "drafts": 42
+  },
+  "/dashboard": {
+    "errors": [],
+    "funnel": [
+      {
+        "count": 559,
+        "go": "stream",
+        "step": "Сообщений"
+      },
+      {
+        "count": 340,
+        "go": "stream",
+        "step": "L0 структура"
+      },
+      {
+        "count": 268,
+        "go": "stream",
+        "step": "L1 слова"
+      },
+      {
+        "count": null,
+        "go": "stream",
+        "step": "L2 эмбеддинги"
+      },
+      {
+        "count": null,
+        "go": "stream",
+        "step": "L3 LLM"
+      },
+      {
+        "count": 80,
+        "go": "leads",
+        "step": "Лиды"
+      }
+    ],
+    "killed": false,
+    "mode": "DRY_RUN",
+    "queues": [
+      {
+        "count": 42,
+        "go": "drafts",
+        "key": "drafts",
+        "label": "Черновики"
+      },
+      {
+        "count": 30,
+        "go": "leads",
+        "key": "leads",
+        "label": "Лиды без обработки"
+      },
+      {
+        "count": 6,
+        "go": "channels",
+        "key": "channels",
+        "label": "Каналов в реестре"
+      },
+      {
+        "count": 1,
+        "go": "conversations",
+        "key": "conversations",
+        "label": "Диалогов"
+      }
+    ],
+    "services": [
+      {
+        "name": "engage",
+        "status": "down"
+      },
+      {
+        "name": "postgres",
+        "status": "ok"
+      },
+      {
+        "name": "embeddings",
+        "status": "off"
+      },
+      {
+        "name": "llm",
+        "status": "off"
+      },
+      {
+        "name": "queue",
+        "status": "off"
+      }
+    ],
+    "tiles": [
+      {
+        "go": "stream",
+        "key": "messages",
+        "label": "Сообщений всего",
+        "value": 559
+      },
+      {
+        "go": "stream",
+        "key": "messages_24h",
+        "label": "Сообщений за 24ч",
+        "value": 47
+      },
+      {
+        "go": "leads",
+        "key": "leads",
+        "label": "Лидов найдено",
+        "value": 80
+      },
+      {
+        "go": "drafts",
+        "key": "drafts",
+        "label": "Черновиков в очереди",
+        "value": 42
+      },
+      {
+        "go": "conversations",
+        "key": "conversations",
+        "label": "Диалогов",
+        "value": 1
+      },
+      {
+        "go": "conversations",
+        "key": "sent",
+        "label": "Отправлено",
+        "value": 0
+      },
+      {
+        "go": "safety",
+        "key": "blocked",
+        "label": "Заблокировано гейтом",
+        "value": 1
+      }
+    ]
+  },
+  "/drafts/list": {
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "author_name": "Максим Г.",
+        "author_username": "@user_305",
+        "channel": "Мастерская инженера",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 80,
+        "lead_id": 80,
+        "pain": "хостинг тормозит/дорог",
+        "reject_reason": null,
+        "score": 94,
+        "state": "pending",
+        "text": "Видел твоё сообщение про хостинг — у меня было похоже, пока не перенёс всё к Андрею (@vertsanov_biz). Развернул за день, с тех пор тихо."
+      },
+      {
+        "author_name": "Виктор Б.",
+        "author_username": "@user_89",
+        "channel": "VPS Club",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 79,
+        "lead_id": 79,
+        "pain": "VPN не работает",
+        "reject_reason": null,
+        "score": 78,
+        "state": "pending",
+        "text": "Видел про VPN — у меня было то же самое, пока Андрей (@vertsanov_biz) не поднял свой на Remnawave. С тех пор не отваливается."
+      },
+      {
+        "author_name": "Константин Ф.",
+        "author_username": "@user_302",
+        "channel": "Мастерская инженера",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 78,
+        "lead_id": 78,
+        "pain": "хостинг тормозит/дорог",
+        "reject_reason": null,
+        "score": 41,
+        "state": "pending",
+        "text": "Видел твоё сообщение про хостинг — у меня было похоже, пока не перенёс всё к Андрею (@vertsanov_biz). Развернул за день, с тех пор тихо."
+      },
+      {
+        "author_name": "Андрей В.",
+        "author_username": "@user_470",
+        "channel": "Linux Админы",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 77,
+        "lead_id": 77,
+        "pain": "не может настроить сам",
+        "reject_reason": null,
+        "score": 54,
+        "state": "pending",
+        "text": "Сам мучился с этим же — в итоге позвал Андрея (@vertsanov_biz), он развернул за вечер и показал, что к чему."
+      },
+      {
+        "author_name": "Сергей Л.",
+        "author_username": "@user_427",
+        "channel": "DevOps Chat",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 76,
+        "lead_id": 76,
+        "pain": "хостинг тормозит/дорог",
+        "reject_reason": null,
+        "score": 73,
+        "state": "pending",
+        "text": "Видел твоё сообщение про хостинг — у меня было похоже, пока не перенёс всё к Андрею (@vertsanov_biz). Развернул за день, с тех пор тихо."
+      }
+    ],
+    "states": {
+      "approved": 3,
+      "pending": 72,
+      "rejected": 4
+    },
+    "total": 80
+  },
+  "/drafts/next": {
+    "draft": {
+      "author_name": "Пётр К.",
+      "author_username": "@user_23",
+      "channel": "DevOps Chat",
+      "chosen_variant": null,
+      "decided_at": null,
+      "decided_by": null,
+      "disqualifiers": [],
+      "final_text": null,
+      "id": 1,
+      "lead_id": 1,
+      "pain": "хостинг тормозит/дорог",
+      "reject_reason": null,
+      "score": 47,
+      "score_breakdown": [
+        {
+          "label": "есть боль",
+          "points": 26
+        },
+        {
+          "label": "намерение",
+          "points": 19
+        }
+      ],
+      "source_message_link": "https://t.me/devops_chat/1273",
+      "state": "pending",
+      "thread": [
+        {
+          "meta": "19.08 03:21 · Андрей В.",
+          "target": false,
+          "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
+        },
+        {
+          "meta": "19.08 07:27 · Пётр К. — кандидат",
+          "target": true,
+          "text": "«Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?»"
+        },
+        {
+          "meta": "19.08 11:47 · Игорь С.",
+          "target": false,
+          "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
+        },
+        {
+          "meta": "19.08 13:06 · Алексей Н.",
+          "target": false,
+          "text": "«LOL это была смешная история с сервером»"
+        }
+      ],
+      "variants": [
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: вариант собран по шаблону (prompt_version=template-v0). Читайте текст сами.",
+          "lint_ok": true,
+          "prompt_version": "template-v0",
+          "spam_score": 0.1,
+          "text": "Видел твоё сообщение про хостинг — у меня было похоже, пока не перенёс всё к Андрею (@vertsanov_biz). Развернул за день, с тех пор тихо."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: вариант собран по шаблону (prompt_version=template-v0). Читайте текст сами.",
+          "lint_ok": true,
+          "prompt_version": "template-v0",
+          "spam_score": 0.1,
+          "text": "По хостингу: если не хочется копаться самому, Андрей (@vertsanov_biz) занимается переносами без простоя. Могу передать контакт."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: вариант собран по шаблону (prompt_version=template-v0). Читайте текст сами.",
+          "lint_ok": true,
+          "prompt_version": "template-v0",
+          "spam_score": 0.1,
+          "text": "Сам недавно съезжал с такого же. Помог Андрей (@vertsanov_biz) — сделал и объяснил, что где лежит."
+        }
+      ]
+    },
+    "remaining": 72,
+    "state": "pending"
+  },
+  "/drafts/reasons": [
+    {
+      "label": "Не та боль",
+      "n": 1
+    },
+    {
+      "label": "Не тот человек",
+      "n": 2
+    },
+    {
+      "label": "Звучит как реклама",
+      "n": 3
+    },
+    {
+      "label": "Слишком длинно",
+      "n": 4
+    },
+    {
+      "label": "Фактическая ошибка",
+      "n": 5
+    },
+    {
+      "label": "Неверный тон",
+      "n": 6
+    },
+    {
+      "label": "Дублирует отправленное",
+      "n": 7
+    },
+    {
+      "label": "Ссылка в первом сообщении",
+      "n": 8
+    },
+    {
+      "label": "Другое",
+      "n": 9
+    }
+  ],
+  "/drafts/{id}": {
+    "draft": {
+      "author_name": "Пётр К.",
+      "author_username": "@user_23",
+      "channel": "DevOps Chat",
+      "chosen_variant": null,
+      "decided_at": null,
+      "decided_by": null,
+      "disqualifiers": [],
+      "final_text": null,
+      "id": 1,
+      "lead_id": 1,
+      "pain": "хостинг тормозит/дорог",
+      "reject_reason": null,
+      "score": 47,
+      "score_breakdown": [
+        {
+          "label": "есть боль",
+          "points": 26
+        },
+        {
+          "label": "намерение",
+          "points": 19
+        }
+      ],
+      "source_message_link": "https://t.me/devops_chat/1273",
+      "state": "pending",
+      "thread": [
+        {
+          "meta": "19.08 03:21 · Андрей В.",
+          "target": false,
+          "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
+        },
+        {
+          "meta": "19.08 07:27 · Пётр К. — кандидат",
+          "target": true,
+          "text": "«Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?»"
+        },
+        {
+          "meta": "19.08 11:47 · Игорь С.",
+          "target": false,
+          "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
+        },
+        {
+          "meta": "19.08 13:06 · Алексей Н.",
+          "target": false,
+          "text": "«LOL это была смешная история с сервером»"
+        }
+      ],
+      "variants": [
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: вариант собран по шаблону (prompt_version=template-v0). Читайте текст сами.",
+          "lint_ok": true,
+          "prompt_version": "template-v0",
+          "spam_score": 0.1,
+          "text": "Видел твоё сообщение про хостинг — у меня было похоже, пока не перенёс всё к Андрею (@vertsanov_biz). Развернул за день, с тех пор тихо."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: вариант собран по шаблону (prompt_version=template-v0). Читайте текст сами.",
+          "lint_ok": true,
+          "prompt_version": "template-v0",
+          "spam_score": 0.1,
+          "text": "По хостингу: если не хочется копаться самому, Андрей (@vertsanov_biz) занимается переносами без простоя. Могу передать контакт."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: вариант собран по шаблону (prompt_version=template-v0). Читайте текст сами.",
+          "lint_ok": true,
+          "prompt_version": "template-v0",
+          "spam_score": 0.1,
+          "text": "Сам недавно съезжал с такого же. Помог Андрей (@vertsanov_biz) — сделал и объяснил, что где лежит."
+        }
+      ]
+    },
+    "remaining": 72,
+    "state": "pending"
+  },
+  "/evaluations": {
+    "approval_rate": 0.429,
+    "approved": 3,
+    "note": null,
+    "pending": 72,
+    "prompt_version": "template-v0",
+    "reject_reasons": [
+      {
+        "count": 4,
+        "reason": "—"
+      }
+    ],
+    "rejected": 4
+  },
+  "/leads": {
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "author_name": "Максим Г.",
+        "author_username": "@user_305",
+        "channel": "Мастерская инженера",
+        "channel_id": 3,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 80,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "reject_reason": null,
+        "score": 94,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 25
+          }
+        ],
+        "status": "new"
+      },
+      {
+        "author_name": "Ивал М.",
+        "author_username": "@user_5",
+        "channel": "DevOps Chat",
+        "channel_id": 2,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 75,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "что делать?",
+        "reject_reason": null,
+        "score": 93,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 25
+          }
+        ],
+        "status": "new"
+      },
+      {
+        "author_name": "Сергей Л.",
+        "author_username": "@user_22",
+        "channel": "Linux Админы",
+        "channel_id": 6,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 61,
+        "pain": "VPN не работает",
+        "quote": "спасибо",
+        "reject_reason": null,
+        "score": 93,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 25
+          }
+        ],
+        "status": "new"
+      },
+      {
+        "author_name": "Андрей В.",
+        "author_username": "@user_164",
+        "channel": "DevOps Chat",
+        "channel_id": 2,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 48,
+        "pain": "не может настроить сам",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "reject_reason": "уже клиент",
+        "score": 92,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 29
+          },
+          {
+            "label": "намерение",
+            "points": 23
+          }
+        ],
+        "status": "rejected"
+      },
+      {
+        "author_name": "Виктор Б.",
+        "author_username": "@user_403",
+        "channel": "Linux Админы",
+        "channel_id": 6,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 71,
+        "pain": "не может настроить сам",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "reject_reason": null,
+        "score": 91,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 25
+          }
+        ],
+        "status": "new"
+      }
+    ],
+    "states": [
+      {
+        "count": 30,
+        "key": "new"
+      },
+      {
+        "count": 26,
+        "key": "in_review"
+      },
+      {
+        "count": 10,
+        "key": "approved"
+      },
+      {
+        "count": 14,
+        "key": "rejected"
+      }
+    ],
+    "total": 80
+  },
+  "/leads/pains": [
+    {
+      "count": 23,
+      "label": "нужен админ/подрядчик",
+      "value": "нужен админ/подрядчик"
+    },
+    {
+      "count": 21,
+      "label": "хостинг тормозит/дорог",
+      "value": "хостинг тормозит/дорог"
+    },
+    {
+      "count": 18,
+      "label": "VPN не работает",
+      "value": "VPN не работает"
+    },
+    {
+      "count": 18,
+      "label": "не может настроить сам",
+      "value": "не может настроить сам"
+    }
+  ],
+  "/limits": {
+    "blocklists": [
+      {
+        "count": null,
+        "name": "Админы и модераторы каналов",
+        "source": "не построен"
+      },
+      {
+        "count": null,
+        "name": "Боты",
+        "source": "определяется на L0 по флагу автора"
+      },
+      {
+        "count": 0,
+        "name": "Ранее написанные",
+        "source": "не построен — появится с первой отправкой"
+      }
+    ],
+    "guard_log": [
+      {
+        "allowed": false,
+        "at": "2026-08-25T22:43:30.538196+00:00",
+        "draft_id": 1,
+        "mode": "DRY_RUN",
+        "reasons": [
+          "сухой прогон"
+        ]
+      }
+    ],
+    "limits": [
+      {
+        "description": "больше — это преследование, а не диалог",
+        "key": "max_messages_per_conversation",
+        "label": "Сообщений в одном диалоге",
+        "unit": "шт",
+        "value": 4
+      },
+      {
+        "description": "два подряд выдают бота вернее любого текста",
+        "key": "min_gap_hours",
+        "label": "Пауза между сообщениями",
+        "unit": "ч",
+        "value": 20
+      },
+      {
+        "description": "ночное сообщение читается как рассылка",
+        "key": "quiet_hours",
+        "label": "Тихие часы (время собеседника)",
+        "unit": "",
+        "value": "00:00–08:00"
+      },
+      {
+        "description": "прямой путь в спам, причина отклонения №8",
+        "key": "max_links_first_message",
+        "label": "Ссылок в первом сообщении",
+        "unit": "шт",
+        "value": 0
+      }
+    ]
+  },
+  "/manual-sends/accounts": {
+    "available": true,
+    "reason": null,
+    "rows": [
+      {
+        "id": 12,
+        "label": "acc-12",
+        "status": "active",
+        "use_case": "cold_dm"
+      },
+      {
+        "id": 13,
+        "label": "acc-13",
+        "status": "warmup",
+        "use_case": "cold_dm"
+      }
+    ]
+  },
+  "/manual-sends/accounts [ENGAGE НЕДОСТУПЕН]": {
+    "available": false,
+    "reason": "engage unreachable: connection refused",
+    "rows": []
+  },
+  "/manual-sends/candidates": {
+    "rows": [
+      {
+        "author_name": "Максим Г.",
+        "author_username": "@user_305",
+        "channel": "Мастерская инженера",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "score": 94,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 130
+      },
+      {
+        "author_name": "Виктор Б.",
+        "author_username": "@user_89",
+        "channel": "VPS Club",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "Нужен хороший админ, который может настроить нам инфраструктуру. Может кто порекомендовать?",
+        "score": 78,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 129
+      },
+      {
+        "author_name": "Константин Ф.",
+        "author_username": "@user_302",
+        "channel": "Мастерская инженера",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "Пытаюсь поднять 3x-ui, но что-то не получается — где-то в конфиге ошибка, я новичок в этом, помогите",
+        "score": 41,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 128
+      },
+      {
+        "author_name": "Андрей В.",
+        "author_username": "@user_470",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "не может настроить сам",
+        "quote": "Кто ещё тут занимается хостингом? Просто любопытно",
+        "score": 54,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 127
+      },
+      {
+        "author_name": "Сергей Л.",
+        "author_username": "@user_427",
+        "channel": "DevOps Chat",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "У кого есть рекомендация хорошего ВПН?",
+        "score": 73,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 126
+      },
+      {
+        "author_name": "Ивал М.",
+        "author_username": "@user_5",
+        "channel": "DevOps Chat",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "что делать?",
+        "score": 93,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 125
+      },
+      {
+        "author_name": "Константин Ф.",
+        "author_username": "@user_211",
+        "channel": "Инфра для стартапов",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "Я не могу настроить самостоятельно Marzban на своём сервере — везде ошибки какие-то выскакивают, не знаю что делать. Может кто подсказать?",
+        "score": 60,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 124
+      },
+      {
+        "author_name": "Денис Р.",
+        "author_username": "@user_402",
+        "channel": "DevOps Chat",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "score": 73,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 123
+      },
+      {
+        "author_name": "Пётр К.",
+        "author_username": "@user_318",
+        "channel": "VPS Club",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "нужен админ/подрядчик",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "score": 69,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 122
+      },
+      {
+        "author_name": "Виктор Б.",
+        "author_username": "@user_403",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "не может настроить сам",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+        "score": 91,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 121
+      },
+      {
+        "author_name": "Константин Ф.",
+        "author_username": "@user_380",
+        "channel": "VPN и Обход",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "нужен админ/подрядчик",
+        "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "score": 79,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 120
+      },
+      {
+        "author_name": "Виктор Б.",
+        "author_username": "@user_406",
+        "channel": "Мастерская инженера",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "Вакансия: DevOps инженер зарплата 150к",
+        "score": 46,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 119
+      },
+      {
+        "author_name": "Bot 18",
+        "author_username": "@bot_49",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "нужен админ/подрядчик",
+        "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "score": 64,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 118
+      },
+      {
+        "author_name": "Денис Р.",
+        "author_username": "@user_340",
+        "channel": "Мастерская инженера",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?",
+        "score": 73,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 117
+      },
+      {
+        "author_name": "Алексей Н.",
+        "author_username": "@user_71",
+        "channel": "Мастерская инженера",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "score": 64,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 116
+      },
+      {
+        "author_name": "Пётр К.",
+        "author_username": "@user_176",
+        "channel": "DevOps Chat",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "нужен админ/подрядчик",
+        "quote": "Пытаюсь поднять 3x-ui, но что-то не получается — где-то в конфиге ошибка, я новичок в этом, помогите",
+        "score": 65,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 115
+      },
+      {
+        "author_name": "Ивал М.",
+        "author_username": "@user_28",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "не может настроить сам",
+        "quote": "Я не могу настроить самостоятельно Marzban на своём сервере — везде ошибки какие-то выскакивают, не знаю что делать. Может кто подсказать?",
+        "score": 88,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 114
+      },
+      {
+        "author_name": "Алексей Н.",
+        "author_username": "@user_420",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "LOL это была смешная история с сервером",
+        "score": 53,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 113
+      },
+      {
+        "author_name": "Игорь С.",
+        "author_username": "@user_159",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "нужен админ/подрядчик",
+        "quote": "Мой новый проект на Golang уже готов!",
+        "score": 55,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 112
+      },
+      {
+        "author_name": "Сергей Л.",
+        "author_username": "@user_22",
+        "channel": "Linux Админы",
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "draft_id": null,
+        "pain": "VPN не работает",
+        "quote": "спасибо",
+        "score": 93,
+        "status": "new",
+        "suggested_text": null,
+        "target_id": 111
+      }
+    ]
+  },
+  "/manual-sends/form": {
+    "default_workflow_id": 1,
+    "workflows": [
+      {
+        "action": "dm",
+        "id": 1,
+        "key": "cold_dm",
+        "title": "Личные сообщения",
+        "visibility": "private"
+      },
+      {
+        "action": "reply",
+        "id": 2,
+        "key": "public_reply",
+        "title": "Публичные ответы",
+        "visibility": "public"
+      }
+    ]
+  },
+  "/manual-sends/list": {
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "author_name": "—",
+        "author_username": null,
+        "channel": null,
+        "draft_id": null,
+        "engage_account_id": null,
+        "id": 2,
+        "matches_suggestion": false,
+        "note": null,
+        "pain": null,
+        "quote": null,
+        "recorded_at": "2026-08-25T22:43:35.826767+00:00",
+        "recorded_by": "owner@local",
+        "sent_at": null,
+        "suggested_text": null,
+        "target_id": null,
+        "text": "Ответил человеку из чата, которого Radar не находил",
+        "workflow_id": 1
+      },
+      {
+        "author_name": "Пётр К.",
+        "author_username": "@user_23",
+        "channel": "DevOps Chat",
+        "draft_id": 20,
+        "engage_account_id": 12,
+        "id": 1,
+        "matches_suggestion": false,
+        "note": null,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?",
+        "recorded_at": "2026-08-25T22:43:35.826767+00:00",
+        "recorded_by": "owner@local",
+        "sent_at": "2026-08-25T22:10:54+00:00",
+        "suggested_text": "Видел твоё сообщение про хостинг — у меня было похоже, пока не перенёс всё к Андрею (@vertsanov_biz). Развернул за день, с тех пор тихо.",
+        "target_id": 1,
+        "text": "Привет. Судя по описанию, дело в конфиге.",
+        "workflow_id": 1
+      }
+    ],
+    "total": 2
+  },
+  "/messages": {
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "author_name": "Максим Г.",
+        "author_username": "@user_14",
+        "cascade": {
+          "l0": null,
+          "l1": null,
+          "l2": null,
+          "l3": null
+        },
+        "cascade_notes": {
+          "status": "в очереди на обработку"
+        },
+        "channel": "Мастерская инженера",
+        "id": 1558,
+        "is_automatic_forward": false,
+        "lead_id": null,
+        "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
+        "tg_date": "2026-08-25T22:26:54+00:00"
+      },
+      {
+        "author_name": "Денис Р.",
+        "author_username": "@user_164",
+        "cascade": {
+          "l0": true,
+          "l1": true,
+          "l2": true,
+          "l3": true
+        },
+        "cascade_notes": {
+          "l0": "структура в порядке",
+          "l1": "есть боль",
+          "l2": "похоже на VPN не работает",
+          "l3": "живая проблема"
+        },
+        "channel": "VPS Club",
+        "id": 1557,
+        "is_automatic_forward": false,
+        "lead_id": 4,
+        "text": "Нужна помощь с переездом на новый сервер — весь процесс, с сохранением данных. Посоветуйте, где такое заказать",
+        "tg_date": "2026-08-25T21:55:54+00:00"
+      },
+      {
+        "author_name": "Андрей В.",
+        "author_username": "@user_470",
+        "cascade": {
+          "l0": true,
+          "l1": true,
+          "l2": true,
+          "l3": true
+        },
+        "cascade_notes": {
+          "l0": "структура в порядке",
+          "l1": "есть боль",
+          "l2": "похоже на не может настроить сам",
+          "l3": "живая проблема"
+        },
+        "channel": "Linux Админы",
+        "id": 1556,
+        "is_automatic_forward": false,
+        "lead_id": 77,
+        "text": "Кто ещё тут занимается хостингом? Просто любопытно",
+        "tg_date": "2026-08-25T21:30:54+00:00"
+      },
+      {
+        "author_name": "Алексей Н.",
+        "author_username": "@user_71",
+        "cascade": {
+          "l0": true,
+          "l1": true,
+          "l2": true,
+          "l3": true
+        },
+        "cascade_notes": {
+          "l0": "структура в порядке",
+          "l1": "есть боль",
+          "l2": "похоже на VPN не работает",
+          "l3": "живая проблема"
+        },
+        "channel": "Мастерская инженера",
+        "id": 1555,
+        "is_automatic_forward": false,
+        "lead_id": 66,
+        "text": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "tg_date": "2026-08-25T20:41:54+00:00"
+      },
+      {
+        "author_name": "Алексей Н.",
+        "author_username": "@user_219",
+        "cascade": {
+          "l0": false,
+          "l1": null,
+          "l2": null,
+          "l3": null
+        },
+        "cascade_notes": {
+          "l0": "автопересылка поста или бот"
+        },
+        "channel": "Linux Админы",
+        "id": 1554,
+        "is_automatic_forward": false,
+        "lead_id": null,
+        "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
+        "tg_date": "2026-08-25T19:58:54+00:00"
+      }
+    ],
+    "total": 559
+  },
+  "/profile": {
+    "business_description": "Настройка VPS, VPN и прокси.",
+    "cascade": {
+      "l2_enabled": false,
+      "l2_min_margin": 0.01,
+      "l2_model": null,
+      "l3_enabled": false,
+      "l3_model": null,
+      "l3_prompt": "Ты помогаешь отбирать людей, которым нужна помощь с хостингом, VPS, VPN и настройкой серверов. Тебе дают одно сообщение из публичного чата Telegram и соседние сообщения для контекста.\n\nТвоя работа — наблюдение, а не решение. Ты НЕ решаешь, писать человеку или нет; ты отвечаешь, что видно в тексте.\n\nОтветь ТОЛЬКО объектом JSON, без пояснений вокруг:\n{\"real_problem\": true|false, \"is_seller\": true|false, \"answering_someone_else\": true|false, \"urgency\": \"low\"|\"medium\"|\"high\", \"pain\": \"<короткое имя проблемы или null>\", \"why\": \"<одно предложение по-русски>\"}\n\nreal_problem — у автора СЕЙЧАС есть неудобство, поломка или задача, которую он не может решить сам. Праздный вопрос, спор о технологиях, шутка — это false.\nis_seller — автор сам предлагает такие услуги или рекламирует свой продукт.\nanswering_someone_else — автор отвечает на чужой вопрос, помогает другому; тогда проблема не его.\nwhy — почему ты так решил, одним предложением, по-русски.",
+      "l3_prompt_key": "dm_v1",
+      "l3_prompt_version": "l3-verdict-v1",
+      "profile": "dm_v1",
+      "profile_title": "Личные сообщения"
+    },
+    "disqualifiers": [
+      {
+        "key": "сам продаёт услугу",
+        "markers": [
+          "предлагаю услуги",
+          "оказываю услуги",
+          "мои услуги",
+          "прайс",
+          "обращайтесь",
+          "пишите в лс"
+        ]
+      },
+      {
+        "key": "реклама/спам",
+        "markers": [
+          "розыгрыш",
+          "промокод",
+          "скидка",
+          "распродажа",
+          "курс по"
+        ]
+      },
+      {
+        "key": "вакансия",
+        "markers": [
+          "вакансия",
+          "резюме",
+          "ищем в команду",
+          "зарплата"
+        ]
+      }
+    ],
+    "generation": {
+      "note": "Черновики собираются по шаблонам: текст ответа модель пока не пишет — L3 только выносит вердикт по сообщению",
+      "prompt_version": "template-v0"
+    },
+    "is_active": true,
+    "noise_prototypes": [
+      {
+        "examples": [
+          "а через впн туда вообще можно зайти?",
+          "интересно, а какой протокол сейчас популярнее",
+          "да, у меня тоже такой хостинг, нормально работает",
+          "прикольно, не знал что так можно"
+        ],
+        "key": "болтовня по теме, проблемы нет"
+      },
+      {
+        "examples": [
+          "настрою vpn под ключ, недорого, пишите в личку",
+          "оказываю услуги системного администрирования, опыт 10 лет",
+          "продаю конфиги, есть безлимит, прайс в закрепе",
+          "мы хостинг-провайдер, у нас акция на новые тарифы"
+        ],
+        "key": "сам оказывает такие услуги"
+      },
+      {
+        "examples": [
+          "попробуй перезапустить службу, у меня так помогло",
+          "тебе надо в конфиге поменять порт, вот пример",
+          "это известный баг, лечится обновлением",
+          "смотри логи, там будет написано в чём дело"
+        ],
+        "key": "отвечает другому, проблема не его"
+      },
+      {
+        "examples": [
+          "всем привет, как дела",
+          "когда уже выходные",
+          "смотрели вчера матч?",
+          "спасибо большое, всё получилось"
+        ],
+        "key": "офтоп"
+      }
+    ],
+    "pains": [
+      {
+        "anchors": [
+          "хостинг",
+          "хостинге",
+          "хостинга",
+          "хостингом",
+          "vps",
+          "впс"
+        ],
+        "anchors_total": 11,
+        "key": "хостинг тормозит/дорог",
+        "label": "хостинг тормозит/дорог",
+        "prototypes": [
+          "хостер тормозит уже вторую неделю, сайт открывается по десять секунд, куда переехать?",
+          "посоветуйте нормальный vps, текущий хостинг дорогой и постоянно лежит",
+          "у меня на сервере всё дико тупит, поддержка отписывается отписками",
+          "ищу куда перенести проект, надоел текущий хостинг с его аптаймом",
+          "сколько вы платите за vds? у меня выходит дорого за такие характеристики"
+        ]
+      },
+      {
+        "anchors": [
+          "vpn",
+          "впн",
+          "прокси не работает",
+          "обход блокировок",
+          "outline",
+          "vless"
+        ],
+        "anchors_total": 8,
+        "key": "VPN не работает",
+        "label": "VPN не работает",
+        "prototypes": [
+          "впн перестал работать, вчера всё было нормально, сегодня не подключается",
+          "vless конфиг отваливается каждые пять минут, что с этим делать",
+          "outline не коннектится, пробовал разные серверы, ничего не помогает",
+          "wireguard поднял, а трафик не идёт, куда копать",
+          "мой vpn заблокировали, нужен нормальный рабочий вариант"
+        ]
+      },
+      {
+        "anchors": [
+          "3x-ui",
+          "3x ui",
+          "marzban",
+          "remnawave",
+          "не могу настроить",
+          "не получается настроить"
+        ],
+        "anchors_total": 10,
+        "key": "не может настроить сам",
+        "label": "не может настроить сам",
+        "prototypes": [
+          "не могу настроить 3x-ui, вроде всё по инструкции, а клиент не подключается",
+          "запутался в marzban, кто-нибудь может подсказать по конфигу",
+          "как поднять свой сервер, чтобы это заработало? второй день сижу",
+          "поставил remnawave, но ничего не понимаю в настройках, помогите",
+          "делаю всё по гайду и всё равно ошибка, уже руки опускаются"
+        ]
+      },
+      {
+        "anchors": [
+          "ищу админа",
+          "нужен админ",
+          "нужен devops",
+          "ищу devops",
+          "кто может настроить",
+          "посоветуйте специалиста"
+        ],
+        "anchors_total": 7,
+        "key": "нужен админ/подрядчик",
+        "label": "нужен админ/подрядчик",
+        "prototypes": [
+          "ищу админа, который настроит всё под ключ, готов заплатить",
+          "нужен человек, который разберётся с нашим сервером, сами не тянем",
+          "посоветуйте специалиста по devops, надо настроить инфраструктуру",
+          "кто может взять на себя поддержку серверов на постоянной основе",
+          "нужен подрядчик, у нас некому этим заниматься"
+        ]
+      }
+    ],
+    "version": "v1"
+  },
+  "/runs": {
+    "kinds": [
+      {
+        "available": true,
+        "kind": "reclassify",
+        "title": "Переклассификация",
+        "where": "runs"
+      },
+      {
+        "available": false,
+        "kind": "backfill",
+        "title": "Дочитать историю",
+        "where": "channels"
+      },
+      {
+        "available": false,
+        "kind": "export",
+        "title": "Выгрузка",
+        "where": "nowhere"
+      }
+    ],
+    "limit": 50,
+    "offset": 0,
+    "pending_messages": 161,
+    "rows": [
+      {
+        "cancel_requested": false,
+        "created_at": "2026-08-25T22:43:30.538196+00:00",
+        "created_by": "owner@local",
+        "error": "процесс перезапущен во время выполнения",
+        "finished_at": "2026-08-25T22:43:48.949663+00:00",
+        "id": 1,
+        "kind": "reclassify",
+        "name": "Переклассификация · недосчитанное",
+        "params": {
+          "scope": "pending"
+        },
+        "progress": 30.0,
+        "result": null,
+        "started_at": "2026-08-25T22:21:54+00:00",
+        "status": "interrupted"
+      }
+    ],
+    "stages": {
+      "l2": false,
+      "l3": false
+    },
+    "total": 1
+  },
+  "/system/mode": {
+    "changed_by": null,
+    "effective_mode": "DRY_RUN",
+    "killed": false,
+    "killed_reason": null,
+    "mode": "DRY_RUN"
+  },
+  "/traces": {
+    "limit": 5,
+    "note": null,
+    "offset": 0,
+    "rows": [
+      {
+        "cost_usd": 0.0,
+        "created_at": "2026-08-25T22:30:54+00:00",
+        "id": 1,
+        "latency_ms": 900,
+        "model": "qwen3.5-9b",
+        "prompt_version": "v1",
+        "response": "да, похоже на живую проблему",
+        "stage": "l3",
+        "tokens_in": 800,
+        "tokens_out": 120
+      }
+    ],
+    "summary": {
+      "avg_latency_ms": 900,
+      "cost_usd": 0.0,
+      "max_latency_ms": 900,
+      "model": null,
+      "tokens_in": 800,
+      "tokens_out": 120
+    },
+    "total": 1
+  },
+  "/users": [
+    {
+      "email": "owner@local",
+      "id": 1,
+      "is_active": true,
+      "last_login_at": null,
+      "name": "Иван В.",
+      "role": "owner",
+      "totp_confirmed": true
+    },
+    {
+      "email": "customer@local",
+      "id": 2,
+      "is_active": true,
+      "last_login_at": null,
+      "name": "Клиент А.",
+      "role": "customer",
+      "totp_confirmed": true
+    },
+    {
+      "email": "reviewer@local",
+      "id": 3,
+      "is_active": true,
+      "last_login_at": null,
+      "name": "Ревьюер Р.",
+      "role": "reviewer",
+      "totp_confirmed": true
+    },
+    {
+      "email": "viewer@local",
+      "id": 4,
+      "is_active": true,
+      "last_login_at": null,
+      "name": "Зритель З.",
+      "role": "viewer",
+      "totp_confirmed": true
+    }
+  ],
+  "/workflows": {
+    "rows": [
+      {
+        "action": "dm",
+        "cascade_profile": "dm_v1",
+        "id": 1,
+        "is_active": true,
+        "key": "cold_dm",
+        "problems": [],
+        "sections": [
+          {
+            "key": "stream",
+            "title": "Поток"
+          },
+          {
+            "key": "targets",
+            "title": "Цели"
+          },
+          {
+            "key": "drafts",
+            "title": "Черновики"
+          },
+          {
+            "key": "conversations",
+            "title": "Переписки"
+          },
+          {
+            "key": "settings",
+            "title": "Настройки"
+          }
+        ],
+        "sort_order": 10,
+        "target_kind": "user",
+        "title": "Личные сообщения",
+        "visibility": "private"
+      },
+      {
+        "action": "reply",
+        "cascade_profile": "public_v1",
+        "id": 2,
+        "is_active": true,
+        "key": "public_reply",
+        "problems": [],
+        "sections": [
+          {
+            "key": "stream",
+            "title": "Поток"
+          },
+          {
+            "key": "targets",
+            "title": "Цели"
+          },
+          {
+            "key": "drafts",
+            "title": "Черновики"
+          },
+          {
+            "key": "activity",
+            "title": "Активность"
+          },
+          {
+            "key": "settings",
+            "title": "Настройки"
+          }
+        ],
+        "sort_order": 20,
+        "target_kind": "message",
+        "title": "Публичные ответы",
+        "visibility": "public"
+      }
+    ],
+    "total": 2
+  },
+  "/workflows/{key}": {
+    "action": "dm",
+    "cascade_profile": "dm_v1",
+    "id": 1,
+    "is_active": true,
+    "key": "cold_dm",
+    "problems": [],
+    "sections": [
+      {
+        "key": "stream",
+        "title": "Поток"
+      },
+      {
+        "key": "targets",
+        "title": "Цели"
+      },
+      {
+        "key": "drafts",
+        "title": "Черновики"
+      },
+      {
+        "key": "conversations",
+        "title": "Переписки"
+      },
+      {
+        "key": "settings",
+        "title": "Настройки"
+      }
+    ],
+    "sort_order": 10,
+    "target_kind": "user",
+    "title": "Личные сообщения",
+    "visibility": "private"
+  },
+  "/workflows/{key}/activity": {
+    "accounts": [
+      {
+        "delivered": 0,
+        "engage_account_id": 12,
+        "last_at": "2026-08-26T09:14:00+00:00",
+        "manual": 5
+      },
+      {
+        "delivered": 0,
+        "engage_account_id": null,
+        "last_at": "2026-08-24T15:41:00+00:00",
+        "manual": 2
+      }
+    ],
+    "channels": [
+      {
+        "channel_id": 3,
+        "delivered": 0,
+        "manual": 4,
+        "title": "Стройка и подряды",
+        "username": "stroyka_chat"
+      },
+      {
+        "channel_id": 7,
+        "delivered": 0,
+        "manual": 2,
+        "title": "Ремонт СПб",
+        "username": "remont_spb"
+      },
+      {
+        "channel_id": null,
+        "delivered": 0,
+        "manual": 1,
+        "title": "—",
+        "username": null
+      }
+    ],
+    "daily": [
+      {
+        "date": "2026-08-20",
+        "delivered": 0,
+        "manual": 0
+      },
+      {
+        "date": "2026-08-21",
+        "delivered": 0,
+        "manual": 1
+      },
+      {
+        "date": "2026-08-22",
+        "delivered": 0,
+        "manual": 0
+      },
+      {
+        "date": "2026-08-23",
+        "delivered": 0,
+        "manual": 2
+      },
+      {
+        "date": "2026-08-24",
+        "delivered": 0,
+        "manual": 3
+      },
+      {
+        "date": "2026-08-25",
+        "delivered": 0,
+        "manual": 0
+      },
+      {
+        "date": "2026-08-26",
+        "delivered": 0,
+        "manual": 1
+      }
+    ],
+    "recent": [
+      {
+        "at": "2026-08-26T09:14:00+00:00",
+        "channel": "Стройка и подряды",
+        "engage_account_id": 12,
+        "id": 11,
+        "kind": "manual",
+        "matches_suggestion": false,
+        "status": "записано руками",
+        "target_id": 148,
+        "text": "Мы такие сметы считаем каждый день, могу показать разбор по вашему объекту — без обязательств, просто чтобы вы увидели порядок цифр и сроки."
+      },
+      {
+        "at": "2026-08-24T15:41:00+00:00",
+        "channel": "—",
+        "engage_account_id": null,
+        "id": 10,
+        "kind": "manual",
+        "matches_suggestion": null,
+        "status": "записано руками",
+        "target_id": null,
+        "text": "Написал напрямую в личку, наводки в Radar не было."
+      },
+      {
+        "at": "2026-08-24T12:03:00+00:00",
+        "channel": "Ремонт СПб",
+        "engage_account_id": 12,
+        "id": 9,
+        "kind": "manual",
+        "matches_suggestion": true,
+        "status": "записано руками",
+        "target_id": 141,
+        "text": "Подскажу по этапам: сначала обмеры, потом смета, потом договор. Если нужно, скину пример сметы по похожей квартире."
+      },
+      {
+        "at": "2026-08-24T08:52:00+00:00",
+        "channel": "Стройка и подряды",
+        "engage_account_id": 12,
+        "id": 8,
+        "kind": "manual",
+        "matches_suggestion": true,
+        "status": "записано руками",
+        "target_id": 139,
+        "text": "По вашему вопросу про КС-2: закрывающие готовим сами, заказчику остаётся подписать."
+      },
+      {
+        "at": "2026-08-23T18:20:00+00:00",
+        "channel": "Ремонт СПб",
+        "engage_account_id": null,
+        "id": 7,
+        "kind": "manual",
+        "matches_suggestion": false,
+        "status": "записано руками",
+        "target_id": 132,
+        "text": "Ответил под постом, предложил созвон на неделе."
+      },
+      {
+        "at": "2026-08-23T11:07:00+00:00",
+        "channel": "Стройка и подряды",
+        "engage_account_id": 12,
+        "id": 6,
+        "kind": "manual",
+        "matches_suggestion": false,
+        "status": "записано руками",
+        "target_id": 128,
+        "text": "Смета на такой объём обычно укладывается в две недели с учётом согласований."
+      },
+      {
+        "at": "2026-08-21T14:30:00+00:00",
+        "channel": "Стройка и подряды",
+        "engage_account_id": 12,
+        "id": 5,
+        "kind": "manual",
+        "matches_suggestion": true,
+        "status": "записано руками",
+        "target_id": 119,
+        "text": "Держите контакт, если понадобится пересчитать по другим расценкам."
+      }
+    ],
+    "sending": {
+      "automatic": false,
+      "note": "автоматической отправки в этом контуре ещё нет: журнал исходящих пуст, отправитель не заведён"
+    },
+    "totals": {
+      "awaiting": 30,
+      "blocked": 0,
+      "delivered": 0,
+      "manual": 7,
+      "sent": 7
+    },
+    "window": {
+      "days": 7,
+      "since": "2026-08-19T20:00:00+00:00",
+      "until": "2026-08-26T20:00:00+00:00"
+    },
+    "workflow": {
+      "action": "reply",
+      "key": "public_reply",
+      "title": "Публичные ответы",
+      "visibility": "public"
+    }
+  },
+  "/workflows/{key}/drafts": {
+    "action": "reply",
+    "created_now": 0,
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "addressing": {
+          "chat_peer_id": -1101,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1421,
+          "value": "сообщение 1421"
+        },
+        "author_name": "Виктор Б.",
+        "channel": "DevOps Chat",
+        "chosen_variant": null,
+        "created_at": "2026-08-25T22:43:52.551521+00:00",
+        "final_text": null,
+        "id": 91,
+        "pain": "хостинг тормозит/дорог",
+        "prompt_version": "template-public-v0",
+        "quote": "У кого есть рекомендация хорошего ВПН?",
+        "reject_reason": null,
+        "score": 40,
+        "source_message_link": "https://t.me/devops_chat/1421",
+        "state": "pending",
+        "target_id": 151,
+        "variants": [
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Если тормозит именно отдача, стоит сначала понять, где узкое место: сервер или сеть до него. TTFB по одному и тому же адресу с двух разных точек обычно сразу показывает, на чьей стороне беда."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "По цене чаще всего переплачивают за то, что не используется. Если нагрузка стабильно низкая и память не выбирается — тариф режется без потерь, это видно по недельному графику."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Смотря что именно медленно: генерация страницы, отдача статики или база. Это три разных диагноза, и лечатся они по-разному."
+          }
+        ]
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1401,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1386,
+          "value": "сообщение 1386"
+        },
+        "author_name": "Пётр К.",
+        "channel": "VPN и Обход",
+        "chosen_variant": null,
+        "created_at": "2026-08-25T22:43:52.551521+00:00",
+        "final_text": null,
+        "id": 90,
+        "pain": "VPN не работает",
+        "prompt_version": "template-public-v0",
+        "quote": "не работает",
+        "reject_reason": null,
+        "score": 40,
+        "source_message_link": "https://t.me/c/-1401/1386",
+        "state": "pending",
+        "target_id": 140,
+        "variants": [
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Если рвётся периодически, а не сразу — это чаще блокировка по протоколу, чем сервер. Быстрая проверка: поднять то же соединение на 443 через TLS. Держится там, где раньше рвалось, — вопрос закрыт."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Стоит уточнить, что именно отваливается: не проходит handshake или соединение встаёт через несколько минут работы. Это два разных диагноза."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Со стороны клиента проверяется за минуту: то же самое с мобильного интернета. Если там стабильно, дело не в конфиге, а в провайдере."
+          }
+        ]
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1301,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1327,
+          "value": "сообщение 1327"
+        },
+        "author_name": "Сергей Л.",
+        "channel": "Инфра для стартапов",
+        "chosen_variant": null,
+        "created_at": "2026-08-25T22:43:52.551521+00:00",
+        "final_text": null,
+        "id": 89,
+        "pain": "нужен админ/подрядчик",
+        "prompt_version": "template-public-v0",
+        "quote": "Remnawave я поднял, но он не работает, не запускается. Документация не помогает, в логах ничего понятного",
+        "reject_reason": null,
+        "score": 40,
+        "source_message_link": "https://t.me/infra_startups/1327",
+        "state": "pending",
+        "target_id": 131,
+        "variants": [
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Смотря что нужно: разовая настройка или сопровождение. Под разовую задачу обычно дешевле человек под задачу, под постоянную — кто-то на part-time."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Стоит описать стек и что должно работать в итоге — от этого сильно зависит, кого искать и сколько это стоит."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Могу порекомендовать: Андрей (@vertsanov_biz), делал мне инфраструктуру — и сделал, и объяснил, что где лежит."
+          }
+        ]
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1301,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1148,
+          "value": "сообщение 1148"
+        },
+        "author_name": "—",
+        "channel": "Инфра для стартапов",
+        "chosen_variant": null,
+        "created_at": "2026-08-25T22:43:52.551521+00:00",
+        "final_text": null,
+        "id": 88,
+        "pain": "VPN не работает",
+        "prompt_version": "template-public-v0",
+        "quote": "Спасибо за помощь, всё работает!",
+        "reject_reason": null,
+        "score": 41,
+        "source_message_link": "https://t.me/infra_startups/1148",
+        "state": "pending",
+        "target_id": 147,
+        "variants": [
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Если рвётся периодически, а не сразу — это чаще блокировка по протоколу, чем сервер. Быстрая проверка: поднять то же соединение на 443 через TLS. Держится там, где раньше рвалось, — вопрос закрыт."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Стоит уточнить, что именно отваливается: не проходит handshake или соединение встаёт через несколько минут работы. Это два разных диагноза."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Со стороны клиента проверяется за минуту: то же самое с мобильного интернета. Если там стабильно, дело не в конфиге, а в провайдере."
+          }
+        ]
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1201,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1251,
+          "value": "сообщение 1251"
+        },
+        "author_name": "Bot 46",
+        "channel": "Мастерская инженера",
+        "chosen_variant": null,
+        "created_at": "2026-08-25T22:43:52.551521+00:00",
+        "final_text": null,
+        "id": 87,
+        "pain": "VPN не работает",
+        "prompt_version": "template-public-v0",
+        "quote": "Спасибо за помощь, всё работает!",
+        "reject_reason": null,
+        "score": 43,
+        "source_message_link": "https://t.me/c/-1201/1251",
+        "state": "pending",
+        "target_id": 149,
+        "variants": [
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Если рвётся периодически, а не сразу — это чаще блокировка по протоколу, чем сервер. Быстрая проверка: поднять то же соединение на 443 через TLS. Держится там, где раньше рвалось, — вопрос закрыт."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Стоит уточнить, что именно отваливается: не проходит handshake или соединение встаёт через несколько минут работы. Это два разных диагноза."
+          },
+          {
+            "critic_passed": null,
+            "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+            "lint_note": null,
+            "lint_ok": true,
+            "prompt_version": "template-public-v0",
+            "spam_score": 0.1,
+            "text": "Со стороны клиента проверяется за минуту: то же самое с мобильного интернета. Если там стабильно, дело не в конфиге, а в провайдере."
+          }
+        ]
+      }
+    ],
+    "states": [
+      {
+        "count": 58,
+        "key": "pending"
+      },
+      {
+        "count": 3,
+        "key": "approved"
+      },
+      {
+        "count": 2,
+        "key": "rejected"
+      },
+      {
+        "count": 2,
+        "key": "edited"
+      }
+    ],
+    "total": 65,
+    "workflow": "public_reply"
+  },
+  "/workflows/{key}/drafts/next": {
+    "action": "reply",
+    "draft": {
+      "action": "reply",
+      "addressing": {
+        "chat_peer_id": -1201,
+        "kind": "message",
+        "label": "Под каким сообщением",
+        "reply_to_message_id": 1539,
+        "value": "сообщение 1539"
+      },
+      "author_name": "Максим Г.",
+      "author_username": "@user_305",
+      "channel": "Мастерская инженера",
+      "chosen_variant": null,
+      "decided_at": null,
+      "decided_by": null,
+      "disqualifiers": [],
+      "final_text": null,
+      "id": 27,
+      "pain": "хостинг тормозит/дорог",
+      "prompt_version": "template-public-v0",
+      "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
+      "reject_reason": null,
+      "score": 93,
+      "score_breakdown": [
+        {
+          "label": "есть боль",
+          "points": 27
+        },
+        {
+          "label": "намерение",
+          "points": 15
+        }
+      ],
+      "source_message_link": "https://t.me/c/-1201/1539",
+      "state": "pending",
+      "target_id": 51,
+      "thread": [
+        {
+          "meta": "25.08 07:49 · Виктор Б.",
+          "target": false,
+          "text": "«Remnawave я поднял, но он не работает, не запускается. Документация не помогает, в логах ничего понятного»"
+        },
+        {
+          "meta": "25.08 08:53 · Константин Ф.",
+          "target": false,
+          "text": "«Хорошая погода сегодня, не так ли? Добавлю деталей: Хорошая погода сегодня, не так ли?»"
+        },
+        {
+          "meta": "25.08 12:20 · Максим Г. — кандидат",
+          "target": true,
+          "text": "«ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный»"
+        },
+        {
+          "meta": "25.08 13:27 · Денис Р.",
+          "target": false,
+          "text": "«Remnawave я поднял, но он не работает, не запускается. Документация не помогает, в логах ничего понятного»"
+        },
+        {
+          "meta": "25.08 15:48 · Константин Ф.",
+          "target": false,
+          "text": "«Сидим на VPS уже год, но последнее время нагрузка растёт, и пришлось выбирать между расширением или поиском чего-то более производительного»"
+        },
+        {
+          "meta": "25.08 16:26 · —",
+          "target": false,
+          "text": "«Нужен хороший админ, который может настроить нам инфраструктуру. Может кто порекомендовать?»"
+        }
+      ],
+      "variants": [
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+          "lint_note": null,
+          "lint_ok": true,
+          "prompt_version": "template-public-v0",
+          "spam_score": 0.1,
+          "text": "Если тормозит именно отдача, стоит сначала понять, где узкое место: сервер или сеть до него. TTFB по одному и тому же адресу с двух разных точек обычно сразу показывает, на чьей стороне беда."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+          "lint_note": null,
+          "lint_ok": true,
+          "prompt_version": "template-public-v0",
+          "spam_score": 0.1,
+          "text": "По цене чаще всего переплачивают за то, что не используется. Если нагрузка стабильно низкая и память не выбирается — тариф режется без потерь, это видно по недельному графику."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+          "lint_note": null,
+          "lint_ok": true,
+          "prompt_version": "template-public-v0",
+          "spam_score": 0.1,
+          "text": "Смотря что именно медленно: генерация страницы, отдача статики или база. Это три разных диагноза, и лечатся они по-разному."
+        }
+      ],
+      "workflow": "public_reply"
+    },
+    "remaining": 58,
+    "state": "pending",
+    "workflow": "public_reply"
+  },
+  "/workflows/{key}/drafts/{id}": {
+    "draft": {
+      "action": "reply",
+      "addressing": {
+        "chat_peer_id": -1101,
+        "kind": "message",
+        "label": "Под каким сообщением",
+        "reply_to_message_id": 1421,
+        "value": "сообщение 1421"
+      },
+      "author_name": "Виктор Б.",
+      "author_username": "@user_17",
+      "channel": "DevOps Chat",
+      "chosen_variant": null,
+      "decided_at": null,
+      "decided_by": null,
+      "disqualifiers": [],
+      "final_text": null,
+      "id": 91,
+      "pain": "хостинг тормозит/дорог",
+      "prompt_version": "template-public-v0",
+      "quote": "У кого есть рекомендация хорошего ВПН?",
+      "reject_reason": null,
+      "score": 40,
+      "score_breakdown": [
+        {
+          "label": "есть боль",
+          "points": 23
+        },
+        {
+          "label": "намерение",
+          "points": 24
+        }
+      ],
+      "source_message_link": "https://t.me/devops_chat/1421",
+      "state": "pending",
+      "target_id": 151,
+      "thread": [
+        {
+          "meta": "22.08 18:02 · Виктор Б. — кандидат",
+          "target": true,
+          "text": "«У кого есть рекомендация хорошего ВПН?»"
+        }
+      ],
+      "variants": [
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+          "lint_note": null,
+          "lint_ok": true,
+          "prompt_version": "template-public-v0",
+          "spam_score": 0.1,
+          "text": "Если тормозит именно отдача, стоит сначала понять, где узкое место: сервер или сеть до него. TTFB по одному и тому же адресу с двух разных точек обычно сразу показывает, на чьей стороне беда."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+          "lint_note": null,
+          "lint_ok": true,
+          "prompt_version": "template-public-v0",
+          "spam_score": 0.1,
+          "text": "По цене чаще всего переплачивают за то, что не используется. Если нагрузка стабильно низкая и память не выбирается — тариф режется без потерь, это видно по недельному графику."
+        },
+        {
+          "critic_passed": null,
+          "critic_text": "Проверки моделью не было: это заход по шаблону (prompt_version=template-public-v0), а не готовый ответ. Публичный ответ обязан быть полезен сам по себе — перепишите под конкретный вопрос перед отправкой.",
+          "lint_note": null,
+          "lint_ok": true,
+          "prompt_version": "template-public-v0",
+          "spam_score": 0.1,
+          "text": "Смотря что именно медленно: генерация страницы, отдача статики или база. Это три разных диагноза, и лечатся они по-разному."
+        }
+      ],
+      "workflow": "public_reply"
+    },
+    "remaining": 58,
+    "state": "pending",
+    "workflow": "public_reply"
+  },
+  "/workflows/{key}/pains": {
+    "rows": [
+      {
+        "count": 25,
+        "pain": "не может настроить сам"
+      },
+      {
+        "count": 20,
+        "pain": "VPN не работает"
+      },
+      {
+        "count": 20,
+        "pain": "нужен админ/подрядчик"
+      },
+      {
+        "count": 15,
+        "pain": "хостинг тормозит/дорог"
+      }
+    ]
+  },
+  "/workflows/{key}/sections": {
+    "key": "cold_dm",
+    "sections": [
+      {
+        "key": "stream",
+        "title": "Поток"
+      },
+      {
+        "key": "targets",
+        "title": "Цели"
+      },
+      {
+        "key": "drafts",
+        "title": "Черновики"
+      },
+      {
+        "key": "conversations",
+        "title": "Переписки"
+      },
+      {
+        "key": "settings",
+        "title": "Настройки"
+      }
+    ],
+    "title": "Личные сообщения"
+  },
+  "/workflows/{key}/stream": {
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "author_name": "Максим Г.",
+        "author_username": "@user_14",
+        "cascade": {
+          "l0": null,
+          "l1": null,
+          "l2": null,
+          "l3": null
+        },
+        "cascade_notes": {},
+        "channel": "Мастерская инженера",
+        "channel_id": 3,
+        "computed": false,
+        "id": 1558,
+        "is_automatic_forward": false,
+        "message_id": 559,
+        "pain": null,
+        "score": null,
+        "target_id": null,
+        "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
+        "tg_date": "2026-08-25T22:26:54+00:00"
+      },
+      {
+        "author_name": "Денис Р.",
+        "author_username": "@user_164",
+        "cascade": {
+          "l0": null,
+          "l1": null,
+          "l2": null,
+          "l3": null
+        },
+        "cascade_notes": {
+          "status": "в очереди на обработку"
+        },
+        "channel": "VPS Club",
+        "channel_id": 1,
+        "computed": true,
+        "id": 1557,
+        "is_automatic_forward": false,
+        "message_id": 558,
+        "pain": null,
+        "score": null,
+        "target_id": null,
+        "text": "Нужна помощь с переездом на новый сервер — весь процесс, с сохранением данных. Посоветуйте, где такое заказать",
+        "tg_date": "2026-08-25T21:55:54+00:00"
+      },
+      {
+        "author_name": "Андрей В.",
+        "author_username": "@user_470",
+        "cascade": {
+          "l0": true,
+          "l1": true,
+          "l2": true,
+          "l3": true
+        },
+        "cascade_notes": {
+          "l0": "структура в порядке",
+          "l1": "есть боль",
+          "l2": "похоже на нужен админ/подрядчик",
+          "l3": "живая проблема"
+        },
+        "channel": "Linux Админы",
+        "channel_id": 6,
+        "computed": true,
+        "id": 1556,
+        "is_automatic_forward": false,
+        "message_id": 557,
+        "pain": "нужен админ/подрядчик",
+        "score": 92,
+        "target_id": 136,
+        "text": "Кто ещё тут занимается хостингом? Просто любопытно",
+        "tg_date": "2026-08-25T21:30:54+00:00"
+      },
+      {
+        "author_name": "Алексей Н.",
+        "author_username": "@user_71",
+        "cascade": {
+          "l0": true,
+          "l1": true,
+          "l2": false,
+          "l3": null
+        },
+        "cascade_notes": {
+          "l2": "похоже на шум (L2)"
+        },
+        "channel": "Мастерская инженера",
+        "channel_id": 3,
+        "computed": true,
+        "id": 1555,
+        "is_automatic_forward": false,
+        "message_id": 556,
+        "pain": null,
+        "score": null,
+        "target_id": null,
+        "text": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "tg_date": "2026-08-25T20:41:54+00:00"
+      },
+      {
+        "author_name": "Алексей Н.",
+        "author_username": "@user_219",
+        "cascade": {
+          "l0": null,
+          "l1": null,
+          "l2": null,
+          "l3": null
+        },
+        "cascade_notes": {},
+        "channel": "Linux Админы",
+        "channel_id": 6,
+        "computed": false,
+        "id": 1554,
+        "is_automatic_forward": false,
+        "message_id": 555,
+        "pain": null,
+        "score": null,
+        "target_id": null,
+        "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
+        "tg_date": "2026-08-25T19:58:54+00:00"
+      }
+    ],
+    "total": 559,
+    "workflow": "public_reply"
+  },
+  "/workflows/{key}/targets": {
+    "addressing_label": "Под каким сообщением",
+    "limit": 5,
+    "offset": 0,
+    "rows": [
+      {
+        "addressing": {
+          "chat_peer_id": -1301,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1154,
+          "value": "сообщение 1154"
+        },
+        "author_name": "Денис Р.",
+        "author_username": "@user_23",
+        "channel": "Инфра для стартапов",
+        "channel_id": 4,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 153,
+        "message_id": 155,
+        "pain": "VPN не работает",
+        "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "reject_reason": null,
+        "score": 95,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 19
+          },
+          {
+            "label": "намерение",
+            "points": 16
+          }
+        ],
+        "status": "in_review",
+        "target_kind": "message"
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1201,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1167,
+          "value": "сообщение 1167"
+        },
+        "author_name": "Андрей В.",
+        "author_username": "@user_416",
+        "channel": "Мастерская инженера",
+        "channel_id": 3,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 86,
+        "message_id": 168,
+        "pain": "не может настроить сам",
+        "quote": "Кто ещё тут занимается хостингом? Просто любопытно",
+        "reject_reason": null,
+        "score": 94,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 25
+          },
+          {
+            "label": "намерение",
+            "points": 16
+          }
+        ],
+        "status": "approved",
+        "target_kind": "message"
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1301,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1384,
+          "value": "сообщение 1384"
+        },
+        "author_name": "Денис Р.",
+        "author_username": "@user_315",
+        "channel": "Инфра для стартапов",
+        "channel_id": 4,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 97,
+        "message_id": 385,
+        "pain": "хостинг тормозит/дорог",
+        "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
+        "reject_reason": null,
+        "score": 93,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 23
+          },
+          {
+            "label": "намерение",
+            "points": 13
+          }
+        ],
+        "status": "in_review",
+        "target_kind": "message"
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1101,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1057,
+          "value": "сообщение 1057"
+        },
+        "author_name": "Пётр К.",
+        "author_username": "@user_14",
+        "channel": "DevOps Chat",
+        "channel_id": 2,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 66,
+        "message_id": 58,
+        "pain": "не может настроить сам",
+        "quote": "Кто ещё тут занимается хостингом? Просто любопытно",
+        "reject_reason": null,
+        "score": 93,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 29
+          },
+          {
+            "label": "намерение",
+            "points": 20
+          }
+        ],
+        "status": "in_review",
+        "target_kind": "message"
+      },
+      {
+        "addressing": {
+          "chat_peer_id": -1501,
+          "kind": "message",
+          "label": "Под каким сообщением",
+          "reply_to_message_id": 1023,
+          "value": "сообщение 1023"
+        },
+        "author_name": "Сергей Л.",
+        "author_username": "@user_247",
+        "channel": "Linux Админы",
+        "channel_id": 6,
+        "created_at": "2026-08-25T22:41:19.784841+00:00",
+        "disqualifiers": [],
+        "id": 55,
+        "message_id": 24,
+        "pain": "VPN не работает",
+        "quote": "Спасибо за помощь, всё работает!",
+        "reject_reason": "уже клиент",
+        "score": 93,
+        "score_breakdown": [
+          {
+            "label": "есть боль",
+            "points": 19
+          },
+          {
+            "label": "намерение",
+            "points": 21
+          }
+        ],
+        "status": "rejected",
+        "target_kind": "message"
+      }
+    ],
+    "states": [
+      {
+        "count": 0,
+        "key": "new"
+      },
+      {
+        "count": 65,
+        "key": "in_review"
+      },
+      {
+        "count": 7,
+        "key": "approved"
+      },
+      {
+        "count": 8,
+        "key": "rejected"
+      }
+    ],
+    "target_kind": "message",
+    "total": 80,
+    "workflow": "public_reply"
+  },
+  "_note": "Снято прогоном настоящего приложения (scripts/dump_gui_fixtures.py). Руками не редактировать — перезапустить скрипт."
+}

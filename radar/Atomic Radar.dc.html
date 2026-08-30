@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="../_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/fonts.css">
+<link rel="stylesheet" href="../_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/colors.css">
+<style>
+html,body{margin:0;padding:0;background:#F8F3E0;color:#184153;font-family:"Architexture",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+a{color:#156479;text-decoration:none}
+a:hover{color:#DA501C}
+button{font-family:inherit;cursor:pointer}
+input,textarea{font-family:inherit}
+table{border-collapse:collapse;width:100%}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style>
+</helmet>
+
+<sc-if value="{{ v.login }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;background:#F8F3E0;display:grid;place-items:center;position:relative;overflow:hidden">
+  <div style="position:relative;width:min(880px,92vw);display:grid;grid-template-columns:1fr 1fr;align-items:stretch">
+    <div style="padding:48px 40px;color:#F8F3E0;background:#131E5F;display:flex;flex-direction:column;justify-content:center;position:relative">
+      <div style="font:400 40px/1 'Architexture',sans-serif;letter-spacing:.02em">ATOMIC<br>RADAR</div>
+      <div style="margin-top:18px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#94BEBE;letter-spacing:.08em">лидогенерация · телеметрия · ревью</div>
+      <div style="margin-top:36px;width:120px;height:1px;background:#DA501C"></div>
+      <div style="margin-top:18px;font:400 13px/1.6 'Architexture',sans-serif;color:#DBE9E8;max-width:280px">Внутренний инструмент. Система стартует в режиме сухого прогона: ни одно сообщение не отправляется без ревью человеком.</div>
+      <div style="position:absolute;right:-32px;top:0;bottom:0;width:32px;background:#94BEBE"></div>
+    </div>
+    <div style="background:#FFFFFF;border:1px solid rgba(19,30,95,0.16);padding:32px">
+      <sc-if value="{{ v.stepLogin }}" hint-placeholder-val="{{ true }}">
+      <div>
+        <div style="font:400 20px/1.1 'Architexture',sans-serif;color:#131E5F">Вход</div>
+        <sc-if value="{{ loginError }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;border-left:3px solid #DA501C;background:#FBEEE8;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#8F2F0C">Неверный логин или пароль</div>
+        </sc-if>
+        <div style="margin-top:20px;font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Логин</div>
+        <input value="{{ login.u }}" onChange="{{ setLoginU }}" placeholder="email или username" style="margin-top:6px;width:100%;padding:10px 12px;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;font:400 13px/1.2 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        <div style="margin-top:16px;font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Пароль</div>
+        <div style="margin-top:6px;display:flex;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0">
+          <input value="{{ login.p }}" onChange="{{ setLoginP }}" type="{{ pwType }}" placeholder="••••••••" style="flex:1;min-width:0;padding:10px 12px;border:0;background:transparent;font:400 13px/1.2 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <button onClick="{{ togglePw }}" style="border:0;background:transparent;padding:0 12px;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">показать</button>
+        </div>
+        <button onClick="{{ doLogin }}" style="margin-top:22px;width:100%;padding:13px;border:0;background:#131E5F;color:#F8F3E0;font:400 14px/1 'Architexture',sans-serif;letter-spacing:.04em" style-hover="background:#DA501C">Войти</button>
+        <div style="margin-top:14px;text-align:center"><a href="#" onClick="{{ noop }}" style="font:400 12px/1 'JetBrains Mono',monospace">Забыли пароль?</a></div>
+      </div>
+      </sc-if>
+      <sc-if value="{{ v.stepTotp }}" hint-placeholder-val="{{ false }}">
+      <div>
+        <div style="font:400 20px/1.1 'Architexture',sans-serif;color:#131E5F">Второй фактор</div>
+        <div style="margin-top:10px;font:400 12px/1.5 'Architexture',sans-serif;color:#184153">Код обновляется каждые 30 секунд в приложении-аутентификаторе.</div>
+        <input value="{{ totp }}" onChange="{{ setTotp }}" placeholder="000000" maxlength="6" style="margin-top:20px;width:100%;padding:14px 12px;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;font:400 24px/1 'JetBrains Mono',monospace;letter-spacing:.4em;text-align:center;color:#131E5F;outline:none">
+        <div style="margin-top:12px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Отправка автоматически при вводе 6-й цифры</div>
+        <button onClick="{{ doTotp }}" style="margin-top:18px;width:100%;padding:13px;border:0;background:#131E5F;color:#F8F3E0;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#DA501C">Подтвердить</button>
+        <div style="margin-top:14px;text-align:center"><a href="#" onClick="{{ noop }}" style="font:400 12px/1 'JetBrains Mono',monospace">Использовать резервный код</a></div>
+      </div>
+      </sc-if>
+      <div style="margin-top:28px;border-top:1px solid rgba(19,30,95,0.16);padding-top:12px;font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;letter-spacing:.06em">v1.0 · radar.atomic-automation.net</div>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ v.appDesktop }}" hint-placeholder-val="{{ true }}">
+<div style="min-height:100vh;background:#F8F3E0;display:grid;grid-template-columns:{{ sidebarW }} 1fr">
+  <aside style="background:#131E5F;padding-bottom:24px;position:sticky;top:0;height:100vh;overflow:auto">
+    <div style="padding:18px 16px 20px 16px;border-bottom:1px solid rgba(148,190,190,0.24)">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:22px;height:22px;border:2px solid #94BEBE;border-radius:11px;position:relative;flex:none">
+          <div style="position:absolute;left:3px;top:8px;width:4px;height:4px;background:#DA501C"></div>
+          <div style="position:absolute;right:3px;top:8px;width:4px;height:4px;background:#94BEBE"></div>
+        </div>
+        <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+          <div style="font:400 15px/1 'Architexture',sans-serif;color:#F8F3E0;letter-spacing:.08em">ATOMIC RADAR</div>
+        </sc-if>
+      </div>
+    </div>
+    <sc-for list="{{ nav }}" as="g" hint-placeholder-count="5">
+      <div style="padding:16px 12px 4px 16px">
+        <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+          <div style="font:400 9px/1 'JetBrains Mono',monospace;letter-spacing:.16em;color:#6E7CB0;text-transform:uppercase">{{ g.title }}</div>
+        </sc-if>
+      </div>
+      <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+        <div onClick="{{ it.go }}" style="display:flex;align-items:center;gap:10px;padding:8px 16px;cursor:pointer;background:{{ it.bg }};border-left:3px solid {{ it.mark }}" style-hover="background:rgba(148,190,190,0.14)">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#94BEBE;width:22px;flex:none;letter-spacing:.04em">{{ it.code }}</div>
+          <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
+            <div style="font:400 13px/1.2 'Architexture',sans-serif;color:{{ it.fg }};flex:1">{{ it.label }}</div>
+          </sc-if>
+          <sc-if value="{{ it.badge }}" hint-placeholder-val="{{ false }}">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#131E5F;background:#94BEBE;padding:3px 6px">{{ it.badge }}</div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </sc-for>
+  </aside>
+
+  <div style="display:flex;flex-direction:column;min-width:0;position:relative">
+    <header style="position:sticky;top:0;z-index:30;background:#F8F3E0;border-bottom:1px solid rgba(19,30,95,0.16);display:flex;align-items:center;gap:14px;padding:10px 20px">
+      <button onClick="{{ toggleSidebar }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#131E5F;padding:6px 9px;font:400 12px/1 'JetBrains Mono',monospace">≡</button>
+      <div onClick="{{ goDash }}" style="font:400 14px/1 'Architexture',sans-serif;color:#131E5F;letter-spacing:.06em;cursor:pointer">Atomic Radar</div>
+      <div style="display:flex;align-items:center;gap:6px;border:1px solid rgba(19,30,95,0.16);padding:5px 9px">
+        <span style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;letter-spacing:.06em">ЗАКАЗЧИК</span>
+        <span style="font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F">vertsanov ▾</span>
+      </div>
+      <div style="flex:1"></div>
+      <div onClick="{{ goSafety }}" style="cursor:pointer;padding:7px 14px;background:{{ modePill.bg }};color:{{ modePill.fg }};font:400 12px/1 'JetBrains Mono',monospace;letter-spacing:.14em;animation:{{ modePill.anim }}">{{ modePill.text }}</div>
+      <button onClick="{{ openCmdk }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#156479;padding:6px 10px;font:400 11px/1 'JetBrains Mono',monospace">⌕ ⌘K</button>
+      <div onClick="{{ toggleNotif }}" style="position:relative;cursor:pointer;border:1px solid rgba(19,30,95,0.24);padding:6px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">
+        ◔<sc-if value="{{ alertsBadge }}" hint-placeholder-val="{{ true }}"><span style="position:absolute;top:-7px;right:-7px;background:#DA501C;color:#fff;font:400 10px/1 'JetBrains Mono',monospace;padding:2px 4px">{{ alertsBadge }}</span></sc-if>
+      </div>
+      <div onClick="{{ toggleUser }}" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <div style="width:26px;height:26px;background:#156479;color:#F8F3E0;display:grid;place-items:center;font:400 11px/1 'JetBrains Mono',monospace">{{ me.initials }}</div>
+        <div style="font:400 13px/1 'Architexture',sans-serif;color:#131E5F">{{ me.name }}</div>
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#156479;border:1px solid rgba(21,100,121,0.4);padding:3px 5px">{{ me.role }}</div>
+      </div>
+    </header>
+
+    <sc-if value="{{ notifOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;right:120px;top:52px;z-index:40;width:340px;background:#fff;border:1px solid rgba(19,30,95,0.24)">
+        <div style="padding:10px 12px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;color:#156479;text-transform:uppercase">Алерты</div>
+        <sc-for list="{{ alerts }}" as="a" hint-placeholder-count="3">
+          <div style="padding:10px 12px;border-bottom:1px solid rgba(19,30,95,0.08);display:flex;gap:10px">
+            <div style="width:6px;height:6px;margin-top:5px;background:{{ a.c }};flex:none"></div>
+            <div><div style="font:400 12px/1.3 'JetBrains Mono',monospace;color:#184153">{{ a.text }}</div><div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;margin-top:4px">{{ a.time }}</div></div>
+          </div>
+        </sc-for>
+                <sc-if value="{{ alertsEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="padding:10px 14px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8E97C6">Тревог нет</div>
+        </sc-if>
+        <div onClick="{{ ackAll }}" style="padding:10px 14px;font:400 11px/1 'JetBrains Mono',monospace;color:#94BEBE;cursor:pointer">Отметить все прочитанными</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ userOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;right:20px;top:52px;z-index:40;width:250px;background:#fff;border:1px solid rgba(19,30,95,0.24);padding:12px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ me.name }}</div>
+        <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E;margin-top:2px">{{ me.email }}</div>
+        <div style="margin-top:10px;border-top:1px solid rgba(19,30,95,0.12);padding-top:10px;display:flex;flex-direction:column;gap:8px">
+          <div style="font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.08em;color:#156479;text-transform:uppercase">Роль для просмотра</div>
+          <sc-for list="{{ roleOptions }}" as="r" hint-placeholder-count="4">
+            <div onClick="{{ r.pick }}" style="cursor:pointer;padding:6px 8px;background:{{ r.bg }};color:{{ r.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ r.label }}</div>
+          </sc-for>
+        </div>
+        <div onClick="{{ logout }}" style="margin-top:12px;border-top:1px solid rgba(19,30,95,0.12);padding-top:10px;font:400 12px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Выйти</div>
+      </div>
+    </sc-if>
+
+    <main style="padding:20px 24px 60px 24px;display:flex;flex-direction:column;gap:18px;min-width:0">
+      <sc-if value="{{ denied }}" hint-placeholder-val="{{ false }}">
+        <div style="margin:60px auto;max-width:520px;background:#fff;border:1px solid rgba(19,30,95,0.16);padding:32px;text-align:center">
+          <div style="font:400 22px/1.1 'Architexture',sans-serif;color:#131E5F">Недостаточно прав</div>
+          <div style="margin-top:12px;font:400 13px/1.5 'Architexture',sans-serif;color:#184153">Раздел <span style="font-family:'JetBrains Mono',monospace">{{ route }}</span> доступен только роли <span style="font-family:'JetBrains Mono',monospace">{{ deniedRoles }}</span>.</div>
+          <button onClick="{{ goDash }}" style="margin-top:20px;border:0;background:#131E5F;color:#F8F3E0;padding:11px 20px;font:400 13px/1 'Architexture',sans-serif">На Dashboard</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{ v.dashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="RadarDashboard" api="{{ api }}" mobile="{{ false }}" hint-size="100%,600px"></dc-import></sc-if>
+      <sc-if value="{{ v.fleet }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarFleet" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
+      <sc-if value="{{ v.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ v.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.manual_sends }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarManualSends" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ v.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{ v.profile }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarProfile" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.runs }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarRuns" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.evals }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarEvaluations" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.attribution }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAttribution" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.observability }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarObservability" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.safety }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarSafety" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ v.admin }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAdmin" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+    </main>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ v.mobile }}" hint-placeholder-val="{{ false }}">
+<div style="min-height:100vh;background:#DBE9E8;display:grid;place-items:center;padding:24px">
+  <div style="width:390px;height:820px;background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);display:flex;flex-direction:column;overflow:hidden;position:relative">
+    <div style="background:#131E5F;color:#F8F3E0;padding:10px 14px;display:flex;align-items:center;gap:10px">
+      <div onClick="{{ toggleDrawer }}" style="font:400 14px/1 'JetBrains Mono',monospace;cursor:pointer">≡</div>
+      <div style="font:400 13px/1 'Architexture',sans-serif;letter-spacing:.06em;flex:1">{{ screenTitle }}</div>
+      <div style="padding:4px 8px;background:{{ modePill.bg }};color:{{ modePill.fg }};font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em">{{ modePill.text }}</div>
+    </div>
+    <sc-if value="{{ drawer }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;inset:0;z-index:50;background:rgba(19,30,95,0.5)">
+        <div style="width:260px;height:100%;background:#131E5F;padding:14px 0;overflow:auto">
+          <sc-for list="{{ nav }}" as="g" hint-placeholder-count="5">
+            <div style="padding:14px 16px 4px 16px;font:400 9px/1 'JetBrains Mono',monospace;letter-spacing:.16em;color:#6E7CB0;text-transform:uppercase">{{ g.title }}</div>
+            <sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+              <div onClick="{{ it.go }}" style="padding:9px 16px;font:400 13px/1.2 'Architexture',sans-serif;color:{{ it.fg }};background:{{ it.bg }}">{{ it.label }}</div>
+            </sc-for>
+          </sc-for>
+          <div onClick="{{ toggleDrawer }}" style="margin-top:16px;padding:10px 16px;font:400 12px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Закрыть</div>
+        </div>
+      </div>
+    </sc-if>
+    <div style="flex:1;overflow:auto">
+      <sc-if value="{{ m.dashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="RadarDashboard" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.fleet }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarFleet" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
+      <sc-if value="{{ m.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ m.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.manual_sends }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarManualSends" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ m.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
+      <sc-if value="{{ m.profile }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarProfile" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.runs }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarRuns" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.evals }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarEvaluations" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.attribution }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAttribution" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.observability }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarObservability" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.safety }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarSafety" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ m.admin }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAdmin" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);background:#131E5F">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+        <div onClick="{{ t.go }}" style="padding:12px 4px;text-align:center;font:400 11px/1.3 'JetBrains Mono',monospace;color:{{ t.fg }};border-top:3px solid {{ t.mark }};cursor:pointer">{{ t.label }}</div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ drill }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeDrill }}" style="position:fixed;inset:0;background:rgba(19,30,95,0.32);z-index:60"></div>
+  <div style="position:fixed;top:0;right:0;bottom:0;width:min(520px,96vw);background:#F8F3E0;border-left:1px solid rgba(19,30,95,0.24);z-index:61;display:flex;flex-direction:column">
+    <div style="padding:14px 16px;border-bottom:1px solid rgba(19,30,95,0.16);display:flex;align-items:center;gap:10px">
+      <div style="flex:1">
+        <div style="font:400 17px/1.1 'Architexture',sans-serif;color:#131E5F">{{ drill.title }}</div>
+        <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E;margin-top:3px">{{ drill.subtitle }}</div>
+      </div>
+      <button onClick="{{ closeDrill }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:6px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">✕</button>
+    </div>
+    <div style="display:flex;border-bottom:1px solid rgba(19,30,95,0.16)">
+      <sc-for list="{{ drillTabs }}" as="t" hint-placeholder-count="2">
+        <div onClick="{{ t.pick }}" style="padding:9px 14px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:{{ t.fg }};background:{{ t.bg }}">{{ t.label }}</div>
+      </sc-for>
+    </div>
+    <div style="flex:1;overflow:auto;padding:16px">
+      <sc-if value="{{ drillDetails }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ drill.rows }}" as="r" hint-placeholder-count="6">
+            <div style="display:grid;grid-template-columns:150px 1fr;gap:12px;border-bottom:1px solid rgba(19,30,95,0.08);padding-bottom:8px">
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.k }}</div>
+              <div style="font:400 13px/1.5 'JetBrains Mono',monospace;color:#184153">{{ r.v }}</div>
+            </div>
+          </sc-for>
+          <sc-if value="{{ drill.note }}" hint-placeholder-val="{{ false }}">
+            <div style="border-left:3px solid #DA501C;background:#FBEEE8;padding:10px 12px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8F2F0C">{{ drill.note }}</div>
+          </sc-if>
+          <sc-if value="{{ drill.actions }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:6px;display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ drill.actions }}" as="a" hint-placeholder-count="3">
+                <button onClick="{{ a.run }}" style="border:1px solid {{ a.c }};background:transparent;color:{{ a.c }};padding:9px 12px;font:400 12px/1.35 'JetBrains Mono',monospace;text-align:left">{{ a.label }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ drill.log }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:10px">
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Журнал</div>
+              <div style="margin-top:8px;background:#131E5F;padding:12px;overflow:auto">
+                <pre style="margin:0;font:400 11px/1.6 'JetBrains Mono',monospace;color:#94BEBE;white-space:pre-wrap">{{ drill.log }}</pre>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+      <sc-if value="{{ drillJson }}" hint-placeholder-val="{{ false }}">
+        <div>
+          <button onClick="{{ copyJson }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 11px;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">Скопировать</button>
+          <div style="margin-top:10px;background:#131E5F;padding:14px;overflow:auto">
+            <pre style="margin:0;font:400 12px/1.6 'JetBrains Mono',monospace;color:#94BEBE;white-space:pre-wrap">{{ drill.json }}</pre>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ drillTrace }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div>
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Промпт</div>
+            <div style="margin-top:6px;border:1px solid rgba(19,30,95,0.16);background:#fff;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap">{{ drill.llm.prompt }}</div>
+          </div>
+          <div>
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Ответ модели</div>
+            <div style="margin-top:6px;border:1px solid rgba(19,30,95,0.16);background:#fff;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap">{{ drill.llm.response }}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">
+            <div>Модель: {{ drill.llm.model }}</div><div>Температура: {{ drill.llm.temp }}</div>
+            <div>Токены: {{ drill.llm.tokens }}</div><div>Латентность: {{ drill.llm.latency }}</div>
+            <div>Стоимость: {{ drill.llm.cost }}</div><div>Версия промпта: {{ drill.llm.version }}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <button onClick="{{ retryAsIs }}" style="border:1px solid #156479;background:transparent;color:#156479;padding:10px;font:400 12px/1 'JetBrains Mono',monospace">Повторить как есть</button>
+            <button onClick="{{ retryPrompt }}" style="border:1px solid #156479;background:transparent;color:#156479;padding:10px;font:400 12px/1 'JetBrains Mono',monospace">Повторить с изменённым промптом</button>
+            <button onClick="{{ retryModel }}" style="border:1px solid #156479;background:transparent;color:#156479;padding:10px;font:400 12px/1 'JetBrains Mono',monospace">Повторить на другой модели ▾</button>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ modal }}" hint-placeholder-val="{{ false }}">
+  <div style="position:fixed;inset:0;background:rgba(19,30,95,0.5);z-index:80;display:grid;place-items:center;padding:24px">
+    <div style="width:min(560px,96vw);background:#F8F3E0;border:1px solid rgba(19,30,95,0.24)">
+      <div style="padding:16px 20px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 19px/1.2 'Architexture',sans-serif;color:#131E5F">{{ modal.title }}</div>
+      <div style="padding:18px 20px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ modal.lines }}" as="l" hint-placeholder-count="3">
+          <div style="display:flex;gap:8px;font:400 13px/1.5 'JetBrains Mono',monospace;color:#184153"><span style="color:#156479">·</span><span>{{ l.text }}</span></div>
+        </sc-for>
+        <sc-if value="{{ modal.word }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:8px">
+            <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Напечатайте <span style="color:#DA501C">{{ modal.word }}</span> для подтверждения</div>
+            <input value="{{ modalInput }}" onChange="{{ setModalInput }}" style="margin-top:6px;width:100%;padding:10px 12px;border:1px solid rgba(19,30,95,0.24);background:#fff;font:400 14px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          </div>
+        </sc-if>
+      </div>
+      <div style="padding:14px 20px;border-top:1px solid rgba(19,30,95,0.16);display:flex;gap:10px;justify-content:flex-end">
+        <button onClick="{{ closeModal }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#131E5F;padding:11px 16px;font:400 13px/1 'Architexture',sans-serif">Отмена</button>
+        <button onClick="{{ confirmModal }}" style="border:0;background:{{ modal.btnBg }};color:#F8F3E0;padding:11px 18px;font:400 13px/1 'Architexture',sans-serif">{{ modal.confirm }}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+<sc-if value="{{ cmdk }}" hint-placeholder-val="{{ false }}">
+  <div onClick="{{ closeCmdk }}" style="position:fixed;inset:0;background:rgba(19,30,95,0.5);z-index:80;display:grid;place-items:start center;padding:80px 24px">
+    <div style="width:min(560px,96vw);background:#F8F3E0;border:1px solid rgba(19,30,95,0.24)">
+      <input placeholder="Поиск по лидам, каналам, драфтам · команды" style="width:100%;padding:14px 16px;border:0;border-bottom:1px solid rgba(19,30,95,0.16);background:transparent;font:400 14px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ cmdItems }}" as="c" hint-placeholder-count="5">
+        <div onClick="{{ c.go }}" style="padding:11px 16px;border-bottom:1px solid rgba(19,30,95,0.08);font:400 13px/1 'JetBrains Mono',monospace;color:#184153;cursor:pointer" style-hover="background:#EDF4F3">{{ c.label }}</div>
+      </sc-for>
+    </div>
+  </div>
+</sc-if>
+
+<div style="position:fixed;right:20px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
+    <div style="min-width:280px;background:#fff;border:1px solid rgba(19,30,95,0.16);border-left:4px solid {{ t.c }};padding:12px 14px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ t.text }}</div>
+  </sc-for>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;owner&quot;,&quot;customer&quot;,&quot;reviewer&quot;,&quot;viewer&quot;],&quot;default&quot;:&quot;owner&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Прототип&quot;},&quot;mode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;DRY_RUN&quot;,&quot;LIVE&quot;],&quot;default&quot;:&quot;DRY_RUN&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Прототип&quot;},&quot;viewport&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;desktop&quot;,&quot;mobile&quot;],&quot;default&quot;:&quot;desktop&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Прототип&quot;}}">
+// Оболочка Atomic Radar: авторизация, навигация, права, боковая панель деталей,
+// модалки и тосты. Содержимое экранов живёт в отдельных файлах Radar*.dc.html.
+class Component extends DCLogic {
+  C = { green:'#2E7D57', amber:'#C98A1E', red:'#DA501C', gray:'#8A8F9E', sea:'#156479' };
+
+  state = {
+    authed:false, step:'login', loginError:false, showPw:false, login:{u:'',p:''}, totp:'',
+    route:'dashboard', roleOverride:null, modeOverride:null,
+    wide:true, drawer:false, notifOpen:false, userOpen:false, cmdk:false,
+    drill:null, drillTab:'details', modal:null, modalInput:'',
+    toasts:[], toastId:0,
+    // Состояние потока событий: жив ли он, какие кадры по нему возят этой роли и
+    // на что сервер жалуется. Экраны читают это через пропс `api`.
+    streamLive:false, streamServes:[], streamStale:null
+  };
+
+  async componentDidMount(){
+    // Сессия живёт в cookie на сервере, а `authed` — в памяти вкладки. Без этого
+    // запроса любая перезагрузка страницы выбрасывала на форму входа при живой
+    // сессии: пользователь вводил TOTP заново на каждый F5.
+    try {
+      const { get } = await import('./radar-api.js');
+      const me = await get('/auth/me');
+      this.setState({authed:true, me, serverRole:me.role, sections:me.sections});
+      this.refreshMode();
+      this.loadWorkflows();
+      this.openStream();
+    } catch(e){ /* нет сессии — остаёмся на форме входа, это нормальный путь */ }
+
+    this._key = (e)=>{
+      const t = e.target && e.target.tagName;
+      if(t === 'INPUT' || t === 'TEXTAREA') return;
+      // e.code — физическая клавиша, независимо от раскладки. По e.key в
+      // русской раскладке сюда приезжает «л», и палитра не открывалась.
+      if((e.metaKey || e.ctrlKey) && e.code === 'KeyK'){ e.preventDefault(); this.setState({cmdk:true}); }
+      else if(e.key === 'Escape') this.setState({drill:null, modal:null, cmdk:false, notifOpen:false, userOpen:false});
+    };
+    window.addEventListener('keydown', this._key);
+
+    // Уход со страницы закрывает поток явно. Браузер оборвёт соединение и сам, но
+    // сервер узнает об этом позже, чем нужно, и будет держать подписчика, за
+    // которым уже некому читать.
+    this._leave = ()=>this.closeStream();
+    window.addEventListener('pagehide', this._leave);
+  }
+  componentWillUnmount(){
+    window.removeEventListener('keydown', this._key);
+    window.removeEventListener('pagehide', this._leave);
+    this.closeStream();
+  }
+
+  ACCESS = {
+    dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
+    channels:['owner','customer','reviewer'], stream:['owner','customer','reviewer'],
+    leads:['owner','customer','reviewer'], drafts:['owner','customer','reviewer'],
+    draftsTable:['owner','customer','reviewer'],
+    conversations:['owner','customer','reviewer'],
+    // Совпадает с `Section.MANUAL_SENDS` на сервере (_STAFF). Настоящая проверка там;
+    // здесь — только чтобы не показывать гостю пункт, по которому его развернут.
+    manual_sends:['owner','customer','reviewer'],
+    // Совпадает с `Section.ACTIVITY` на сервере (_STAFF). Настоящая проверка там;
+    // здесь — только чтобы не показывать гостю пункт, по которому его развернут.
+    activity:['owner','customer','reviewer'],
+    profile:['owner','customer','reviewer'],
+    // Разборщик должен видеть, что идёт пересчёт: замершая очередь иначе
+    // выглядит поломкой. Запускать задачи он не может — это отдельное право.
+    runs:['owner','customer','reviewer'], evals:['owner','customer','reviewer'],
+    attribution:['owner','customer','viewer'], observability:['owner'],
+    safety:['owner','customer'], admin:['owner']
+  };
+
+  NAV = [
+    {title:'Dashboard', items:[{key:'dashboard', label:'Dashboard', code:'DS'}]},
+    {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'stream', label:'Stream', code:'ST'}]},
+    {title:'Конвейер лидов', items:[{key:'leads', label:'Leads', code:'LD'},{key:'drafts', label:'Drafts', code:'DR', badgeKey:'drafts'},{key:'conversations', label:'Conversations', code:'CV', badgeKey:'conversations'},{key:'manual_sends', label:'Ручные отправки', code:'MS'}]},
+    {title:'Настройка', items:[{key:'profile', label:'Profile & Prompts', code:'PP'},{key:'runs', label:'Runs', code:'RN'},{key:'evals', label:'Evaluations', code:'EV'}]},
+    {title:'Бизнес', items:[{key:'attribution', label:'Attribution', code:'AT'}]},
+    {title:'Эксплуатация', items:[{key:'observability', label:'Observability', code:'OB'},{key:'safety', label:'Safety', code:'SF'},{key:'admin', label:'Admin', code:'AD'}]}
+  ];
+
+  USERS = {
+    owner:{name:'Иван', initials:'ИВ', email:'owner@atomic-automation.net', role:'owner'},
+    customer:{name:'Андрей', initials:'АВ', email:'customer@atomic-automation.net', role:'customer'},
+    reviewer:{name:'Ревьюер', initials:'РВ', email:'reviewer@atomic-automation.net', role:'reviewer'},
+    viewer:{name:'Гость', initials:'ГС', email:'guest@atomic-automation.net', role:'viewer'}
+  };
+
+  // Ключ здесь — имя экрана, а не маршрута: у раздела сценария общего маршрута нет
+  // вовсе, и подпись мобильной шапки берётся по `w.screen`. Поэтому `activity`
+  // лежит в этой же карте, хотя перейти на него по имени раздела нельзя.
+  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin'};
+
+  // Здесь лежали три выдуманные тревоги с выдуманными датами — «vertsanov-03 ушёл
+  // в паузу», «run_20260805_regen упал», «новый ответ от Игоря С.». Они показывались
+  // всем и всегда, независимо от того, что происходило на самом деле. Теперь лента
+  // приходит с сервера: события из таблицы плюс состояния, посчитанные на месте.
+  ALERT_COLOR = {info:'#156479', warn:'#C98A1E', error:'#DA501C'};
+
+  // Маршруты оболочки, у которых нет собственного раздела на сервере: это второй
+  // вид уже существующего раздела, а не отдельное право. Без этой карты переход в
+  // таблицу черновиков упёрся бы в отказ, которого сервер не выносил.
+  SECTION_OF = {draftsTable:'drafts'};
+
+  // ── блоки сценариев ─────────────────────────────────────────────────────────
+  //
+  // По спецификации (§9.1) у каждого сценария свой блок разделов, и все блоки —
+  // один шаблон, параметризованный сценарием. Третий сценарий добавляет третий
+  // блок и ни строки нового кода: список приезжает с сервера, экраны те же.
+  //
+  // Маршрут блока — `wf:<ключ сценария>:<раздел>`. Ключ, а не числовой id: он
+  // переживает пересев базы, а адрес в строке браузера должен что-то значить.
+
+  // Раздел сценария → раздел матрицы прав, он же имя экрана. Здесь эти два смысла
+  // совпадают, но совпадают не по совпадению: экран целей и есть экран лидов,
+  // обобщённый до целей.
+  //
+  // Списка здесь на одну позицию меньше, чем отдаёт сервер: «Настройки» ручки пока
+  // не имеют, и пункт меню, ведущий на пустой экран, хуже отсутствующего — первый
+  // читается как «данных нет», второй как «ещё не сделано». Появится ручка —
+  // строка добавляется сюда, и пункт возникает сам. Так и вышло с «Активностью»:
+  // ручка `/workflows/{key}/activity` появилась, и строка добавлена.
+  //
+  // Пункт виден не во всех блоках, и это не оболочка решает: состав разделов
+  // выводится на сервере из осей сценария, и «Активность» приходит там, где
+  // `visibility='public'`, — вместо «Переписок».
+  WF_SECTION = {stream:'stream', targets:'leads', drafts:'drafts',
+                activity:'activity'};
+
+  WF_CODE = {stream:'ST', targets:'LD', drafts:'DR', activity:'AC'};
+
+  // Разбор маршрута сценария. Возвращает `null` для всего остального — включая
+  // `wf:...` с разделом, которого мы не умеем рисовать: такой адрес обязан вести в
+  // отказ, а не в пустой экран без объяснения.
+  wf(route){
+    if(typeof route !== 'string' || route.indexOf('wf:') !== 0) return null;
+    const p = route.split(':');
+    if(p.length !== 3 || !this.WF_SECTION[p[2]]) return null;
+    return {key:p[1], section:p[2], screen:this.WF_SECTION[p[2]]};
+  }
+
+  // Раздел матрицы прав для любого маршрута — одним местом на всю оболочку.
+  sectionOf(route){
+    const w = this.wf(route);
+    return w ? w.screen : (this.SECTION_OF[route] || route);
+  }
+
+  // Какой экран монтировать. Отдельно от `sectionOf`, и это не педантизм: у
+  // таблицы черновиков раздел прав — `drafts`, а экран свой, `draftsTable`. Слей
+  // их в одну карту — и таблица начала бы открывать очередь.
+  screenOf(route){
+    const w = this.wf(route);
+    return w ? w.screen : route;
+  }
+
+  async loadWorkflows(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/workflows');
+      this.setState({workflows:(data && data.rows) || []});
+    } catch(e){
+      // Без списка оболочка работает: блоков сценариев просто нет, общие разделы
+      // на месте. Валить вход из-за реестра меню нельзя.
+    }
+  }
+
+  // Кто что видит, решает сервер: `/auth/me` отдаёт `sections` для вошедшего.
+  // `ACCESS` ниже остаётся запасным вариантом на случай, когда ответа нет — в
+  // первое мгновение после перезагрузки страницы и при неудачном `/auth/me`.
+  //
+  // Список с сервера годится только когда на экране настоящая роль. Владелец может
+  // «примерить» чужую, чтобы посмотреть её глазами, — под примеркой сервер по-
+  // прежнему описывает владельца, и брать его ответ значило бы показать не то,
+  // что просили показать. Тогда работает `ACCESS`.
+  allows(route){
+    const key = this.sectionOf(route);
+    const S = this.state;
+    if(S.sections && this.role() === S.serverRole) return S.sections.indexOf(key) !== -1;
+    return (this.ACCESS[key] || []).includes(this.role());
+  }
+
+  role(){
+    // Роль приходит с сервера после TOTP и она же — источник истины.
+    const server = this.state.serverRole;
+    if(!server) return this.props.role || 'owner';
+    // Переключатель ролей в меню профиля — инструмент прототипа. Оставляем его
+    // только owner'у и только чтобы СУЗИТЬ обзор («посмотреть глазами заказчика»).
+    // Без этого customer одним кликом рисует себе меню владельца: сервер такие
+    // запросы всё равно отдаёт как 403, но интерфейс показывал бы разделы-обманки.
+    if(server === 'owner' && this.state.roleOverride) return this.state.roleOverride;
+    return server;
+  }
+  // Режим — то, что скажет сервер, и только он. Локальный флаг тут был бы худшим
+  // из возможных вариантов: интерфейс показывал бы LIVE при выключенной отправке
+  // или, что хуже, DRY RUN при включённой.
+  mode(){ return this.state.serverMode || 'DRY_RUN'; }
+
+  async refreshMode(){
+    const { get } = await import('./radar-api.js');
+    try {
+      const m = await get('/system/mode');
+      this.setState({serverMode:m.effective_mode, killed:m.killed});
+    } catch (e) { /* раздел Safety доступен не всем — молча оставляем как есть */ }
+    try {
+      this.setState({counters: await get('/counters')});
+    } catch (e) { /* без счётчиков просто не рисуем бейджи */ }
+    await this.loadAlerts();
+  }
+
+  // Лента тревог отдельным методом: её теперь тянут ещё из двух мест — когда
+  // поток сообщил новое число непрочитанных и когда колокольчик открывают.
+  async loadAlerts(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const a = await get('/alerts');
+      // Пока поток не сказал своего слова, это число за него и стоит: источник у
+      // них один. Иначе первый кадр снимка дотягивал бы ленту, прочитанную секунду
+      // назад при входе. Заговорил поток — дальше число ведёт он один.
+      if(this.streamUnread === undefined) this.streamUnread = a.unread || 0;
+      this.setState({alerts:a.rows || [], alertsUnread:a.unread || 0});
+    } catch (e) { /* лента недоступна — колокольчик просто пуст */ }
+  }
+
+  // ── поток серверных событий ─────────────────────────────────────────────────
+  //
+  // Соединение одно на вкладку и живёт здесь, в оболочке. Раньше свежие числа
+  // добывал каждый экран сам: «Задачи» опрашивали `/runs` раз в три секунды, а
+  // колокольчик и бейджи не обновлялись вовсе — их читали четыре раза за сеанс.
+  //
+  // Каждый кадр несёт текущее значение целиком, а не приращение: пропущенный кадр
+  // ничего не портит, склеивать состояние не нужно — последнее полученное
+  // значение и есть правда. Поэтому же нечего доигрывать после переподключения:
+  // сервер здоровается заново и присылает полный снимок.
+  //
+  // Экраны сюда не лезут — они подписываются через `api.events` (см. renderVals).
+
+  // Имя кадра → набор обработчиков экранов.
+  _subs = {};
+
+  async openStream(){
+    // EventSource есть не везде. Отсутствие — не поломка, а штатный путь: экраны
+    // тогда работают как раньше, своими таймерами. Проверяем до импорта, чтобы в
+    // такой среде вообще не трогать модуль потока.
+    //
+    // `_opening` — от второго соединения: между проверкой и импортом проходит
+    // круг событий, а два потока возили бы каждый кадр дважды.
+    if(typeof EventSource === 'undefined' || this._es || this._opening) return;
+    this._opening = true;
+    const { stream } = await import('./radar-api.js');
+    this._opening = false;
+    if(this._es) return;
+
+    const es = stream();
+    this._es = es;
+
+    // `hello` приходит первым и ровно один раз за соединение. В нём — список
+    // кадров, которые этому подписчику вообще будут приходить: гостю `runs` не
+    // шлют, и экрану бессмысленно их ждать.
+    es.addEventListener('hello', (e)=>{
+      const d = this.frame(e);
+      if(!d || this._es !== es) return;
+      this._probed = false;
+      this.streamState(true, d.events || []);
+    });
+
+    for(const name of ['alerts', 'counters', 'runs', 'error']){
+      es.addEventListener(name, (e)=>{
+        const d = this.frame(e);
+        if(d && this._es === es) this.onFrame(name, d);
+      });
+    }
+
+    es.onerror = ()=>{
+      // Поток нам больше не отвечает. EventSource переподключается сам, и обычно
+      // это и есть правильное поведение, — но не тогда, когда кончилась сессия:
+      // тогда он будет стучаться в закрытую дверь вечно. Что именно случилось,
+      // спрашиваем у сервера отдельно.
+      if(this._es !== es) return;     // поток, который мы уже закрыли
+      this.streamState(false, []);
+      this.probeSession();
+    };
+  }
+
+  closeStream(){
+    if(this._es){ this._es.close(); this._es = null; }
+    this._probed = false;
+    // Число непрочитанных, услышанное от прошлого соединения, к следующему входу
+    // отношения не имеет: там будет другой человек и другая лента.
+    this.streamUnread = undefined;
+    this.streamState(false, []);
+  }
+
+  // Тело кадра — JSON в одну строку. Испорченный кадр молча пропускаем: ронять
+  // из-за одной строки соединение незачем, следующий придёт целым.
+  frame(e){
+    try { return JSON.parse(e.data); } catch (err) { return null; }
+  }
+
+  onFrame(name, body){
+    if(name === 'alerts') this.onAlerts(body);
+    else if(name === 'counters') this.setState({counters:body});
+    // Опрос базы на сервере упал: показанные числа могли отстать, но само
+    // соединение в порядке. Переподключаться здесь нечем и незачем — разрыв
+    // только отобрал бы снимок, который приедет сам, когда сервер выздоровеет.
+    else if(name === 'error') this.setState({streamStale:(body && body.text) || null});
+    this.emit(name, body);
+  }
+
+  // Кадр `alerts` несёт одно число непрочитанных — самих строк в нём нет. Цифру
+  // ставим сразу, а ленту дотягиваем прежней ручкой и только когда цифра
+  // изменилась: открытый колокольчик с содержимым, не совпадающим с цифрой, —
+  // та же ложь, что и застывшая цифра. Это запрос на настоящее событие, а не раз
+  // в N секунд, и он несопоставимо дешевле опроса.
+  //
+  // Сравниваем с прошлым кадром, а не с показанным числом: показанное приходит из
+  // `/alerts` и вправе разойтись с кадром — ленту с тех пор могли отметить
+  // прочитанной. Сверка с самим потоком не зависит от таких расхождений, и
+  // дотягивание остаётся ровно одним на одно изменение.
+  onAlerts(body){
+    const n = (body && body.unread) || 0;
+    if(n === this.streamUnread) return;
+    this.streamUnread = n;
+    this.setState({alertsUnread:n});
+    this.loadAlerts();
+  }
+
+  // Состояние самого канала экраны узнают тем же способом, что и кадры, — под
+  // именем `stream`. С сервера кадра с таким именем не приходит: его список
+  // закрыт (`hello`, `alerts`, `counters`, `runs`, `error`), и занять это имя
+  // некому. Экрану с запасным путём нужно знать ровно это: жив канал или нет.
+  streamState(live, serves){
+    if(!!this.state.streamLive === !!live) return;
+    this.setState({streamLive:!!live, streamServes:serves || [],
+                   streamStale: live ? this.state.streamStale : null});
+    this.emit('stream', {live:!!live, serves:serves || []});
+  }
+
+  // Обход по копии набора: обработчик вправе отписаться прямо из себя, а
+  // изменение набора по ходу обхода потеряло бы соседа.
+  emit(name, body){
+    const subs = this._subs[name];
+    if(!subs) return;
+    for(const fn of [...subs]){
+      try { fn(body); } catch (err) { console.error(err); }
+    }
+  }
+
+  // Подписка экрана. Возвращает функцию отписки, и позвать её в
+  // `componentWillUnmount` — обязанность экрана, а не любезность: у каждого
+  // раздела две точки монтирования, десктопная и мобильная, и при пересечении
+  // брейкпоинта этот экземпляр исчезает. Оставшийся в наборе обработчик
+  // продолжил бы дёргать `setState` у мёртвого компонента.
+  subscribe(name, fn){
+    const subs = this._subs[name] || (this._subs[name] = new Set());
+    subs.add(fn);
+    return ()=>{ subs.delete(fn); };
+  }
+
+  // Один запрос на обрыв, а не на каждую попытку: EventSource переподключается
+  // каждые несколько секунд, и проверять сессию с той же частотой значило бы
+  // заменить убранный опрос новым. Флаг снимается на `hello` — то есть когда
+  // положение действительно изменилось.
+  async probeSession(){
+    if(this._probed) return;
+    this._probed = true;
+    const { get, isUnauthorized } = await import('./radar-api.js');
+    try {
+      await get('/auth/me');
+      // Сессия жива — это обычный обрыв связи, и EventSource справится сам.
+    } catch (e) {
+      if(!isUnauthorized(e)) return;
+      // Сессия кончилась: она живёт 12 часов, и поток, открытый до истечения,
+      // однажды получает отказ. Держать соединение дальше нельзя — оно будет
+      // биться в закрытую дверь, а интерфейс показывать вчерашние числа. Уводим
+      // на вход: так же поступает любой экран, получив 401.
+      this.closeStream();
+      this.setState({authed:false, step:'login', login:{u:'',p:''}, totp:'',
+                     notifOpen:false, userOpen:false,
+                     me:null, serverRole:null, sections:null});
+      this.toast('Сессия истекла, войдите заново', this.C.red);
+    }
+  }
+
+  async ackAll(){
+    try {
+      const { post } = await import('./radar-api.js');
+      await post('/alerts/ack-all', {});
+      this.refreshMode();
+    } catch (e) { /* не отметилось — лента останется как есть */ }
+  }
+
+  // Второй аргумент — параметры перехода. Нужен, чтобы клик по строке в таблице
+  // черновиков открывал в очереди именно тот черновик, а не «следующий по счёту».
+  go(route, params){
+    this.setState({route, routeParams:params || null, drill:null, notifOpen:false,
+                   userOpen:false, cmdk:false, drawer:false});
+  }
+
+  toast(text, c){
+    const id = this.state.toastId + 1;
+    this.setState(s=>({toastId:id, toasts:[...s.toasts, {id, text, c: c || this.C.green}]}));
+    setTimeout(()=>this.setState(s=>({toasts:s.toasts.filter(t=>t.id!==id)})), 4000);
+  }
+
+  async confirmModal(){
+    const m = this.state.modal;
+    if(!m) return;
+    if(m.word && this.state.modalInput.trim() !== m.word) return;
+    this.setState({modal:null, modalInput:''});
+
+    // Переключение режима и аварийная остановка выполняются на сервере. Раньше
+    // здесь стояла установка локального флага с бодрым тостом — то есть кнопка
+    // «Переключить в LIVE» ничего не переключала, а «Остановить» ничего не
+    // останавливала, при этом обе рапортовали об успехе.
+    const call = {live:['/system/mode', {mode:'LIVE'}],
+                  dry:['/system/mode', {mode:'DRY_RUN'}],
+                  kill:['/system/kill', {reason:'kill switch из интерфейса'}]}[m.kind];
+
+    if(call){
+      const { post, describe } = await import('./radar-api.js');
+      try {
+        await post(call[0], call[1]);
+        await this.refreshMode();
+        this.toast(m.kind === 'live' ? 'Система переведена в LIVE'
+                 : m.kind === 'kill' ? 'Аварийная остановка выполнена'
+                 : 'Система возвращена в сухой прогон',
+                   m.kind === 'dry' ? this.C.amber : this.C.red);
+      } catch (e) { this.toast(describe(e), this.C.red); }
+      return;
+    }
+
+    // Обычная модалка: у неё может быть собственное действие. Без этого вызова
+    // подтверждение показывало «Готово», не сделав ничего.
+    if(typeof m.run === 'function'){
+      try { await m.run(); } catch (e) { this.toast(String(e && e.message || e), this.C.red); }
+    }
+    this.toast(m.done || 'Готово', this.C.green);
+  }
+
+  renderVals(){
+    const S = this.state, role = this.role(), mode = this.mode();
+    const isMobile = (this.props.viewport || 'desktop') === 'mobile';
+    const route = S.route, authed = S.authed;
+    const allowed = this.allows(route);
+    // Экран выбирается по маршруту, а не по названию раздела: у маршрута сценария
+    // экран тот же, что у общего раздела, и отличается он только пропсом.
+    const screen = this.screenOf(route);
+    const on = (k)=>authed && !isMobile && screen === k && allowed;
+    const onM = (k)=>authed && isMobile && screen === k && allowed;
+
+    const w = this.wf(route);
+    const workflows = S.workflows || [];
+    const current = w ? workflows.filter(x=>x.key === w.key)[0] : null;
+
+    // Очередь и таблица — два вида одной сущности, а не два раздела: пункт меню
+    // один, и он остаётся подсвеченным, в каком бы виде человек сейчас ни был.
+    // У сценария подсвечивается его собственный пункт, а не общий «Leads»: блоки
+    // на то и заведены, чтобы было видно, в каком конвейере человек находится.
+    const navKey = w ? route : (this.SECTION_OF[route] || route);
+    const nav = this.NAV.map(g=>({
+      title:g.title,
+      items:g.items.filter(i=>this.allows(i.key)).map(i=>({
+        ...i,
+        // Бейдж — счётчик с сервера, а не число из вёрстки. Раньше здесь стояли
+        // «12» и «3», и они не менялись, сколько бы черновиков ни разобрали.
+        badge: i.badgeKey && S.counters && S.counters[i.badgeKey]
+               ? String(S.counters[i.badgeKey]) : '',
+        bg: navKey === i.key ? 'rgba(148,190,190,0.18)' : 'transparent',
+        mark: navKey === i.key ? '#DA501C' : 'transparent',
+        fg: navKey === i.key ? '#F8F3E0' : '#C7CEE8',
+        go:()=>this.go(i.key)
+      }))
+    })).filter(g=>g.items.length);
+
+    // Блоки сценариев — тем же шаблоном, что и статические группы: у сайдбара одна
+    // разметка, и добавлять ей второй вид ради второго источника пунктов незачем.
+    //
+    // Состав пунктов внутри блока приходит с сервера и выводится там из осей
+    // сценария; оболочка лишь отбрасывает разделы, которые пока некому нарисовать,
+    // и разделы, закрытые роли. Пустой блок не рисуется вовсе — заголовок без
+    // единого пункта выглядит как поломка.
+    for(const wf of workflows){
+      const items = (wf.sections || [])
+        .filter(s=>this.WF_SECTION[s.key])
+        .filter(s=>this.allows('wf:' + wf.key + ':' + s.key))
+        .map(s=>{
+          const key = 'wf:' + wf.key + ':' + s.key;
+          return {key, label:s.title, code:this.WF_CODE[s.key] || '··',
+                  badge:'',
+                  bg: navKey === key ? 'rgba(148,190,190,0.18)' : 'transparent',
+                  mark: navKey === key ? '#DA501C' : 'transparent',
+                  fg: navKey === key ? '#F8F3E0' : '#C7CEE8',
+                  go:()=>this.go(key)};
+        });
+      if(items.length) nav.push({title:wf.title, items});
+    }
+
+    const api = {
+      role, mode,
+      go:(r, p)=>this.go(r, p),
+      toast:(t,c)=>this.toast(t,c),
+      drill:(p)=>this.setState({drill:p, drillTab:'details'}),
+      trace:(p)=>this.setState({drill:p, drillTab:'trace'}),
+      modal:(m)=>this.setState({modal:m, modalInput:''}),
+
+      // Канал серверных событий. Соединение держит оболочка — экран только
+      // подписывается и обязан отписаться возвращённой функцией.
+      events:{
+        on:(name, fn)=>this.subscribe(name, fn),
+        // Жив ли канал; с именем кадра — ещё и возит ли он этот вид этой роли.
+        // Экран с запасным путём спрашивает именно с именем: канал может быть
+        // поднят, а нужных кадров по нему не приходить, и тогда запасной путь
+        // обязан работать.
+        live:(name)=>!!S.streamLive &&
+                     (!name || (S.streamServes || []).indexOf(name) !== -1),
+        // На что сервер жалуется прямо сейчас: числа могли отстать, хотя
+        // соединение цело. `null` — всё в порядке.
+        stale:S.streamStale || null
+      }
+    };
+
+    return {
+      // id черновика, который просили открыть из таблицы. Живёт до следующего
+      // перехода: иначе возврат в очередь всегда открывал бы один и тот же.
+      focusDraft: (route === 'drafts' && S.routeParams && S.routeParams.focusDraft) || 0,
+      // Ключ сценария и его название — пропсы экранам. Пустая строка означает общий
+      // раздел: экран по ней и различает два своих вида. Название передаётся, чтобы
+      // экран не ходил за ним в реестр второй раз — оболочка его уже запросила.
+      workflowKey: w ? w.key : '',
+      workflowTitle: (current && current.title) || '',
+      v:{
+        login: !authed, stepLogin: S.step === 'login', stepTotp: S.step === 'totp',
+        appDesktop: authed && !isMobile, mobile: authed && isMobile,
+        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), stream:on('stream'),
+        leads:on('leads'), drafts:on('drafts'), draftsTable:on('draftsTable'),
+        conversations:on('conversations'), manual_sends:on('manual_sends'),
+        activity:on('activity'),
+        profile:on('profile'),
+        runs:on('runs'), evals:on('evals'), attribution:on('attribution'),
+        observability:on('observability'), safety:on('safety'), admin:on('admin')
+      },
+      m:{
+        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), stream:onM('stream'),
+        leads:onM('leads'), drafts:onM('drafts'), draftsTable:onM('draftsTable'),
+        conversations:onM('conversations'), manual_sends:onM('manual_sends'),
+        activity:onM('activity'),
+        profile:onM('profile'),
+        runs:onM('runs'), evals:onM('evals'), attribution:onM('attribution'),
+        observability:onM('observability'), safety:onM('safety'), admin:onM('admin')
+      },
+      // Кому раздел открыт — берётся из `ACCESS`: это текст экрана отказа, а не
+      // само право. Сервер отдаёт разделы вошедшего, а не таблицу «кому что», и
+      // назвать роли по его ответу нельзя.
+      api, route, denied: authed && !allowed,
+      deniedRoles:(this.ACCESS[this.sectionOf(route)]||[]).join(', '),
+
+      login:S.login, totp:S.totp, loginError:S.loginError, pwType:S.showPw ? 'text' : 'password',
+      setLoginU:(e)=>this.setState({login:{...S.login, u:e.target.value}}),
+      setLoginP:(e)=>this.setState({login:{...S.login, p:e.target.value}}),
+      togglePw:()=>this.setState({showPw:!S.showPw}),
+      doLogin:async ()=>{
+        if(!S.login.u || !S.login.p){ this.setState({loginError:true}); return; }
+        try {
+          const { post } = await import('./radar-api.js');
+          await post('/auth/login', {username:S.login.u, password:S.login.p});
+          this.setState({step:'totp', loginError:false});
+        } catch(e){ this.setState({loginError:true}); }
+      },
+      // Код проверяет сервер. Раньше здесь стоял setTimeout на 250 мс, который
+      // просто ставил authed:true, — то есть вход открывался кому угодно.
+      setTotp:async (e)=>{
+        const val = e.target.value.replace(/[^0-9]/g,'').slice(0,6);
+        this.setState({totp:val});
+        if(val.length !== 6) return;
+        try {
+          const { post } = await import('./radar-api.js');
+          const me = await post('/auth/totp', {code: val});
+          // Роль и список разделов приходят с сервера: держать их копию на клиенте
+          // значит однажды разойтись с настоящей матрицей прав.
+          this.setState({authed:true, me, serverRole:me.role, sections:me.sections,
+                         loginError:false});
+          this.refreshMode();
+          // Подписываться раньше нечем: до входа куки нет и ручка отвечает 401.
+          this.openStream();
+        } catch(err){ this.setState({loginError:true, totp:''}); }
+      },
+      doTotp:()=>{},
+      logout:async ()=>{
+        // Поток закрываем первым: сессии уже нет, а EventSource, узнав об этом
+        // сам, начал бы переподключаться к ручке, которая теперь отвечает 401.
+        this.closeStream();
+        try { const { post } = await import('./radar-api.js'); await post('/auth/logout'); }
+        catch(e){ /* сессию всё равно роняем локально */ }
+        this.setState({authed:false, step:'login', login:{u:'',p:''}, totp:'',
+                       userOpen:false, me:null, serverRole:null, sections:null});
+      },
+      noop:(e)=>{ if(e && e.preventDefault) e.preventDefault(); },
+
+      nav, wide:S.wide, sidebarW:S.wide ? '240px' : '64px',
+      toggleSidebar:()=>this.setState({wide:!S.wide}),
+      me:this.state.me || this.USERS[role],
+      roleOptions:(this.state.serverRole === 'owner' ? Object.keys(this.USERS) : []).map(r=>({label:r, bg: role === r ? '#131E5F' : 'transparent', fg: role === r ? '#F8F3E0' : '#184153', pick:()=>this.setState({roleOverride:r, userOpen:false, route:'dashboard'})})),
+      modePill: mode === 'LIVE'
+        ? {text:'LIVE', bg:'#DA501C', fg:'#FFFFFF', anim:'livepulse 1.6s ease-in-out infinite'}
+        : {text:'DRY RUN', bg:'#131E5F', fg:'#F8F3E0', anim:'none'},
+      goDash:()=>this.go('dashboard'), goObs:()=>this.go('observability'), goSafety:()=>this.go('safety'),
+      // Открывая колокольчик, лента перечитывается. Кадр `alerts` несёт только
+      // число, и одинаковое число при сменившемся составе ленты его не выдаёт —
+      // а смотрят как раз состав.
+      toggleNotif:()=>{
+        if(!S.notifOpen) this.loadAlerts();
+        this.setState({notifOpen:!S.notifOpen, userOpen:false});
+      },
+      toggleUser:()=>this.setState({userOpen:!S.userOpen, notifOpen:false}),
+      notifOpen:S.notifOpen, userOpen:S.userOpen,
+      // Состояния (сухой прогон, недоступная модель) идут первыми и не
+      // отмечаются прочитанными: прятать то, что истинно прямо сейчас, нельзя.
+      alerts:(S.alerts || []).map(a=>({
+        text:a.text,
+        time:a.created_at ? String(a.created_at).slice(5, 16).replace('T', ' ')
+                          : 'сейчас',
+        c:this.ALERT_COLOR[a.severity] || '#156479'})),
+      alertsEmpty: !(S.alerts || []).length,
+      alertsBadge: S.alertsUnread ? String(S.alertsUnread) : '',
+      ackAll:()=>this.ackAll(),
+      openCmdk:()=>this.setState({cmdk:true}), closeCmdk:()=>this.setState({cmdk:false}), cmdk:S.cmdk,
+      cmdItems:[
+        {label:'→ Перейти в Safety', go:()=>this.go('safety')},
+        {label:'→ Журнал аудита', go:()=>this.go('admin')},
+        {label:'→ Драфты на ревью', go:()=>this.go('drafts')},
+        {label:'→ Канал VPS & Hosting Talk', go:()=>this.go('channels')},
+        {label:'→ Экспорт текущей таблицы', go:()=>{ this.setState({cmdk:false}); this.toast('Экспорт запущен, придёт уведомление', this.C.sea); }}
+      ],
+
+      drill:S.drill, closeDrill:()=>this.setState({drill:null}),
+      drillTabs:[{key:'details', label:'Детали'},{key:'json', label:'JSON'}].concat(S.drill && S.drill.llm ? [{key:'trace', label:'LLM-трейс'}] : []).map(t=>({label:t.label, bg: S.drillTab === t.key ? '#131E5F' : 'transparent', fg: S.drillTab === t.key ? '#F8F3E0' : '#156479', pick:()=>this.setState({drillTab:t.key})})),
+      drillDetails: S.drillTab === 'details', drillJson: S.drillTab === 'json', drillTrace: S.drillTab === 'trace',
+      copyJson:()=>this.toast('JSON скопирован в буфер', this.C.green),
+      retryAsIs:()=>this.toast('Повтор вызова поставлен в очередь', this.C.sea),
+      retryPrompt:()=>this.toast('Открыт редактор промпта', this.C.sea),
+      retryModel:()=>this.toast('Выбор модели: qwen3.5-9b / llama3.1-8b', this.C.sea),
+
+      modal:S.modal, modalInput:S.modalInput,
+      setModalInput:(e)=>this.setState({modalInput:e.target.value}),
+      closeModal:()=>this.setState({modal:null, modalInput:''}),
+      confirmModal:()=>this.confirmModal(),
+      toasts:S.toasts,
+
+      // У маршрута сценария в шапке — сценарий и раздел: в мобильном виде сайдбара
+      // нет вовсе, и без этой подписи два одинаковых экрана не различить.
+      screenTitle: w
+        ? ((current && current.title ? current.title + ' · ' : '')
+           + (this.TITLES[w.screen] || w.section))
+        : (this.TITLES[route] || 'Atomic Radar'),
+      drawer:S.drawer, toggleDrawer:()=>this.setState({drawer:!S.drawer}),
+      tabs:[{key:'dashboard', label:'Dash'},{key:'leads', label:'Leads'},{key:'drafts', label:'Drafts'},{key:'conversations', label:'Диалоги'}].map(t=>({label:t.label, fg: route === t.key ? '#F8F3E0' : '#8E97C6', mark: route === t.key ? '#DA501C' : 'transparent', go:()=>this.go(t.key)}))
+    };
+  }
+}
+</script>
+</body>
+</html>

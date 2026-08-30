@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">{{ title }}</div>
+    <div style="display:flex;border:1px solid rgba(19,30,95,0.24)">
+      <sc-for list="{{ windows }}" as="w" hint-placeholder-count="3">
+        <div onClick="{{ w.pick }}" style="cursor:pointer;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace;background:{{ w.bg }};color:{{ w.fg }}">{{ w.label }}</div>
+      </sc-for>
+    </div>
+    <div style="flex:1"></div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ rangeLabel }}</div>
+    <button onClick="{{ reload }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">↻ обновить</button>
+  </div>
+
+  <sc-if value="{{ showNotice }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px;font:400 13px/1.5 'JetBrains Mono',monospace;color:{{ noticeFg }}">{{ notice }}</div>
+  </sc-if>
+
+  <sc-if value="{{ showTiles }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:rgba(19,30,95,0.16);border:1px solid rgba(19,30,95,0.16)">
+      <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="5">
+        <div style="background:#fff;padding:14px">
+          <div style="font:400 10px/1.3 'JetBrains Mono',monospace;color:#156479;letter-spacing:.06em;text-transform:uppercase">{{ t.label }}</div>
+          <div style="margin-top:8px;font:400 26px/1 'JetBrains Mono',monospace;color:{{ t.c }}">{{ t.value }}</div>
+          <div style="margin-top:6px;font:400 10px/1.35 'JetBrains Mono',monospace;color:#8A8F9E">{{ t.hint }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showAuto }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#EDF4F3;border:1px solid rgba(21,100,121,0.28);padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
+      <div style="flex:none;font:400 12px/1.5 'JetBrains Mono',monospace;color:#156479;letter-spacing:.12em">СТУПЕНЬ</div>
+      <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ autoNote }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px;font:400 13px/1.5 'Architexture',sans-serif;color:#184153">{{ emptyLine }}</div>
+  </sc-if>
+
+  <sc-if value="{{ showBody }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16)">
+      <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">По дням · {{ dailyNote }}</div>
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ daily }}" as="d" hint-placeholder-count="7">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:none;width:56px;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ d.label }}</div>
+            <div style="flex:1;height:14px;background:#EDF4F3;display:flex">
+              <div style="height:14px;width:{{ d.wm }};background:#131E5F"></div>
+              <div style="height:14px;width:{{ d.wd }};background:#156479"></div>
+            </div>
+            <div style="flex:none;width:170px;text-align:right;font:400 11px/1 'JetBrains Mono',monospace;color:#184153">{{ d.n }}</div>
+          </div>
+        </sc-for>
+      </div>
+      <div style="padding:0 14px 12px 14px;display:flex;gap:16px;font:400 11px/1 'JetBrains Mono',monospace">
+        <span style="color:#131E5F">— руками</span><span style="color:#156479">— автоматически</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showBody }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+        <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">По каналам</div>
+        <table style="width:100%;font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+          <thead><tr>
+            <sc-for list="{{ channelCols }}" as="h" hint-placeholder-count="4">
+              <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ h }}</th>
+            </sc-for>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ channels }}" as="c" hint-placeholder-count="4">
+              <tr>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+                  <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ c.title }}</div>
+                  <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#8A8F9E">{{ c.username }}</div>
+                </td>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:80px;text-align:right">{{ c.manual }}</td>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:110px;text-align:right">{{ c.auto }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div style="padding:10px 14px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ channelsNote }}</div>
+      </div>
+
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+        <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">По аккаунтам</div>
+        <table style="width:100%;font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+          <thead><tr>
+            <sc-for list="{{ accountCols }}" as="h" hint-placeholder-count="4">
+              <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ h }}</th>
+            </sc-for>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ accounts }}" as="a" hint-placeholder-count="3">
+              <tr>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ a.acct }}</td>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:70px;text-align:right">{{ a.manual }}</td>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:100px;text-align:right">{{ a.auto }}</td>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:120px;color:#8A8F9E">{{ a.last }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+        <div style="padding:10px 14px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ accountsNote }}</div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showBody }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+      <div style="padding:12px 14px;border-bottom:1px solid rgba(19,30,95,0.16);font:400 14px/1 'Architexture',sans-serif;color:#131E5F">Лента · {{ recentNote }}</div>
+      <table style="width:100%;font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+        <thead><tr>
+          <sc-for list="{{ recentCols }}" as="h" hint-placeholder-count="6">
+            <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ h }}</th>
+          </sc-for>
+        </tr></thead>
+        <tbody>
+          <sc-for list="{{ recent }}" as="r" hint-placeholder-count="8">
+            <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;color:#8A8F9E;width:110px">{{ r.time }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:150px">
+                <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.kc }};border:1px solid {{ r.kc }};padding:4px 7px">{{ r.kind }}</span>
+              </td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:170px">{{ r.channel }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:90px">{{ r.acct }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top">{{ r.text }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);vertical-align:top;width:180px;color:{{ r.mc }}">{{ r.mark }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+      <div style="padding:10px 14px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ recentHint }}</div>
+    </div>
+  </sc-if>
+
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;gap:6px;flex-wrap:wrap">
+    <sc-for list="{{ windows }}" as="w" hint-placeholder-count="3">
+      <div onClick="{{ w.pick }}" style="padding:8px 12px;border:1px solid rgba(19,30,95,0.24);background:{{ w.bg }};color:{{ w.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ w.label }}</div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ showNotice }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px;font:400 12px/1.5 'JetBrains Mono',monospace;color:{{ noticeFg }}">{{ notice }}</div>
+  </sc-if>
+
+  <sc-if value="{{ showTiles }}" hint-placeholder-val="{{ true }}">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <sc-for list="{{ tiles }}" as="t" hint-placeholder-count="5">
+        <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+          <div style="font:400 10px/1.3 'JetBrains Mono',monospace;color:#156479;text-transform:uppercase">{{ t.label }}</div>
+          <div style="margin-top:6px;font:400 22px/1 'JetBrains Mono',monospace;color:{{ t.c }}">{{ t.value }}</div>
+          <div style="margin-top:4px;font:400 10px/1.35 'JetBrains Mono',monospace;color:#8A8F9E">{{ t.hint }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showAuto }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#EDF4F3;border:1px solid rgba(21,100,121,0.28);padding:12px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ autoNote }}</div>
+  </sc-if>
+
+  <sc-if value="{{ showEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px;font:400 13px/1.5 'Architexture',sans-serif;color:#184153">{{ emptyLine }}</div>
+  </sc-if>
+
+  <sc-if value="{{ showBody }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px;display:flex;flex-direction:column;gap:8px">
+      <div style="font:400 14px/1 'Architexture',sans-serif;color:#131E5F">По дням</div>
+      <sc-for list="{{ daily }}" as="d" hint-placeholder-count="7">
+        <div>
+          <div style="display:flex;justify-content:space-between;font:400 11px/1 'JetBrains Mono',monospace;color:#184153"><span>{{ d.label }}</span><span>{{ d.n }}</span></div>
+          <div style="margin-top:4px;height:12px;background:#EDF4F3;display:flex">
+            <div style="height:12px;width:{{ d.wm }};background:#131E5F"></div>
+            <div style="height:12px;width:{{ d.wd }};background:#156479"></div>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showBody }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ recent }}" as="r" hint-placeholder-count="6">
+        <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.kc }};border:1px solid {{ r.kc }};padding:3px 6px">{{ r.kind }}</div>
+            <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.time }}</div>
+          </div>
+          <div style="margin-top:6px;font:400 12px/1.2 'JetBrains Mono',monospace;color:#131E5F">{{ r.channel }}</div>
+          <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.text }}</div>
+          <div style="margin-top:6px;font:400 11px/1.3 'JetBrains Mono',monospace;color:{{ r.mc }}">{{ r.mark }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:720},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;workflowTitle&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { d:null, days:7, loading:true, error:null };
+
+  // Раздел существует только внутри сценария: ручка живёт по адресу
+  // `/workflows/{key}/activity`, общего маршрута у неё нет. Пустой пропс — это не
+  // «второй вид экрана», как у потока и целей, а положение, в которое экран попасть
+  // не должен. Отрисовать его пустым значило бы показать ноль там, где данных не
+  // спрашивали вовсе, поэтому здесь стоит подпись, а не таблицы.
+  wf(){ return this.props.workflow || ''; }
+
+  componentDidMount(){ this.load(); }
+
+  // Переход между блоками сайдбара не пересоздаёт экран — место в разметке одно и
+  // то же, меняется только пропс. Без этого «Активность» публичных ответов
+  // показывала бы числа личных сообщений до первого нажатия «обновить».
+  componentDidUpdate(prev){
+    if((prev.workflow || '') === this.wf()) return;
+    this.setState({d:null, loading:true, error:null}, ()=>this.load());
+  }
+
+  async load(){
+    if(!this.wf()){ this.setState({d:null, loading:false, error:null}); return; }
+    try {
+      const { get } = await import('./radar-api.js');
+      const d = await get('/workflows/' + this.wf() + '/activity',
+                          {days:this.state.days});
+      this.setState({d, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({d:null, error:describe(e), loading:false});
+    }
+  }
+
+  // Окно считает сервер: `days` уходит параметром, а `since`/`until` приезжают
+  // готовыми. Считать границы на клиенте нельзя — часовой пояс браузера сдвинул бы
+  // их относительно тех суток, по которым сгруппирован ряд `daily`.
+  pick(days){
+    if(days === this.state.days) return;
+    this.setState({days, loading:true}, ()=>this.load());
+  }
+
+  // Прочерк, а не ноль: ноль значит «посчитали и получилось пусто», прочерк —
+  // «поля в ответе нет». Разница видна только если её не стирать.
+  num(v){
+    if(v === null || v === undefined) return '—';
+    return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  // Дата дня приходит строкой `YYYY-MM-DD` в UTC. Режем строку, а не разбираем её
+  // через `Date`: разбор дал бы полночь UTC, а `getDate()` вернул бы её в поясе
+  // браузера — и весь ряд поехал бы на сутки у любого, кто западнее Гринвича.
+  dayLabel(s){
+    const p = String(s || '').split('-');
+    return p.length === 3 ? p[2] + '.' + p[1] : (s || '—');
+  }
+
+  // То же самое для границ окна: они приходят полным ISO, и день из них берётся
+  // срезом строки, а не пересчётом в местное время.
+  dayOfIso(s){
+    const t = String(s || '');
+    return t.length >= 10 ? t.slice(8, 10) + '.' + t.slice(5, 7) : '—';
+  }
+
+  // Границы окна одной строкой. Когда окно в одни сутки, «28.08 — 28.08» выглядит
+  // как недоделанная подстановка, хотя это верные границы; печатаем одну дату.
+  range(win){
+    const a = this.dayOfIso(win.since), b = this.dayOfIso(win.until);
+    return a === b ? a : (a + ' — ' + b);
+  }
+
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    const p = (n)=>String(n).padStart(2, '0');
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' +
+           p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // Ширина полосы — геометрия рисунка, а не показатель. Доли и проценты на этом
+  // экране запрещены (§9.2), поэтому число рядом с полосой всегда абсолютное, а
+  // сама полоса подписи не имеет.
+  pct(v, max){
+    const n = v || 0;
+    if(!n) return '0%';
+    return Math.max(2, Math.round(n * 100 / max)) + '%';
+  }
+
+  // Отметка у записи ленты. Три состояния, а не два: `matches_suggestion` считает
+  // сервер, и он вправе вернуть `null` — предложенного текста у наводки могло не
+  // быть вовсе. Подписать такую запись «написано иначе» значило бы придумать
+  // сравнение, которого никто не делал.
+  markOf(r){
+    if(r.kind === 'manual'){
+      if(r.matches_suggestion === true) return {mark:'совпало с предложенным', mc:'#2E7D57'};
+      if(r.matches_suggestion === false) return {mark:'написано иначе', mc:'#C98A1E'};
+      return {mark:'—', mc:'#8A8F9E'};
+    }
+    if(r.allowed === true) return {mark:'гейт пропустил', mc:'#2E7D57'};
+    if(r.allowed === false) return {mark:'гейт заблокировал', mc:'#DA501C'};
+    return {mark:'—', mc:'#8A8F9E'};
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const d = S.d;
+    const wf = this.wf();
+
+    const totals = (d && d.totals) || {};
+    const sending = (d && d.sending) || {};
+    const win = (d && d.window) || {};
+
+    // Пустое состояние — одна честная строка вместо пяти пустых таблиц. Условие
+    // ровно из контракта: ничего не отправляли И ничего не ждёт отправки. Одного
+    // нуля мало — одобренные и не ушедшие черновики это как раз то, ради чего
+    // экран открывают, когда за период тихо.
+    const empty = !!d && totals.sent === 0 && totals.awaiting === 0;
+    const showBody = !!d && !empty;
+
+    let notice = '', noticeFg = '#8A8F9E';
+    if(!wf){
+      notice = 'Раздел «Активность» открывается внутри сценария: выберите его в блоке сценария в меню.';
+    } else if(S.loading && !d){
+      notice = 'загрузка…';
+    } else if(S.error){
+      notice = S.error;
+      noticeFg = '#DA501C';
+    }
+
+    const daily = (d && d.daily) || [];
+    let maxDay = 1;
+    for(const r of daily){
+      const s = (r.manual || 0) + (r.delivered || 0);
+      if(s > maxDay) maxDay = s;
+    }
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+
+      // Заголовок называет сценарий: экранов сценария несколько и по виду они
+      // одинаковы, а «Активность» без имени контура ничем не отличается от чужой.
+      title: wf ? ('Активность · ' + (this.props.workflowTitle || wf)) : 'Активность',
+
+      // «Сегодня», а не «24 часа», и это не придирка к слову. Окно на сервере нарезано
+      // по календарным суткам UTC: `days=1` — это текущие сутки, а не последние 24
+      // часа, и рано утром оно короткое. Подпись «24 часа» над одной записью вместо
+      // трёх читалась бы как потеря данных.
+      windows: [{n:1, label:'сегодня'}, {n:7, label:'7 дней'}, {n:30, label:'30 дней'}]
+        .map(w=>({label:w.label,
+                  bg: S.days === w.n ? '#131E5F' : 'transparent',
+                  fg: S.days === w.n ? '#F8F3E0' : '#156479',
+                  pick:()=>this.pick(w.n)})),
+
+      // Границы окна показываем как есть, с оговоркой про UTC: сутки в ряду
+      // `daily` нарезаны по UTC, и подпись обязана называть тот же пояс, иначе
+      // человек сверит вечернюю запись не с той строкой.
+      rangeLabel: win.since ? ('окно: ' + this.range(win) + ' · UTC') : '',
+
+      reload:()=>this.load(),
+
+      showNotice: !!notice, notice, noticeFg,
+      showEmpty: empty,
+      emptyLine: 'За выбранный период в этом контуре ничего не отправляли.',
+      showTiles: showBody,
+      showBody,
+
+      // Пять плиток контракта. Долей и процентов здесь нет намеренно — §9.2
+      // запрещает метрики конверсии, поэтому «одобрено → отправлено» на экране не
+      // появляется ни рядом, ни отношением.
+      tiles: showBody ? [
+        {label:'Отправлено', value:this.num(totals.sent), c:'#131E5F',
+         hint:'руками и автоматически'},
+        {label:'Руками', value:this.num(totals.manual), c:'#131E5F',
+         hint:'записи формы ручных отправок'},
+        {label:'Автоматически', value:this.num(totals.delivered), c:'#131E5F',
+         hint:'доставленные исходящие'},
+        {label:'Заблокировано гейтом', value:this.num(totals.blocked), c:'#131E5F',
+         hint:'исходящие, которые гейт не пропустил'},
+        {label:'Одобрено и ждёт отправки', value:this.num(totals.awaiting), c:'#C98A1E',
+         hint:'сейчас, не за период'}
+      ] : [],
+
+      // Полоса пояснения, а не тревоги: автоматической отправки в контуре нет —
+      // это состояние ступени, а не поломка и не пустые данные. Текст берётся
+      // из ответа дословно, чтобы экран и сервер объясняли это одними словами.
+      showAuto: sending.automatic === false && !!sending.note,
+      autoNote: sending.note || '',
+
+      dailyNote: 'нулевые дни показаны, сутки нарезаны по UTC',
+      daily: daily.map(r=>({
+        label:this.dayLabel(r.date),
+        wm:this.pct(r.manual, maxDay),
+        wd:this.pct(r.delivered, maxDay),
+        n:'руками ' + this.num(r.manual) + ' · авто ' + this.num(r.delivered)
+      })),
+
+      channelCols:['Канал', 'Руками', 'Автоматически'],
+      channels: ((d && d.channels) || []).map(c=>({
+        title: c.title || '—',
+        username: c.username ? ('@' + c.username) : '',
+        manual: this.num(c.manual),
+        auto: this.num(c.delivered)
+      })),
+      channelsNote: 'только каналы, где что-то было; строка «—» — отправки без канала',
+
+      accountCols:['Аккаунт', 'Руками', 'Автоматически', 'Последняя'],
+      accounts: ((d && d.accounts) || []).map(a=>({
+        // Имён аккаунтов у нас нет: ручка в Engage не ходит намеренно. Показываем
+        // id и не выдаём его за имя.
+        acct: (a.engage_account_id === null || a.engage_account_id === undefined)
+              ? 'не указан' : ('#' + a.engage_account_id),
+        manual: this.num(a.manual),
+        auto: this.num(a.delivered),
+        last: this.when(a.last_at)
+      })),
+      accountsNote: 'id аккаунта Engage; имён у нас нет',
+
+      recentCols:['Время', 'Вид', 'Канал', 'Аккаунт', 'Текст', 'Отметка'],
+      recentNote: ((d && d.recent) || []).length
+        ? ('записей: ' + ((d && d.recent) || []).length + ', не больше тридцати')
+        : 'пусто',
+      recentHint: 'клик по строке открывает запись целиком',
+      recent: ((d && d.recent) || []).map(r=>{
+        const manual = r.kind === 'manual';
+        const text = r.text || '';
+        const m = this.markOf(r);
+        const reasons = (r.reasons || []).join(', ');
+        return {
+          time:this.when(r.at),
+          // Подпись вида берём с сервера (`status`), а не сочиняем по `kind`:
+          // ярлык у записи уже есть, и второй, придуманный здесь, разошёлся бы
+          // с отчётами при первой же правке на сервере.
+          kind: r.status || (manual ? 'руками' : 'автоматически'),
+          kc: manual ? '#156479' : '#131E5F',
+          channel: r.channel || '—',
+          acct: (r.engage_account_id === null || r.engage_account_id === undefined)
+                ? '—' : ('#' + r.engage_account_id),
+          text: text.slice(0, 110) + (text.length > 110 ? '…' : ''),
+          mark:m.mark, mc:m.mc,
+          open:()=>api.drill && api.drill({
+            title:(manual ? 'Ручная отправка #' : 'Исходящее #') + r.id,
+            subtitle:(r.channel || '—') + ' · ' + this.when(r.at),
+            rows:[
+              {k:'Вид', v:r.status || r.kind},
+              {k:'Канал', v:r.channel || '—'},
+              {k:'Аккаунт Engage', v:(r.engage_account_id === null ||
+                                      r.engage_account_id === undefined)
+                                     ? 'не указан' : '#' + r.engage_account_id},
+              {k:'Цель', v:(r.target_id === null || r.target_id === undefined)
+                           ? 'без наводки' : '#' + r.target_id},
+              {k:'Текст', v:text || '—'},
+              {k:(manual ? 'Совпало с предложенным' : 'Гейт'), v:m.mark},
+              {k:'Причины гейта', v:reasons || '—'}
+            ],
+            // Ручка отдаёт первые двести символов и полного текста в ответе нет.
+            // Промолчать об этом значило бы выдать обрезок за запись целиком.
+            note:'Текст показан так, как его отдала ручка: первые 200 символов.',
+            json:JSON.stringify(r, null, 2)
+          })
+        };
+      })
+    };
+  }
+}
+</script>
+</body>
+</html>

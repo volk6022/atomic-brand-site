@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F;flex:1">Profile &amp; Prompts</div>
+    <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ versionLabel }}</div>
+  </div>
+  <div style="display:flex;border-bottom:1px solid rgba(19,30,95,0.16);flex-wrap:wrap">
+    <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="3">
+      <div onClick="{{ t.pick }}" style="padding:9px 14px;cursor:pointer;font:400 12px/1 'JetBrains Mono',monospace;color:{{ t.fg }};background:{{ t.bg }}">{{ t.label }}</div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isBiz }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Описание бизнеса заказчика</div>
+      <div style="margin-top:10px;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 14px/1.6 'JetBrains Mono',monospace;color:#131E5F">{{ description }}</div>
+      <div style="margin-top:16px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ editNote }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isPains }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <sc-for list="{{ pains }}" as="p" hint-placeholder-count="4">
+        <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+          <div style="font:400 15px/1.3 'Architexture',sans-serif;color:#131E5F">{{ p.label }}</div>
+          <div>
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L1 · слова-якоря ({{ p.anchorsTotal }})</div>
+            <div style="margin-top:5px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ p.anchors }}</div>
+          </div>
+          <div>
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">L2 · эталонные фразы ({{ p.protosTotal }})</div>
+            <sc-for list="{{ p.protos }}" as="x" hint-placeholder-count="3">
+              <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-for>
+
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="font:400 15px/1.3 'Architexture',sans-serif;color:#DA501C">Что система считает шумом</div>
+        <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ noiseNote }}</div>
+        <sc-for list="{{ noise }}" as="n" hint-placeholder-count="4">
+          <div>
+            <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ n.key }}</div>
+            <sc-for list="{{ n.examples }}" as="x" hint-placeholder-count="3">
+              <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
+            </sc-for>
+          </div>
+        </sc-for>
+        <div>
+          <div style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">Дисквалификаторы (пометка, не отсев)</div>
+          <sc-for list="{{ disq }}" as="x" hint-placeholder-count="3">
+            <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">— {{ x }}</div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isCascade }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+        <table style="font:400 13px/1.4 'JetBrains Mono',monospace;color:#184153">
+          <thead><tr>
+            <sc-for list="{{ cfgCols }}" as="c" hint-placeholder-count="2">
+              <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+            </sc-for>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ cfg }}" as="r" hint-placeholder-count="6">
+              <tr>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F;white-space:nowrap">{{ r.k }}</td>
+                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.v }}</td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Системный промпт L3 · {{ promptVersion }}</div>
+        <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap">{{ prompt }}</pre>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  // Экран показывает ровно то, по чему сейчас работает каскад, и ничего сверх того.
+  // До переписывания здесь жили выдуманные числа прямо в разметке («Найдено болей:
+  // 41/50», «Средняя уверенность: 0.79», «Таксономия болей (12)») — они не приходили
+  // ниоткуда и не менялись никогда. Такой экран хуже пустого: по нему принимают
+  // решения о настройке отбора.
+  state = { d:null, loading:true, error:null, tab:'biz' };
+
+  async componentDidMount(){
+    try {
+      const { get } = await import('./radar-api.js');
+      this.setState({d: await get('/profile'), loading:false});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  renderVals(){
+    const S = this.state, d = S.d || {};
+    const c = d.cascade || {};
+    const tab = (k, label)=>({label, bg: S.tab === k ? '#131E5F' : 'transparent',
+                              fg: S.tab === k ? '#F8F3E0' : '#156479',
+                              pick:()=>this.setState({tab:k})});
+    const note = S.loading ? 'загрузка…' : (S.error || '');
+    const onOff = (on, model)=> on ? ('включена · ' + (model || 'модель не названа'))
+                                   : 'выключена (адрес модели не задан)';
+
+    return {
+      pad: this.props.mobile ? '12px' : '0',
+      versionLabel: note || ('Версия профиля: ' + (d.version || '—')),
+      tabs:[tab('biz', 'Бизнес'), tab('pains', 'Боли и шум'), tab('cascade', 'Каскад')],
+      isBiz: S.tab === 'biz', isPains: S.tab === 'pains', isCascade: S.tab === 'cascade',
+
+      description: note || d.business_description || '—',
+      editNote: 'Профиль сейчас задаётся в коде каскада и правится вместе с ним — '
+              + 'редактирования из интерфейса нет, и кнопки, которая делает вид, '
+              + 'что оно есть, тоже.',
+
+      // Боли — те самые, по которым принимаются решения. Отдельного списка «для
+      // экрана» нет: он разошёлся бы с поведением в первый же день.
+      pains:(d.pains || []).map(p=>({
+        label:p.label,
+        anchorsTotal:p.anchors_total || 0,
+        anchors:(p.anchors || []).join(', ') || '—',
+        protos:p.prototypes || [],
+        protosTotal:(p.prototypes || []).length
+      })),
+      noiseNote: 'L2 сравнивает сообщение и с болями, и с шумом, и выбирает, к чему '
+               + 'оно ближе. Без этих эталонов ступень умела бы только соглашаться.',
+      noise:(d.noise_prototypes || []).map(n=>({key:n.key, examples:n.examples || []})),
+      disq:(d.disqualifiers || []).map(x=>x.key + ': ' + (x.markers || []).join(', ')),
+
+      cfgCols:['Параметр','Значение'],
+      cfg:[
+        {k:'L1 · слова', v:'всегда включён, ' + (d.pains || []).length + ' групп болей'},
+        {k:'L2 · эмбеддинги', v:onOff(c.l2_enabled, c.l2_model)},
+        {k:'L2 · минимальный отрыв', v: c.l2_min_margin == null ? '—' : String(c.l2_min_margin)},
+        {k:'L3 · LLM', v:onOff(c.l3_enabled, c.l3_model)},
+        {k:'L3 · версия промпта', v:c.l3_prompt_version || '—'},
+        {k:'Черновики', v:(d.generation && d.generation.note) || '—'},
+      ],
+      promptVersion: c.l3_prompt_version || '—',
+      prompt: c.l3_prompt || 'L3 выключена — промпта в работе нет.'
+    };
+  }
+}
+</script>
+</body>
+</html>

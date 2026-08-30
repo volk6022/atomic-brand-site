@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Channels</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+    <button onClick="{{ backfillAll }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Запустить бэкфилл всем</button>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по названию и username" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
+    <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+  </div>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+          <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ r.name }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.topic }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.members }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.perDay }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.pre }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.leads }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);min-width:220px">
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="font:400 15px/1 'JetBrains Mono',monospace;color:#131E5F;width:34px">{{ r.per1000 }}</div>
+                <div style="flex:1;height:8px;background:#EDF4F3;min-width:70px"><div style="height:8px;width:{{ r.w }};background:{{ r.c }}"></div></div>
+                <sc-if value="{{ r.flag }}" hint-placeholder-val="{{ false }}">
+                  <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#DA501C;border:1px solid #DA501C;padding:3px 5px;white-space:nowrap">{{ r.flag }}</div>
+                </sc-if>
+              </div>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="5">
+    <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.name }}</div>
+        <div style="font:400 13px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.per1000 }}</div>
+      </div>
+      <div style="margin-top:6px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ r.perDay }} сообщ/сут · {{ r.leads }} лидов · префильтр {{ r.pre }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:420},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, loading:true, error:null };
+
+  // Массив сортируемых колонок: title, members, leads_total.
+  COLUMNS = [
+    {label:'Канал', sort:'title'},
+    {label:'Username', sort:null},
+    {label:'Участники', sort:'members'},
+    {label:'Сообщений', sort:null},
+    {label:'Префильтр', sort:null},
+    {label:'Лидов', sort:'leads_total'},
+    {label:'Лид/1000', sort:null},
+  ];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      key:'channels', size:50, sort:'leads_total', order:'desc',
+      sorts:[{key:'title'}, {key:'members'}, {key:'leads_total'}],
+    });
+    this.table.attach(()=>this.load());
+    this.load();
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/channels', this.table.query());
+      this.setState({rows:data.rows, total:data.total, loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  num(v){
+    if(v === null || v === undefined) return '—';
+    return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+  }
+
+  pct(v){ return v === null || v === undefined ? '—' : (v * 100).toFixed(1) + '%'; }
+
+  // Сколько сообщений добирать в канале за один запуск. Страницы дозапрашиваются
+  // сервером сами, пока не наберётся столько или пока история не кончится, поэтому
+  // здесь цель, а не размер одного вызова.
+  TARGET = 2000;
+
+  // Аккаунты перебираются по кругу: очередь аккаунта в Engage строго FIFO, и запуск
+  // всех каналов с одного аккаунта выстроил бы их в затылок друг другу.
+  ACCOUNTS = [1, 2, 3, 4, 5];
+
+  async backfill(username, i){
+    const { post, describe } = await import('./radar-api.js');
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      const account_id = this.ACCOUNTS[(i || 0) % this.ACCOUNTS.length];
+      const r = await post('/channels/backfill',
+                           {username, account_id, target:this.TARGET});
+      t('Бэкфилл запущен: ' + r.username + ' · задача ' + (r.task_id || '').slice(0,8),
+        '#156479');
+    } catch (e) { t(describe(e), '#DA501C'); }
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const S = this.state;
+    const rows = S.rows || [];
+
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              rows:[], cols:[], pages:[], sizes:[], range:'загрузка…', q:'',
+              reload:()=>{}, backfillAll:()=>{}, setQ:()=>{}, resetAll:()=>{},
+              prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+    }
+
+    // Ширина полоски — доля от лучшего канала в списке, а не абсолютное число:
+    // сравнивать каналы между собой это и есть смысл экрана.
+    const best = Math.max(1, ...rows.map(c=>c.leads_per_1000 || 0));
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
+                                   error:S.error}),
+      reload:()=>this.load(),
+      backfillAll:()=>api.modal && api.modal({
+        title:'Бэкфилл по всем каналам',
+        lines:[{text:'Цель — по ' + this.TARGET + ' сообщений в каждой группе, страницами по 500'},
+               {text:'Продолжится с того места, где остановились в прошлый раз'},
+               {text:'Чтения расходуют дневной бюджет аккаунта (2000 get_chat_history)'},
+               {text:'Результат приедет вебхуком, экран нужно обновить'}],
+        confirm:'Запустить', btnBg:'#131E5F', done:'Бэкфилл поставлен в очередь',
+        run:()=>rows.filter(c=>c.username)
+                    .forEach((c, i)=>this.backfill(c.username, i))}),
+
+      rows:rows.map(c=>({
+        name:c.title,
+        topic:c.username ? '@' + c.username : '—',
+        members:this.num(c.members),
+        perDay:this.num(c.messages_total),
+        pre:this.pct(c.prefilter_rate),
+        leads:this.num(c.leads_total),
+        per1000:c.leads_per_1000 == null ? '—' : String(c.leads_per_1000),
+        w: Math.max(2, Math.round((c.leads_per_1000 || 0) * 100 / best)) + '%',
+        c: c.is_junk ? '#DA501C' : (c.leads_total > 0 ? '#156479' : '#94BEBE'),
+        flag: c.is_junk ? 'мусорный'
+            : (c.messages_total === 0 ? 'нет сообщений — бэкфилл не запускался' : ''),
+        open:()=>api.drill && api.drill({
+          title:c.title, subtitle:'peer_id: ' + c.peer_id,
+          rows:[
+            {k:'Username', v:c.username ? '@' + c.username : '—'},
+            {k:'Участников', v:this.num(c.members)},
+            {k:'Сообщений в базе', v:this.num(c.messages_total)},
+            {k:'Прошли каскад', v:this.pct(c.prefilter_rate)},
+            {k:'Лидов', v:this.num(c.leads_total)},
+            {k:'Лид на 1000 сообщений', v:c.leads_per_1000 == null ? '—' : String(c.leads_per_1000)},
+            {k:'Группа обсуждения', v:c.linked_chat_username ? '@' + c.linked_chat_username : 'нет'},
+            {k:'Ингест', v:c.ingest_enabled ? 'включён' : 'выключен'}
+          ],
+          actions:[
+            {label:'Дочитать историю', c:'#156479',
+             run:()=>c.username ? this.backfill(c.username, c.id)
+                                : t('У группы нет username — читать нечем', '#C98A1E')},
+            {label:'Обновить экран', c:'#156479', run:()=>this.load()}
+          ],
+          json:JSON.stringify(c, null, 2)
+        })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
