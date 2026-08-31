@@ -16,8 +16,17 @@
     <sc-if value="{{ canAdd }}" hint-placeholder-val="{{ false }}">
       <button onClick="{{ addToggle }}" style="border:1px solid #131E5F;background:transparent;color:#131E5F;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">{{ addToggleLabel }}</button>
     </sc-if>
-    <button onClick="{{ backfillAll }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Запустить бэкфилл всем</button>
+    <button onClick="{{ scanDiscussions }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Разобрать группы обсуждения</button>
   </div>
+
+  <sc-if value="{{ hasSummary }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#F8F3E0;border:1px solid rgba(19,30,95,0.16);padding:9px 12px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Обсуждения</div>
+      <sc-for list="{{ summary }}" as="s" hint-placeholder-count="5">
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ s.c }}">{{ s.label }}</div>
+      </sc-for>
+    </div>
+  </sc-if>
 
   <sc-if value="{{ addOpen }}" hint-placeholder-val="{{ false }}">
     <div style="background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:14px;display:flex;flex-direction:column;gap:10px">
@@ -52,6 +61,9 @@
           <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F">{{ r.name }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.topic }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              <span style="font:400 10px/1 'JetBrains Mono',monospace;color:{{ r.discC }};border:1px solid {{ r.discC }};padding:3px 5px">{{ r.discLabel }}</span>
+            </td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.members }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.perDay }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.pre }}</td>
@@ -105,13 +117,17 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:420},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { rows:[], total:0, loading:true, error:null,
+  state = { rows:[], total:0, loading:true, error:null, summary:null,
            addOpen:false, addUsername:'', addAccount:1, adding:false };
 
   // Массив сортируемых колонок: title, members, leads_total.
   COLUMNS = [
     {label:'Канал', sort:'title'},
     {label:'Username', sort:null},
+    // Состояние обсуждения. Отдельная колонка, а не приписка к «Сообщений»:
+    // ноль сообщений у канала и непрочитанная группа — разные вещи, и до
+    // 31.08 они выглядели одинаково (FIXES.md #3).
+    {label:'Обсуждение', sort:null},
     {label:'Участники', sort:'members'},
     {label:'Сообщений', sort:null},
     {label:'Префильтр', sort:null},
@@ -139,6 +155,50 @@ class Component extends DCLogic {
       const { describe } = await import('./radar-api.js');
       this.setState({error:describe(e), loading:false});
     }
+    // Сводка считается по ВСЕМ каналам, а не по видимой странице: «не читаем 61»
+    // — это число, ради которого экран и открывают, и оно не должно меняться от
+    // того, какая страница сейчас показана. Отказ сводки не ломает таблицу.
+    try {
+      const { get } = await import('./radar-api.js');
+      this.setState({summary: await get('/channels/discussions')});
+    } catch (e) { this.setState({summary:null}); }
+  }
+
+  // Разбор групп обсуждения (FIXES.md #3). Заменил кнопку «Запустить бэкфилл
+  // всем»: та перебирала строки, которые видит на экране, и до групп, которых в
+  // Радаре нет вовсе, не добиралась в принципе — а их 61 из 71. Вдобавок она
+  // ставила по задаче на канал, а второй бэкфилл подряд ручка отвергает как
+  // «задача уже идёт», так что дальше первого канала она и не уходила.
+  async runScan(scope){
+    const { post, describe } = await import('./radar-api.js');
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      const r = await post('/channels/discussions/scan',
+                           {scope: scope || 'unread', target: this.TARGET});
+      t('Разбор запущен · задача #' + r.run_id + ' — ход виден в Runs', '#156479');
+    } catch (e) { t(describe(e), '#DA501C'); }
+  }
+
+  // Пять состояний обсуждения (см. app/services/discussions.py, STATES). Подписи
+  // называют следующий шаг, а не внутреннее имя: «не читаем» — это работа, которую
+  // ещё предстоит сделать, «истории нет потока» — что аккаунт не в группе, и
+  // комментарии больше не приедут сами.
+  DISC = {
+    unknown: {label:'не проверяли', c:'#8A8F9E'},
+    none:    {label:'нет обсуждения', c:'#C9CCD6'},
+    unread:  {label:'не читаем', c:'#DA501C'},
+    history: {label:'история, потока нет', c:'#C98A1E'},
+    live:    {label:'читаем', c:'#156479'},
+    group:   {label:'это группа', c:'#94BEBE'},
+  };
+
+  GROUP_TYPES = ['supergroup', 'group', 'forum'];
+
+  disc(c){
+    // Строка группы обсуждения — сама не «канал без обсуждения»: у неё обсуждение
+    // и есть она сама, а `linked` указывает обратно на канал.
+    if (this.GROUP_TYPES.indexOf(c.chat_type) >= 0) return this.DISC.group;
+    return this.DISC[((c.discussion || {}).state) || 'unknown'] || this.DISC.unknown;
   }
 
   num(v){
@@ -147,6 +207,46 @@ class Component extends DCLogic {
   }
 
   pct(v){ return v === null || v === undefined ? '—' : (v * 100).toFixed(1) + '%'; }
+
+  // Дата последнего комментария — единственный способ увидеть, что группа
+  // прочитана, но давно замолчала: у восьми чатов 28.08 после разовой выгрузки не
+  // приехало ни одного сообщения, и заметил это Андрей, а не экран.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    const days = Math.floor((Date.now() - d.getTime()) / 86400000);
+    const shown = d.toISOString().slice(0, 16).replace('T', ' ');
+    return days >= 1 ? shown + ' (' + days + ' дн. назад)' : shown;
+  }
+
+  discRow(c){
+    const d = c.discussion || {};
+    if (this.GROUP_TYPES.indexOf(c.chat_type) >= 0)
+      return 'это и есть группа обсуждения' +
+             (c.linked_chat_username ? ' канала @' + c.linked_chat_username : '');
+    if (!d.username) return this.disc(c).label;
+    return '@' + d.username + ' — ' + this.disc(c).label;
+  }
+
+  // Подписи сводки. Показываем только непустые: строка «нет обсуждения 0» ничего
+  // не сообщает, а место занимает.
+  SUMMARY_ORDER = [
+    ['unread',  'не читаем',            '#DA501C'],
+    ['history', 'история без потока',   '#C98A1E'],
+    ['live',    'читаем',               '#156479'],
+    ['unknown', 'не проверяли',         '#8A8F9E'],
+    ['none',    'без обсуждения',       '#8A8F9E'],
+    ['groups',  'строк-групп',          '#94BEBE'],
+  ];
+
+  summaryChips(){
+    const s = this.state.summary;
+    if (!s) return [];
+    return this.SUMMARY_ORDER
+      .filter(([k])=>s[k])
+      .map(([k, label, c])=>({label: label + ' · ' + s[k], c}));
+  }
 
   // Сколько сообщений добирать в канале за один запуск. Страницы дозапрашиваются
   // сервером сами, пока не наберётся столько или пока история не кончится, поэтому
@@ -228,7 +328,8 @@ class Component extends DCLogic {
     if(!this.table){
       return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
               rows:[], cols:[], pages:[], sizes:[], range:'загрузка…', q:'',
-              reload:()=>{}, backfillAll:()=>{}, setQ:()=>{}, resetAll:()=>{},
+              summary:[], hasSummary:false,
+              reload:()=>{}, scanDiscussions:()=>{}, setQ:()=>{}, resetAll:()=>{},
               prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
               canAdd:false, addOpen:false, addToggle:()=>{}, addToggleLabel:'',
               addUsername:'', setAddUsername:()=>{}, addAccount:1, setAddAccount:()=>{},
@@ -244,15 +345,17 @@ class Component extends DCLogic {
       ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
                                    error:S.error}),
       reload:()=>this.load(),
-      backfillAll:()=>api.modal && api.modal({
-        title:'Бэкфилл по всем каналам',
-        lines:[{text:'Цель — по ' + this.TARGET + ' сообщений в каждой группе, страницами по 500'},
-               {text:'Продолжится с того места, где остановились в прошлый раз'},
-               {text:'Чтения расходуют дневной бюджет аккаунта (2000 get_chat_history)'},
-               {text:'Результат приедет вебхуком, экран нужно обновить'}],
-        confirm:'Запустить', btnBg:'#131E5F', done:'Бэкфилл поставлен в очередь',
-        run:()=>rows.filter(c=>c.username)
-                    .forEach((c, i)=>this.backfill(c.username, i))}),
+      summary: this.summaryChips(),
+      hasSummary: !!S.summary,
+      scanDiscussions:()=>api.modal && api.modal({
+        title:'Разобрать группы обсуждения',
+        lines:[{text:'У каждого канала спросим карточку, заведём его группу обсуждения и дочитаем её историю (' + this.TARGET + ' сообщений)'},
+               {text:'Берутся каналы, у которых группа известна, но не прочитана — их видно в сводке над таблицей'},
+               {text:'Только чтение: публичную группу Telegram отдаёт и не участнику. Аккаунт никуда не вступает'},
+               {text:'Живой поток комментариев это НЕ включит — для него аккаунт должен вступить в группу'},
+               {text:'Идёт долго, ход и отмена — в разделе Runs'}],
+        confirm:'Запустить', btnBg:'#131E5F', done:'Разбор поставлен в очередь',
+        run:()=>this.runScan('unread')}),
 
       // `channel.add` — та же роль, что открывает Safety на переключение LIVE
       // (owner + customer); проверяется и на сервере, кнопка здесь — только чтобы
@@ -279,8 +382,13 @@ class Component extends DCLogic {
         per1000:c.leads_per_1000 == null ? '—' : String(c.leads_per_1000),
         w: Math.max(2, Math.round((c.leads_per_1000 || 0) * 100 / best)) + '%',
         c: c.is_junk ? '#DA501C' : (c.leads_total > 0 ? '#156479' : '#94BEBE'),
-        flag: c.is_junk ? 'мусорный'
-            : (c.messages_total === 0 ? 'нет сообщений — бэкфилл не запускался' : ''),
+        discLabel: this.disc(c).label,
+        discC: this.disc(c).c,
+        // Прежняя подпись «нет сообщений — бэкфилл не запускался» была неверна для
+        // самого частого случая: у канала лидов не бывает в принципе, они живут в
+        // комментариях, а комментарии — в отдельной строке группы. Про сам канал
+        // честно остаётся только «мусорный».
+        flag: c.is_junk ? 'мусорный' : '',
         open:()=>api.drill && api.drill({
           title:c.title, subtitle:'peer_id: ' + c.peer_id,
           rows:[
@@ -290,7 +398,9 @@ class Component extends DCLogic {
             {k:'Прошли каскад', v:this.pct(c.prefilter_rate)},
             {k:'Лидов', v:this.num(c.leads_total)},
             {k:'Лид на 1000 сообщений', v:c.leads_per_1000 == null ? '—' : String(c.leads_per_1000)},
-            {k:'Группа обсуждения', v:c.linked_chat_username ? '@' + c.linked_chat_username : 'нет'},
+            {k:'Группа обсуждения', v:this.discRow(c)},
+            {k:'Комментарии в базе', v:this.num((c.discussion || {}).messages)},
+            {k:'Последний комментарий', v:this.when((c.discussion || {}).last_message_at)},
             {k:'Ингест', v:c.ingest_enabled ? 'включён' : 'выключен'},
             // Кем подписан — заполнено только у каналов, подключённых руками
             // через эту форму; заведённые сами при первом сообщении молчат тут

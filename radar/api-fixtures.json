@@ -42,7 +42,7 @@
       },
       {
         "ack": false,
-        "created_at": "2026-08-30T18:11:17+00:00",
+        "created_at": "2026-08-31T17:21:26+00:00",
         "id": 1,
         "key": "run_failed",
         "severity": "error",
@@ -181,6 +181,14 @@
     "offset": 0,
     "rows": [
       {
+        "chat_type": "channel",
+        "discussion": {
+          "channel_id": null,
+          "last_message_at": null,
+          "messages": 0,
+          "state": "none",
+          "username": null
+        },
         "id": 6,
         "ingest_enabled": false,
         "is_junk": false,
@@ -198,6 +206,14 @@
         "username": "linux_admins"
       },
       {
+        "chat_type": null,
+        "discussion": {
+          "channel_id": null,
+          "last_message_at": null,
+          "messages": 0,
+          "state": "unknown",
+          "username": null
+        },
         "id": 5,
         "ingest_enabled": false,
         "is_junk": false,
@@ -215,12 +231,20 @@
         "username": null
       },
       {
+        "chat_type": "channel",
+        "discussion": {
+          "channel_id": null,
+          "last_message_at": null,
+          "messages": 0,
+          "state": "unread",
+          "username": "infra_startups_chat"
+        },
         "id": 4,
         "ingest_enabled": false,
         "is_junk": false,
         "leads_per_1000": 0.0,
         "leads_total": 0,
-        "linked_chat_username": null,
+        "linked_chat_username": "infra_startups_chat",
         "members": null,
         "messages_total": 105,
         "peer_id": -1301,
@@ -232,6 +256,14 @@
         "username": "infra_startups"
       },
       {
+        "chat_type": null,
+        "discussion": {
+          "channel_id": null,
+          "last_message_at": null,
+          "messages": 0,
+          "state": "unknown",
+          "username": null
+        },
         "id": 3,
         "ingest_enabled": false,
         "is_junk": false,
@@ -249,12 +281,20 @@
         "username": null
       },
       {
+        "chat_type": "supergroup",
+        "discussion": {
+          "channel_id": 1,
+          "last_message_at": "2026-08-31T17:36:26+00:00",
+          "messages": 90,
+          "state": "history",
+          "username": "vpsclub"
+        },
         "id": 2,
         "ingest_enabled": false,
         "is_junk": false,
         "leads_per_1000": 0.0,
         "leads_total": 0,
-        "linked_chat_username": null,
+        "linked_chat_username": "vpsclub",
         "members": null,
         "messages_total": 79,
         "peer_id": -1101,
@@ -266,12 +306,20 @@
         "username": "devops_chat"
       },
       {
+        "chat_type": "channel",
+        "discussion": {
+          "channel_id": 2,
+          "last_message_at": "2026-08-31T14:14:26+00:00",
+          "messages": 79,
+          "state": "history",
+          "username": "devops_chat"
+        },
         "id": 1,
         "ingest_enabled": false,
         "is_junk": false,
         "leads_per_1000": 0.0,
         "leads_total": 0,
-        "linked_chat_username": null,
+        "linked_chat_username": "devops_chat",
         "members": null,
         "messages_total": 90,
         "peer_id": -1001,
@@ -284,6 +332,14 @@
       }
     ],
     "total": 6
+  },
+  "/channels/discussions": {
+    "groups": 1,
+    "history": 1,
+    "live": 0,
+    "none": 1,
+    "unknown": 2,
+    "unread": 1
   },
   "/channels/options": [
     {
@@ -325,7 +381,7 @@
       {
         "account": 1,
         "id": 1,
-        "last_sent_at": "2026-08-30T15:11:17+00:00",
+        "last_sent_at": "2026-08-31T14:21:26+00:00",
         "lead_id": 1,
         "peer_name": "Пётр К.",
         "peer_username": "@user_23",
@@ -443,7 +499,7 @@
       },
       {
         "name": "queue",
-        "status": "ok"
+        "status": "off"
       }
     ],
     "tiles": [
@@ -496,17 +552,62 @@
     "offset": 0,
     "rows": [
       {
-        "author_name": "Bot 18",
-        "author_username": "@bot_49",
-        "channel": "Linux Админы",
+        "author_name": "Максим Г.",
+        "author_username": "@user_305",
+        "channel": "Мастерская инженера",
         "decided_at": null,
         "decided_by": null,
         "edited": false,
         "id": 80,
         "lead_id": 80,
-        "pain": "нужен админ/подрядчик",
+        "pain": "хостинг тормозит/дорог",
         "reject_reason": null,
-        "score": 64,
+        "score": 94,
+        "state": "pending",
+        "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
+      },
+      {
+        "author_name": "Ивал М.",
+        "author_username": "@user_5",
+        "channel": "DevOps Chat",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 79,
+        "lead_id": 79,
+        "pain": "хостинг тормозит/дорог",
+        "reject_reason": null,
+        "score": 93,
+        "state": "pending",
+        "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
+      },
+      {
+        "author_name": "Сергей Л.",
+        "author_username": "@user_22",
+        "channel": "Linux Админы",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 78,
+        "lead_id": 78,
+        "pain": "VPN не работает",
+        "reject_reason": null,
+        "score": 93,
+        "state": "pending",
+        "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
+      },
+      {
+        "author_name": "Виктор Б.",
+        "author_username": "@user_403",
+        "channel": "Linux Админы",
+        "decided_at": null,
+        "decided_by": null,
+        "edited": false,
+        "id": 77,
+        "lead_id": 77,
+        "pain": "не может настроить сам",
+        "reject_reason": null,
+        "score": 91,
         "state": "pending",
         "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
       },
@@ -517,56 +618,11 @@
         "decided_at": null,
         "decided_by": null,
         "edited": false,
-        "id": 79,
-        "lead_id": 79,
+        "id": 76,
+        "lead_id": 76,
         "pain": "не может настроить сам",
         "reject_reason": null,
         "score": 91,
-        "state": "pending",
-        "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
-      },
-      {
-        "author_name": "Алексей Н.",
-        "author_username": "@user_71",
-        "channel": "Мастерская инженера",
-        "decided_at": null,
-        "decided_by": null,
-        "edited": false,
-        "id": 78,
-        "lead_id": 78,
-        "pain": "VPN не работает",
-        "reject_reason": null,
-        "score": 64,
-        "state": "pending",
-        "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
-      },
-      {
-        "author_name": "Пётр К.",
-        "author_username": "@user_176",
-        "channel": "DevOps Chat",
-        "decided_at": null,
-        "decided_by": null,
-        "edited": false,
-        "id": 77,
-        "lead_id": 77,
-        "pain": "нужен админ/подрядчик",
-        "reject_reason": null,
-        "score": 65,
-        "state": "pending",
-        "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
-      },
-      {
-        "author_name": "Алексей Н.",
-        "author_username": "@user_420",
-        "channel": "Linux Админы",
-        "decided_at": null,
-        "decided_by": null,
-        "edited": false,
-        "id": 76,
-        "lead_id": 76,
-        "pain": "VPN не работает",
-        "reject_reason": null,
-        "score": 53,
         "state": "pending",
         "text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее."
       }
@@ -607,22 +663,22 @@
       "state": "pending",
       "thread": [
         {
-          "meta": "23.08 23:52 · Андрей В.",
+          "meta": "24.08 23:02 · Андрей В.",
           "target": false,
           "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
         },
         {
-          "meta": "24.08 03:58 · Пётр К. — кандидат",
+          "meta": "25.08 03:08 · Пётр К. — кандидат",
           "target": true,
           "text": "«Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?»"
         },
         {
-          "meta": "24.08 08:18 · Игорь С.",
+          "meta": "25.08 07:28 · Игорь С.",
           "target": false,
           "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
         },
         {
-          "meta": "24.08 09:37 · Алексей Н.",
+          "meta": "25.08 08:47 · Алексей Н.",
           "target": false,
           "text": "«LOL это была смешная история с сервером»"
         }
@@ -708,22 +764,22 @@
       "state": "pending",
       "thread": [
         {
-          "meta": "23.08 23:52 · Андрей В.",
+          "meta": "24.08 23:02 · Андрей В.",
           "target": false,
           "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
         },
         {
-          "meta": "24.08 03:58 · Пётр К. — кандидат",
+          "meta": "25.08 03:08 · Пётр К. — кандидат",
           "target": true,
           "text": "«Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?»"
         },
         {
-          "meta": "24.08 08:18 · Игорь С.",
+          "meta": "25.08 07:28 · Игорь С.",
           "target": false,
           "text": "«Мой WireGuard туннель постоянно падает на определённый провайдер, а на другом всё работает. Дело в том, что его блокируют по DPI, или это конфиг?»"
         },
         {
-          "meta": "24.08 09:37 · Алексей Н.",
+          "meta": "25.08 08:47 · Алексей Н.",
           "target": false,
           "text": "«LOL это была смешная история с сервером»"
         }
@@ -765,9 +821,9 @@
         "author_username": "@user_305",
         "channel": "Мастерская инженера",
         "channel_id": 3,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
-        "id": 74,
+        "id": 80,
         "pain": "хостинг тормозит/дорог",
         "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
         "reject_reason": null,
@@ -785,9 +841,9 @@
         "author_username": "@user_5",
         "channel": "DevOps Chat",
         "channel_id": 2,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
-        "id": 59,
+        "id": 79,
         "pain": "хостинг тормозит/дорог",
         "quote": "что делать?",
         "reject_reason": null,
@@ -805,9 +861,9 @@
         "author_username": "@user_22",
         "channel": "Linux Админы",
         "channel_id": 6,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
-        "id": 57,
+        "id": 78,
         "pain": "VPN не работает",
         "quote": "спасибо",
         "reject_reason": null,
@@ -825,7 +881,7 @@
         "author_username": "@user_164",
         "channel": "DevOps Chat",
         "channel_id": 2,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
         "id": 48,
         "pain": "не может настроить сам",
@@ -845,15 +901,15 @@
         "status": "rejected"
       },
       {
-        "author_name": "Сергей Л.",
-        "author_username": "@user_67",
-        "channel": "VPS Club",
-        "channel_id": 1,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "author_name": "Виктор Б.",
+        "author_username": "@user_403",
+        "channel": "Linux Админы",
+        "channel_id": 6,
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
-        "id": 79,
+        "id": 77,
         "pain": "не может настроить сам",
-        "quote": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
+        "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
         "reject_reason": null,
         "score": 91,
         "score_breakdown": [
@@ -928,7 +984,7 @@
     "guard_log": [
       {
         "allowed": false,
-        "at": "2026-08-30T19:11:19.027528+00:00",
+        "at": "2026-08-31T18:21:28.500990+00:00",
         "draft_id": 1,
         "mode": "DRY_RUN",
         "reasons": [
@@ -996,7 +1052,7 @@
         "author_name": "Максим Г.",
         "author_username": "@user_305",
         "channel": "Мастерская инженера",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "хостинг тормозит/дорог",
         "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
@@ -1009,7 +1065,7 @@
         "author_name": "Виктор Б.",
         "author_username": "@user_89",
         "channel": "VPS Club",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "Нужен хороший админ, который может настроить нам инфраструктуру. Может кто порекомендовать?",
@@ -1022,7 +1078,7 @@
         "author_name": "Константин Ф.",
         "author_username": "@user_302",
         "channel": "Мастерская инженера",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "хостинг тормозит/дорог",
         "quote": "Пытаюсь поднять 3x-ui, но что-то не получается — где-то в конфиге ошибка, я новичок в этом, помогите",
@@ -1035,7 +1091,7 @@
         "author_name": "Андрей В.",
         "author_username": "@user_470",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "не может настроить сам",
         "quote": "Кто ещё тут занимается хостингом? Просто любопытно",
@@ -1048,7 +1104,7 @@
         "author_name": "Сергей Л.",
         "author_username": "@user_427",
         "channel": "DevOps Chat",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "хостинг тормозит/дорог",
         "quote": "У кого есть рекомендация хорошего ВПН?",
@@ -1061,7 +1117,7 @@
         "author_name": "Ивал М.",
         "author_username": "@user_5",
         "channel": "DevOps Chat",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "хостинг тормозит/дорог",
         "quote": "что делать?",
@@ -1074,7 +1130,7 @@
         "author_name": "Константин Ф.",
         "author_username": "@user_211",
         "channel": "Инфра для стартапов",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "Я не могу настроить самостоятельно Marzban на своём сервере — везде ошибки какие-то выскакивают, не знаю что делать. Может кто подсказать?",
@@ -1087,7 +1143,7 @@
         "author_name": "Денис Р.",
         "author_username": "@user_402",
         "channel": "DevOps Chat",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
@@ -1100,7 +1156,7 @@
         "author_name": "Пётр К.",
         "author_username": "@user_318",
         "channel": "VPS Club",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "нужен админ/подрядчик",
         "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
@@ -1113,7 +1169,7 @@
         "author_name": "Виктор Б.",
         "author_username": "@user_403",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "не может настроить сам",
         "quote": "ВПН у меня уже второй день отваливается — дождись полчаса работы и вот порвалось. Не понимаю, где копать. 3x-ui стоит на сервере, конфиг вроде правильный",
@@ -1126,7 +1182,7 @@
         "author_name": "Константин Ф.",
         "author_username": "@user_380",
         "channel": "VPN и Обход",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "нужен админ/подрядчик",
         "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
@@ -1139,7 +1195,7 @@
         "author_name": "Виктор Б.",
         "author_username": "@user_406",
         "channel": "Мастерская инженера",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "хостинг тормозит/дорог",
         "quote": "Вакансия: DevOps инженер зарплата 150к",
@@ -1152,7 +1208,7 @@
         "author_name": "Bot 18",
         "author_username": "@bot_49",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "нужен админ/подрядчик",
         "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
@@ -1165,7 +1221,7 @@
         "author_name": "Денис Р.",
         "author_username": "@user_340",
         "channel": "Мастерская инженера",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?",
@@ -1178,7 +1234,7 @@
         "author_name": "Алексей Н.",
         "author_username": "@user_71",
         "channel": "Мастерская инженера",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
@@ -1191,7 +1247,7 @@
         "author_name": "Пётр К.",
         "author_username": "@user_176",
         "channel": "DevOps Chat",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "нужен админ/подрядчик",
         "quote": "Пытаюсь поднять 3x-ui, но что-то не получается — где-то в конфиге ошибка, я новичок в этом, помогите",
@@ -1204,7 +1260,7 @@
         "author_name": "Ивал М.",
         "author_username": "@user_28",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "не может настроить сам",
         "quote": "Я не могу настроить самостоятельно Marzban на своём сервере — везде ошибки какие-то выскакивают, не знаю что делать. Может кто подсказать?",
@@ -1217,7 +1273,7 @@
         "author_name": "Алексей Н.",
         "author_username": "@user_420",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "LOL это была смешная история с сервером",
@@ -1230,7 +1286,7 @@
         "author_name": "Игорь С.",
         "author_username": "@user_159",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "нужен админ/подрядчик",
         "quote": "Мой новый проект на Golang уже готов!",
@@ -1243,7 +1299,7 @@
         "author_name": "Сергей Л.",
         "author_username": "@user_22",
         "channel": "Linux Админы",
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "draft_id": null,
         "pain": "VPN не работает",
         "quote": "спасибо",
@@ -1288,7 +1344,7 @@
         "note": null,
         "pain": null,
         "quote": null,
-        "recorded_at": "2026-08-30T19:11:19.079400+00:00",
+        "recorded_at": "2026-08-31T18:21:28.563337+00:00",
         "recorded_by": "owner@local",
         "sent_at": null,
         "suggested_text": null,
@@ -1307,9 +1363,9 @@
         "note": null,
         "pain": "хостинг тормозит/дорог",
         "quote": "Прокси то отваливается, то работает, слова не найду. Может ли быть это из-за того что я на VPS с плохим каналом?",
-        "recorded_at": "2026-08-30T19:11:19.079400+00:00",
+        "recorded_at": "2026-08-31T18:21:28.563337+00:00",
         "recorded_by": "owner@local",
-        "sent_at": "2026-08-30T18:41:17+00:00",
+        "sent_at": "2026-08-31T17:51:26+00:00",
         "suggested_text": "Видел твоё сообщение — по такой задаче помогает Андрей (@vertsanov_biz), мне он поднимал похожее.",
         "target_id": 1,
         "text": "Привет. Судя по описанию, дело в конфиге.",
@@ -1339,7 +1395,7 @@
         "is_automatic_forward": false,
         "lead_id": null,
         "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
-        "tg_date": "2026-08-30T18:57:17+00:00"
+        "tg_date": "2026-08-31T18:07:26+00:00"
       },
       {
         "author_name": "Денис Р.",
@@ -1361,7 +1417,7 @@
         "is_automatic_forward": false,
         "lead_id": 4,
         "text": "Нужна помощь с переездом на новый сервер — весь процесс, с сохранением данных. Посоветуйте, где такое заказать",
-        "tg_date": "2026-08-30T18:26:17+00:00"
+        "tg_date": "2026-08-31T17:36:26+00:00"
       },
       {
         "author_name": "Андрей В.",
@@ -1381,9 +1437,9 @@
         "channel": "Linux Админы",
         "id": 1556,
         "is_automatic_forward": false,
-        "lead_id": 70,
+        "lead_id": 57,
         "text": "Кто ещё тут занимается хостингом? Просто любопытно",
-        "tg_date": "2026-08-30T18:01:17+00:00"
+        "tg_date": "2026-08-31T17:11:26+00:00"
       },
       {
         "author_name": "Алексей Н.",
@@ -1403,9 +1459,9 @@
         "channel": "Мастерская инженера",
         "id": 1555,
         "is_automatic_forward": false,
-        "lead_id": 78,
+        "lead_id": 61,
         "text": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
-        "tg_date": "2026-08-30T17:12:17+00:00"
+        "tg_date": "2026-08-31T16:22:26+00:00"
       },
       {
         "author_name": "Алексей Н.",
@@ -1424,7 +1480,7 @@
         "is_automatic_forward": false,
         "lead_id": null,
         "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
-        "tg_date": "2026-08-30T16:29:17+00:00"
+        "tg_date": "2026-08-31T15:39:26+00:00"
       }
     ],
     "total": 559
@@ -1444,7 +1500,7 @@
       "profile_title": "Личные сообщения"
     },
     "cascade_version": {
-      "created_at": "2026-08-30T19:11:19.388073+00:00",
+      "created_at": "2026-08-31T18:21:28.926047+00:00",
       "created_by": "bootstrap",
       "version": "v1"
     },
@@ -1712,7 +1768,7 @@
   "/profile/versions": {
     "business": [
       {
-        "created_at": "2026-08-30T19:11:19.027528+00:00",
+        "created_at": "2026-08-31T18:21:28.500990+00:00",
         "created_by": "owner@local",
         "id": 1,
         "is_active": true,
@@ -1721,7 +1777,7 @@
     ],
     "cascade": [
       {
-        "created_at": "2026-08-30T19:11:19.388073+00:00",
+        "created_at": "2026-08-31T18:21:28.926047+00:00",
         "created_by": "bootstrap",
         "id": 1,
         "is_active": true,
@@ -1731,7 +1787,7 @@
     ],
     "l3_prompts": [
       {
-        "created_at": "2026-08-30T19:11:19.388073+00:00",
+        "created_at": "2026-08-31T18:21:28.926047+00:00",
         "created_by": "bootstrap",
         "id": 2,
         "is_active": true,
@@ -1739,7 +1795,7 @@
         "version": "l3-public-v3"
       },
       {
-        "created_at": "2026-08-30T19:11:19.388073+00:00",
+        "created_at": "2026-08-31T18:21:28.926047+00:00",
         "created_by": "bootstrap",
         "id": 1,
         "is_active": true,
@@ -1773,6 +1829,12 @@
         "kind": "export",
         "title": "Выгрузка",
         "where": "nowhere"
+      },
+      {
+        "available": true,
+        "kind": "discussions",
+        "title": "Разбор групп обсуждения",
+        "where": "channels"
       }
     ],
     "limit": 50,
@@ -1781,10 +1843,10 @@
     "rows": [
       {
         "cancel_requested": false,
-        "created_at": "2026-08-30T19:11:19.027528+00:00",
+        "created_at": "2026-08-31T18:21:28.500990+00:00",
         "created_by": "owner@local",
-        "error": null,
-        "finished_at": null,
+        "error": "процесс-исполнитель перезапущен во время выполнения",
+        "finished_at": "2026-08-31T18:21:28.915827+00:00",
         "id": 1,
         "kind": "reclassify",
         "name": "Переклассификация · недосчитанное",
@@ -1793,8 +1855,8 @@
         },
         "progress": 30.0,
         "result": null,
-        "started_at": "2026-08-30T18:52:17+00:00",
-        "status": "running"
+        "started_at": "2026-08-31T18:02:26+00:00",
+        "status": "interrupted"
       }
     ],
     "stages": {
@@ -1817,7 +1879,7 @@
     "rows": [
       {
         "cost_usd": 0.0,
-        "created_at": "2026-08-30T19:01:17+00:00",
+        "created_at": "2026-08-31T18:11:26+00:00",
         "id": 1,
         "latency_ms": 900,
         "model": "qwen3.5-9b",
@@ -1988,11 +2050,6 @@
     "channels": [],
     "daily": [
       {
-        "date": "2026-08-24",
-        "delivered": 0,
-        "manual": 0
-      },
-      {
         "date": "2026-08-25",
         "delivered": 0,
         "manual": 0
@@ -2021,6 +2078,11 @@
         "date": "2026-08-30",
         "delivered": 0,
         "manual": 0
+      },
+      {
+        "date": "2026-08-31",
+        "delivered": 0,
+        "manual": 0
       }
     ],
     "recent": [],
@@ -2037,8 +2099,8 @@
     },
     "window": {
       "days": 7,
-      "since": "2026-08-24T00:00:00+00:00",
-      "until": "2026-08-30T19:11:23.407215+00:00"
+      "since": "2026-08-25T00:00:00+00:00",
+      "until": "2026-08-31T18:21:32.669246+00:00"
     },
     "workflow": {
       "action": "reply",
@@ -2064,7 +2126,7 @@
         "author_name": "Виктор Б.",
         "channel": "DevOps Chat",
         "chosen_variant": null,
-        "created_at": "2026-08-30T19:11:19.503907+00:00",
+        "created_at": "2026-08-31T18:21:29.053610+00:00",
         "final_text": null,
         "id": 91,
         "pain": "хостинг тормозит/дорог",
@@ -2098,7 +2160,7 @@
         "author_name": "Пётр К.",
         "channel": "VPN и Обход",
         "chosen_variant": null,
-        "created_at": "2026-08-30T19:11:19.503907+00:00",
+        "created_at": "2026-08-31T18:21:29.053610+00:00",
         "final_text": null,
         "id": 90,
         "pain": "VPN не работает",
@@ -2132,7 +2194,7 @@
         "author_name": "Сергей Л.",
         "channel": "Инфра для стартапов",
         "chosen_variant": null,
-        "created_at": "2026-08-30T19:11:19.503907+00:00",
+        "created_at": "2026-08-31T18:21:29.053610+00:00",
         "final_text": null,
         "id": 89,
         "pain": "нужен админ/подрядчик",
@@ -2166,7 +2228,7 @@
         "author_name": "—",
         "channel": "Инфра для стартапов",
         "chosen_variant": null,
-        "created_at": "2026-08-30T19:11:19.503907+00:00",
+        "created_at": "2026-08-31T18:21:29.053610+00:00",
         "final_text": null,
         "id": 88,
         "pain": "VPN не работает",
@@ -2200,7 +2262,7 @@
         "author_name": "Bot 46",
         "channel": "Мастерская инженера",
         "chosen_variant": null,
-        "created_at": "2026-08-30T19:11:19.503907+00:00",
+        "created_at": "2026-08-31T18:21:29.053610+00:00",
         "final_text": null,
         "id": 87,
         "pain": "VPN не работает",
@@ -2285,32 +2347,32 @@
       "target_id": 66,
       "thread": [
         {
-          "meta": "18.08 19:59 · Денис Р.",
+          "meta": "19.08 19:09 · Денис Р.",
           "target": false,
           "text": "«LOL это была смешная история с сервером»"
         },
         {
-          "meta": "18.08 20:19 · Константин Ф.",
+          "meta": "19.08 19:29 · Константин Ф.",
           "target": false,
           "text": "«Хостинг в последние дни стал тормозить нещадно, все пик-часы уходят в том, что пока страница грузится. Ищу куда переехать, посоветуйте вариант подешевле»"
         },
         {
-          "meta": "18.08 22:30 · Алексей Н.",
+          "meta": "19.08 21:40 · Алексей Н.",
           "target": false,
           "text": "«У кого есть рекомендация хорошего ВПН?»"
         },
         {
-          "meta": "19.08 02:03 · Пётр К. — кандидат",
+          "meta": "20.08 01:13 · Пётр К. — кандидат",
           "target": true,
           "text": "«Кто ещё тут занимается хостингом? Просто любопытно»"
         },
         {
-          "meta": "19.08 05:11 · Сергей Л.",
+          "meta": "20.08 04:21 · Сергей Л.",
           "target": false,
           "text": "«LOL это была смешная история с сервером»"
         },
         {
-          "meta": "19.08 08:20 · Ивал М.",
+          "meta": "20.08 07:30 · Ивал М.",
           "target": false,
           "text": "«Мой новый проект на Golang уже готов!»"
         }
@@ -2371,7 +2433,7 @@
       "target_id": 151,
       "thread": [
         {
-          "meta": "27.08 14:33 · Виктор Б. — кандидат",
+          "meta": "28.08 13:43 · Виктор Б. — кандидат",
           "target": true,
           "text": "«У кого есть рекомендация хорошего ВПН?»"
         }
@@ -2463,7 +2525,7 @@
         "score": null,
         "target_id": null,
         "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
-        "tg_date": "2026-08-30T18:57:17+00:00"
+        "tg_date": "2026-08-31T18:07:26+00:00"
       },
       {
         "author_name": "Денис Р.",
@@ -2487,7 +2549,7 @@
         "score": null,
         "target_id": null,
         "text": "Нужна помощь с переездом на новый сервер — весь процесс, с сохранением данных. Посоветуйте, где такое заказать",
-        "tg_date": "2026-08-30T18:26:17+00:00"
+        "tg_date": "2026-08-31T17:36:26+00:00"
       },
       {
         "author_name": "Андрей В.",
@@ -2514,7 +2576,7 @@
         "score": 92,
         "target_id": 136,
         "text": "Кто ещё тут занимается хостингом? Просто любопытно",
-        "tg_date": "2026-08-30T18:01:17+00:00"
+        "tg_date": "2026-08-31T17:11:26+00:00"
       },
       {
         "author_name": "Алексей Н.",
@@ -2538,7 +2600,7 @@
         "score": null,
         "target_id": null,
         "text": "Переехать со своего хостинга на облако, кажется, давно пора. Кто-нибудь уже делал? Остаётся ещё неделя до того как текущий контракт истечёт",
-        "tg_date": "2026-08-30T17:12:17+00:00"
+        "tg_date": "2026-08-31T16:22:26+00:00"
       },
       {
         "author_name": "Алексей Н.",
@@ -2560,7 +2622,7 @@
         "score": null,
         "target_id": null,
         "text": "Ищу DevOps инженера, который понимает Kubernetes и может помочь с миграцией. Кто-нибудь есть в контактах?",
-        "tg_date": "2026-08-30T16:29:17+00:00"
+        "tg_date": "2026-08-31T15:39:26+00:00"
       }
     ],
     "total": 559,
@@ -2583,7 +2645,7 @@
         "author_username": "@user_23",
         "channel": "Инфра для стартапов",
         "channel_id": 4,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
         "id": 153,
         "message_id": 155,
@@ -2616,7 +2678,7 @@
         "author_username": "@user_416",
         "channel": "Мастерская инженера",
         "channel_id": 3,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
         "id": 86,
         "message_id": 168,
@@ -2649,7 +2711,7 @@
         "author_username": "@user_315",
         "channel": "Инфра для стартапов",
         "channel_id": 4,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
         "id": 97,
         "message_id": 385,
@@ -2682,7 +2744,7 @@
         "author_username": "@user_14",
         "channel": "DevOps Chat",
         "channel_id": 2,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
         "id": 66,
         "message_id": 58,
@@ -2715,7 +2777,7 @@
         "author_username": "@user_247",
         "channel": "Linux Админы",
         "channel_id": 6,
-        "created_at": "2026-08-30T19:11:18.120225+00:00",
+        "created_at": "2026-08-31T18:21:26.851520+00:00",
         "disqualifiers": [],
         "id": 55,
         "message_id": 24,
