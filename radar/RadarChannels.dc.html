@@ -246,7 +246,21 @@ class Component extends DCLogic {
   pendingCount(){
     const s = this.state.summary;
     if (!s) return 'все неразобранные каналы';
-    return ((s.unknown || 0) + (s.unread || 0)) + ' каналов';
+    return this.plural((s.unknown || 0) + (s.unread || 0),
+                       'канал', 'канала', 'каналов');
+  }
+
+  // «144 каналов» бросается в глаза раньше, чем само число, — а число здесь и есть
+  // содержание строки. Форма выбирается по двум последним цифрам: 11–14 всегда
+  // берут последнюю форму, дальше решает последняя цифра.
+  plural(n, one, few, many){
+    const t = Math.abs(n) % 100;
+    const d = t % 10;
+    const word = (t > 10 && t < 20) ? many
+               : d === 1 ? one
+               : (d >= 2 && d <= 4) ? few
+               : many;
+    return n + ' ' + word;
   }
 
   summaryChips(){
