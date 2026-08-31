@@ -174,7 +174,7 @@ class Component extends DCLogic {
     const t = (this.props.api || {}).toast || (()=>{});
     try {
       const r = await post('/channels/discussions/scan',
-                           {scope: scope || 'unread', target: this.TARGET});
+                           {scope: scope || 'pending', target: this.TARGET});
       t('Разбор запущен · задача #' + r.run_id + ' — ход виден в Runs', '#156479');
     } catch (e) { t(describe(e), '#DA501C'); }
   }
@@ -239,6 +239,15 @@ class Component extends DCLogic {
     ['none',    'без обсуждения',       '#8A8F9E'],
     ['groups',  'строк-групп',          '#94BEBE'],
   ];
+
+  // Сколько каналов возьмёт разбор. Считается по той же сводке, что видна над
+  // таблицей: цифра в предупреждении обязана совпадать с тем, что человек только
+  // что прочитал глазами, иначе она подрывает и то и другое.
+  pendingCount(){
+    const s = this.state.summary;
+    if (!s) return 'все неразобранные каналы';
+    return ((s.unknown || 0) + (s.unread || 0)) + ' каналов';
+  }
 
   summaryChips(){
     const s = this.state.summary;
@@ -350,12 +359,12 @@ class Component extends DCLogic {
       scanDiscussions:()=>api.modal && api.modal({
         title:'Разобрать группы обсуждения',
         lines:[{text:'У каждого канала спросим карточку, заведём его группу обсуждения и дочитаем её историю (' + this.TARGET + ' сообщений)'},
-               {text:'Берутся каналы, у которых группа известна, но не прочитана — их видно в сводке над таблицей'},
+               {text:'Возьмём ' + this.pendingCount() + ' — те, у кого карточку не спрашивали или группа известна и не прочитана'},
                {text:'Только чтение: публичную группу Telegram отдаёт и не участнику. Аккаунт никуда не вступает'},
                {text:'Живой поток комментариев это НЕ включит — для него аккаунт должен вступить в группу'},
                {text:'Идёт долго, ход и отмена — в разделе Runs'}],
         confirm:'Запустить', btnBg:'#131E5F', done:'Разбор поставлен в очередь',
-        run:()=>this.runScan('unread')}),
+        run:()=>this.runScan('pending')}),
 
       // `channel.add` — та же роль, что открывает Safety на переключение LIVE
       // (owner + customer); проверяется и на сервере, кнопка здесь — только чтобы
