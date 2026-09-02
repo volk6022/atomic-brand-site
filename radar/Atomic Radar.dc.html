@@ -366,6 +366,14 @@ class Component extends DCLogic {
   };
 
   async componentDidMount(){
+    // Адрес — часть состояния, и применяется он до всех запросов: какой раздел
+    // ни открывай, первым рисуется тот, что стоит в строке браузера. Слушатель
+    // вешается сразу же: «назад» работает и на форме входа — маршрут просто
+    // ждёт своей очереди в state, пока нет сессии.
+    this._hash = ()=>this.applyHash();
+    window.addEventListener('hashchange', this._hash);
+    this.applyHash();
+
     // Сессия живёт в cookie на сервере, а `authed` — в памяти вкладки. Без этого
     // запроса любая перезагрузка страницы выбрасывала на форму входа при живой
     // сессии: пользователь вводил TOTP заново на каждый F5.
@@ -396,6 +404,7 @@ class Component extends DCLogic {
   }
   componentWillUnmount(){
     window.removeEventListener('keydown', this._key);
+    window.removeEventListener('hashchange', this._hash);
     window.removeEventListener('pagehide', this._leave);
     this.closeStream();
   }
@@ -451,6 +460,11 @@ class Component extends DCLogic {
   // вид уже существующего раздела, а не отдельное право. Без этой карты переход в
   // таблицу черновиков упёрся бы в отказ, которого сервер не выносил.
   SECTION_OF = {draftsTable:'drafts'};
+
+  // Ключи таблиц из radar-table.js, не совпавшие с именами маршрутов: таблица
+  // пишет в адрес свой ключ, и такой адрес обязан открываться разделом, а не
+  // дашбордом. Здесь только те, что расходятся; совпавшие проверять нечего.
+  HASH_ALIAS = {audit:'admin', traces:'observability'};
 
   // ── блоки сценариев ─────────────────────────────────────────────────────────
   //
@@ -739,11 +753,99 @@ class Component extends DCLogic {
     } catch (e) { /* не отметилось — лента останется как есть */ }
   }
 
+  // ── маршрут в адресной строке ───────────────────────────────────────────────
+  //
+  // Формат: `#<маршрут>?<параметры>`. Маршрут — имя раздела или wf-форма
+  // `wf:<ключ>:<раздел>`; параметры — и перехода (focusDraft), и среза экрана
+  // (страницу, размер, сортировку и фильтры туда пишет radar-table.js тем же
+  // правилом — срез принадлежит таблице, оболочка его только разбирает).
+  //
+  // Пишем присваиванием location.hash: переход между разделами — шаг истории, и
+  // «назад» обязан его отбрасывать. Читаем событием hashchange: кнопки
+  // «назад/вперёд», ссылка из письма и ввод адреса руками приходят одним
+  // событием, различать их не нужно и нечем.
+
+  // Каноническая строка адреса для перехода. Скаляры идут в адрес, пустота и
+  // объекты — нет: адрес читают глазами и пишут руками, машинных полей в нём
+  // место не найдётся.
+  hashString(route, params){
+    const p = new URLSearchParams();
+    for(const k of Object.keys(params || {})){
+      const v = params[k];
+      if(v === null || v === undefined || v === '') continue;
+      p.set(k, String(v));
+    }
+    const q = p.toString();
+    return '#' + route + (q ? '?' + q : '');
+  }
+
+  // Запись маршрута в адрес. Повторное присваивание того же значения истории не
+  // создаёт, поэтому клик по уже открытому разделу её не засоряет.
+  writeHash(route, params){
+    const h = this.hashString(route, params);
+    if(String(location.hash || '') !== h) location.hash = h;
+    // Запоминаем нормализованное значение: браузер приводит присвоенное к
+    // канону, и сравнивать надо с тем, что реально стоит в адресе.
+    this._hashWritten = String(location.hash || '');
+  }
+
+  // Разбор адреса. До «?» — маршрут, после — параметры перехода. Неразобранный
+  // маршрут — дашборд, как и пустой. Исключение — wf-форма с незнакомым
+  // разделом: она остаётся маршрутом как есть и упирается в отказ, ровно как
+  // кнопка с таким же маршрутом (см. wf()). Молча уводить её на дашборд
+  // значило бы прятать отказ за дашбордом.
+  parseHash(){
+    const raw = String(location.hash || '').replace(/^#/, '');
+    const q = raw.indexOf('?');
+    const params = {};
+    const sp = new URLSearchParams(q === -1 ? '' : raw.slice(q + 1));
+    for(const pair of sp) params[pair[0]] = pair[1];
+    return {route:this.routeFromHash(q === -1 ? raw : raw.slice(0, q)),
+            params:Object.keys(params).length ? params : null};
+  }
+
+  // Какой маршрут стоит за строкой из адреса. Порядок важен: родная грамматика
+  // wf и имена разделов проходят как есть; дальше — ключи таблиц, не совпавшие с
+  // маршрутами («audit», «traces» и старая форма «раздел:сценарий»), — ссылка,
+  // написанная таблицей, обязана открываться разделом, а не дашбордом.
+  routeFromHash(part){
+    if(!part) return 'dashboard';
+    if(part.indexOf('wf:') === 0 && part.split(':').length === 3) return part;
+    // Собственные свойства, а не «ключ в объекте»: иначе адрес #constructor
+    // находил бы в любой карте прототип и открывал «раздел» с таким именем.
+    const own = (map, key)=>Object.prototype.hasOwnProperty.call(map, key);
+    if(own(this.ACCESS, part)) return part;
+    if(own(this.HASH_ALIAS, part)) return this.HASH_ALIAS[part];
+    const two = part.split(':');
+    if(two.length === 2){
+      const wfForm = 'wf:' + two[1] + ':' + two[0];
+      if(this.wf(wfForm)) return wfForm;
+    }
+    return 'dashboard';
+  }
+
+  // Адрес изменился под ногами. Свою запись узнаём и пропускаем — состояние
+  // уже поставил go(); повторное применение не ломает ничего, но дёргает
+  // перерисовку на каждый переход. Применяется маршрут тем же путём, что и
+  // клик: через state.route, с последующей проверкой allows() при отрисовке —
+  // у адреса нет права обойти матрицу, которой подчиняется кнопка.
+  applyHash(){
+    const raw = String(location.hash || '');
+    if(this._hashWritten !== undefined && raw === this._hashWritten) return;
+    this._hashWritten = raw;
+    const h = this.parseHash();
+    this.setState({route:h.route, routeParams:h.params, drill:null, notifOpen:false,
+                   userOpen:false, cmdk:false, drawer:false});
+  }
+
   // Второй аргумент — параметры перехода. Нужен, чтобы клик по строке в таблице
   // черновиков открывал в очереди именно тот черновик, а не «следующий по счёту».
   go(route, params){
     this.setState({route, routeParams:params || null, drill:null, notifOpen:false,
                    userOpen:false, cmdk:false, drawer:false});
+    // Адрес обязан поспеть за состоянием: иначе F5 или «скопировать ссылку»
+    // возвращали бы на дашборд, каким бы раздел человек ни смотрел.
+    this.writeHash(route, params);
   }
 
   toast(text, c){
@@ -949,7 +1051,13 @@ class Component extends DCLogic {
       nav, wide:S.wide, sidebarW:S.wide ? '240px' : '64px',
       toggleSidebar:()=>this.setState({wide:!S.wide}),
       me:this.state.me || this.USERS[role],
-      roleOptions:(this.state.serverRole === 'owner' ? Object.keys(this.USERS) : []).map(r=>({label:r, bg: role === r ? '#131E5F' : 'transparent', fg: role === r ? '#F8F3E0' : '#184153', pick:()=>this.setState({roleOverride:r, userOpen:false, route:'dashboard'})})),
+      roleOptions:(this.state.serverRole === 'owner' ? Object.keys(this.USERS) : []).map(r=>({label:r, bg: role === r ? '#131E5F' : 'transparent', fg: role === r ? '#F8F3E0' : '#184153', pick:()=>{
+        // Примерка роли уводит на дашборд: открытый раздел новой роли может
+        // быть не положен. Переход — обычным go(), иначе адрес в строке
+        // оставался бы чужим разделом и возвращал туда на F5.
+        this.setState({roleOverride:r, userOpen:false});
+        this.go('dashboard');
+      }})),
       modePill: mode === 'LIVE'
         ? {text:'LIVE', bg:'#DA501C', fg:'#FFFFFF', anim:'livepulse 1.6s ease-in-out infinite'}
         : {text:'DRY RUN', bg:'#131E5F', fg:'#F8F3E0', anim:'none'},

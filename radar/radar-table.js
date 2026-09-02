@@ -31,10 +31,21 @@ function readStoredSize(key) {
 
 // Состояние таблицы живёт в адресной строке, чтобы срез можно было прислать
 // ссылкой, а не пересказывать словами. Заодно бесплатно работает кнопка «назад».
+//
+// Маршрут в адресе — часть до «?», и она принадлежит оболочке. У таблицы общего
+// раздела ключ и есть маршрут; у таблицы сценария ключ — «раздел:ключ», а
+// маршрут — wf-форма. Писать в адрес свой ключ напрямую значило бы стирать
+// маршрут сценария: адрес молча превращался в общий раздел, и ссылка после
+// перезагрузки вела не туда, куда человек смотрел.
+function routeOf(key) {
+  const i = key.indexOf(':');
+  return i === -1 ? key : 'wf:' + key.slice(i + 1) + ':' + key.slice(0, i);
+}
+
 function readUrl(key) {
   const raw = (location.hash || '').replace(/^#/, '');
   const [route, query] = raw.split('?');
-  if (route !== key) return {};
+  if (route !== key && route !== routeOf(key)) return {};
   const p = new URLSearchParams(query || '');
   const out = {};
   for (const [k, v] of p) out[k] = v;
@@ -50,7 +61,7 @@ function writeUrl(key, params) {
   // `replaceState`, а не `pushState`: смена страницы или сортировки — уточнение
   // текущего экрана, а не переход. Иначе «назад» отматывает по одному клику
   // фильтра, и до предыдущего раздела не добраться.
-  history.replaceState(null, '', '#' + key + (q ? '?' + q : ''));
+  history.replaceState(null, '', '#' + routeOf(key) + (q ? '?' + q : ''));
 }
 
 export class Table {

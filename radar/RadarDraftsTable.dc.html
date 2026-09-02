@@ -97,9 +97,66 @@ class Component extends DCLogic {
   state = { d:null, loading:true, error:null,
             filter:'all', query:'', channel:'', minScore:0 };
 
-  componentDidMount(){ this.load(); }
+  componentDidMount(){
+    // Срез читается из адреса до первой загрузки: ссылка вида
+    // #draftsTable?filter=pending&channel=… обязана открыть тот же вид, а не
+    // общий список. Экран не сидит на radar-table.js, поэтому правило адреса
+    // то же, а механика своя.
+    //
+    // Загрузка идёт продолжением setState, а не следующей строкой: состояние
+    // применяется не мгновенно (потому и `set()` ниже написан с продолжением),
+    // и load(), позванный сразу, прочитал бы срез ДО разбора адреса — ссылка
+    // открывала бы общий список, то есть ровно то, что она должна чинить.
+    //
+    // Промис возвращается наружу: фреймворку он не нужен, а проверке нужен —
+    // иначе «смонтировали» и «загрузили» неотличимы, и тест утверждает про
+    // запрос, которого ещё не было.
+    const patch = this.hashPatch();
+    return patch ? new Promise(done=>this.setState(patch, ()=>done(this.load())))
+                 : this.load();
+  }
+
+  // Свой маршрут в адресе — «draftsTable». Чужой хеш не трогаем: часть до «?»
+  // уже разобрала оболочка и открыла этот экран именно поэтому.
+  // Срез из адреса как объект для setState, либо null, если брать нечего.
+  // Отдельно от применения: так «что прочитали» проверяется без монтирования.
+  hashPatch(){
+    const raw = String(location.hash || '').replace(/^#/, '');
+    const q = raw.indexOf('?');
+    if((q === -1 ? raw : raw.slice(0, q)) !== 'draftsTable') return null;
+    const p = new URLSearchParams(q === -1 ? '' : raw.slice(q + 1));
+    const patch = {};
+    if(p.has('filter')) patch.filter = p.get('filter') || 'all';
+    if(p.has('q')) patch.query = p.get('q') || '';
+    if(p.has('channel')) patch.channel = p.get('channel') || '';
+    if(p.has('min_score')) patch.minScore = +p.get('min_score') || 0;
+    return Object.keys(patch).length ? patch : null;
+  }
+
+  // Обратная запись — на каждой загрузке, то есть после любого изменения среза.
+  // replaceState, как у radar-table.js: смена фильтра — уточнение текущего
+  // экрана, а не переход, и «назад» возвращает к предыдущему разделу, а не
+  // перебирает клики по фильтрам.
+  writeHash(){
+    const S = this.state;
+    // Порядок фиксирован от общего к частному — состояние, канал, порог, строка
+    // поиска. Он ни на что не влияет при чтении (разбирает URLSearchParams), но
+    // делает адрес одинаковым для одного и того же среза: иначе две ссылки на
+    // один вид выглядят разными, и их невозможно ни сравнить, ни узнать.
+    const p = new URLSearchParams();
+    if(S.filter && S.filter !== 'all') p.set('filter', S.filter);
+    if(S.channel) p.set('channel', S.channel);
+    if(S.minScore) p.set('min_score', String(S.minScore));
+    if(S.query) p.set('q', S.query);
+    const q = p.toString();
+    history.replaceState(null, '', '#draftsTable' + (q ? '?' + q : ''));
+  }
 
   async load(){
+    // Адрес — надпись поверх данных, а не условие их получения. Стояло до `try`,
+    // и любой сбой записи (окружение без `history`) уносил с собой всю загрузку
+    // списка: человек оставался без черновиков из-за строки браузера.
+    try { this.writeHash(); } catch (e) { /* адрес не обновился, список важнее */ }
     try {
       const { get } = await import('./radar-api.js');
       const S = this.state;
