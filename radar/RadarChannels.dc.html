@@ -45,8 +45,19 @@
   </sc-if>
 
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ discChips }}" as="f" hint-placeholder-count="6">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+    <div style="width:8px"></div>
+    <select value="{{ chatType }}" onChange="{{ setChatType }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ chatTypes }}" as="t" hint-placeholder-count="3">
+        <option value="{{ t.value }}">{{ t.label }}</option>
+      </sc-for>
+    </select>
     <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по названию и username" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
-    <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    </sc-if>
   </div>
 
   <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
@@ -120,7 +131,8 @@ class Component extends DCLogic {
   state = { rows:[], total:0, loading:true, error:null, summary:null,
            addOpen:false, addUsername:'', addAccount:1, adding:false };
 
-  // Массив сортируемых колонок: title, members, leads_total.
+  // Колонки и их серверные ключи сортировки. Какие ключи сервер примет — он
+  // объявляет сам в поле `sorts` ответа /channels; здесь этого списка нет.
   COLUMNS = [
     {label:'Канал', sort:'title'},
     {label:'Username', sort:null},
@@ -135,11 +147,19 @@ class Component extends DCLogic {
     {label:'Лид/1000', sort:null},
   ];
 
+  // Типы чатов, встречавшиеся в загруженных строках. Не в state: это
+  // справочник, накопленный из ответов сервера, а не то, что правит человек.
+  seenTypes = [];
+
   async componentDidMount(){
     const { Table } = await import('./radar-table.js');
     this.table = new Table({
       key:'channels', size:50, sort:'leads_total', order:'desc',
-      sorts:[{key:'title'}, {key:'members'}, {key:'leads_total'}],
+      // Списка разрешённых сортировок здесь нет: сервер объявляет его сам в
+      // поле `sorts` ответа (см. load) — своя копия разошлась бы с ним, и клик
+      // по заголовку давал бы 422. Фильтры заведены через Table: тогда они
+      // живут в адресе страницы, и ссылкой делится отфильтрованный срез.
+      filters:{discussion:'', chat_type:''},
     });
     this.table.attach(()=>this.load());
     this.load();
@@ -150,6 +170,19 @@ class Component extends DCLogic {
     try {
       const { get } = await import('./radar-api.js');
       const data = await get('/channels', this.table.query());
+      // Разрешённые ключи сортировки — слова сервера, а не экрана: берём их из
+      // каждого ответа, чтобы заголовки кликались ровно по тем колонкам, какие
+      // ручка примет сейчас.
+      if (Array.isArray(data.sorts))
+        this.table.sorts = data.sorts.map(k=>({key:k}));
+      // Типы чатов придумывает Telegram, и закрытого перечня в коде нет:
+      // собираем те, что реально встретились в загруженных строках. Копим от
+      // загрузки к загрузке, а не берём с текущей страницы — иначе сузивший
+      // выдачу поиск убрал бы из списка уже выбранный тип.
+      for (const r of (data.rows || [])) {
+        const t = r.chat_type;
+        if (t && this.seenTypes.indexOf(t) < 0) this.seenTypes.push(t);
+      }
       this.setState({rows:data.rows, total:data.total, loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
@@ -352,6 +385,8 @@ class Component extends DCLogic {
       return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
               rows:[], cols:[], pages:[], sizes:[], range:'загрузка…', q:'',
               summary:[], hasSummary:false,
+              discChips:[], chatTypes:[], chatType:'', setChatType:()=>{},
+              hasFilters:false,
               reload:()=>{}, scanDiscussions:()=>{}, setQ:()=>{}, resetAll:()=>{},
               prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
               canAdd:false, addOpen:false, addToggle:()=>{}, addToggleLabel:'',
@@ -370,6 +405,28 @@ class Component extends DCLogic {
       reload:()=>this.load(),
       summary: this.summaryChips(),
       hasSummary: !!S.summary,
+
+      // Чипсы состояния обсуждения: «Все» плюс ровно пять значений, которые
+      // сервер понимает в `discussion`, — любое другое он отверг бы с 422.
+      // Подписи берутся из DISC; счётчик — из сводки по всем каналам, если
+      // ключ в ней есть (ноль тоже показываем: он честно предупреждает, что
+      // под фильтр не попадёт ничего).
+      discChips:['', 'unknown', 'none', 'unread', 'history', 'live'].map(k=>{
+        const active = (this.table.filters.discussion || '') === k;
+        const sum = S.summary || {};
+        return {label: k ? this.DISC[k].label : 'Все',
+                count: k && sum[k] !== undefined ? '· ' + sum[k] : '',
+                bg: active ? '#131E5F' : 'transparent',
+                fg: active ? '#F8F3E0' : '#156479',
+                pick:()=>this.table.setFilter('discussion', k)};
+      }),
+      // Значение «пусто» — «без фильтра»: Table.query() такой параметр просто
+      // не отправит, поэтому отдельного «снять фильтр» здесь не нужно.
+      chatTypes:[{value:'', label:'все типы'}].concat(
+        this.seenTypes.map(t=>({value:t, label:t}))),
+      chatType:String(this.table.filters.chat_type || ''),
+      setChatType:(e)=>this.table.setFilter('chat_type', e.target.value),
+
       scanDiscussions:()=>api.modal && api.modal({
         title:'Разобрать группы обсуждения',
         lines:[{text:'У каждого канала спросим карточку, заведём его группу обсуждения и дочитаем её историю (' + this.TARGET + ' сообщений)'},
