@@ -11,11 +11,14 @@
 <div style="display:flex;flex-direction:column;gap:14px">
   <div style="display:flex;align-items:center;gap:12px">
     <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Conversations</div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">{{ unreadLabel }}</div>
     <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
     <div style="flex:1"></div>
   </div>
 
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div onClick="{{ unreadToggle.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ unreadToggle.bg }};color:{{ unreadToggle.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ unreadToggle.label }}</div>
+    <div style="width:8px"></div>
     <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="6">
       <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
     </sc-for>
@@ -32,7 +35,7 @@
         <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
           <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
-              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.who }}</div>
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F"><span style="font:400 12px/1 'JetBrains Mono',monospace;color:#DA501C">{{ r.dot }}</span>{{ r.who }}</div>
               <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.last }}</div>
             </td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.acct }}</td>
@@ -43,6 +46,45 @@
       </tbody>
     </table>
   </div>
+
+  <sc-if value="{{ threadLoading }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">открываю диалог…</div>
+  </sc-if>
+
+  <sc-if value="{{ threadError }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Диалог не открылся: {{ threadError }}. Список не тронут — можно выбрать другой.</div>
+  </sc-if>
+
+  <sc-if value="{{ thread }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.24)">
+    <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(19,30,95,0.16)">
+      <div style="font:400 16px/1.2 'Architexture',sans-serif;color:#131E5F">{{ thread.peer }}</div>
+      <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ thread.meta }}</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ closeThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">✕ закрыть</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding:14px 16px">
+      <sc-for list="{{ thread.events }}" as="e" hint-placeholder-count="4">
+        <sc-if value="{{ e.mine }}">
+          <div style="display:flex;justify-content:flex-end">
+            <div style="max-width:72%;background:#131E5F;color:#F8F3E0;padding:9px 12px">
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(248,243,224,0.66)">{{ e.who }} · {{ e.whenLabel }}</div>
+              <div style="margin-top:6px;font:400 13px/1.55 'JetBrains Mono',monospace">{{ e.text }}</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ e.theirs }}">
+          <div style="display:flex;justify-content:flex-start">
+            <div style="max-width:72%;background:#EDF4F3;color:#184153;padding:9px 12px">
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">{{ e.who }} · {{ e.whenLabel }}</div>
+              <div style="margin-top:6px;font:400 13px/1.55 'JetBrains Mono',monospace">{{ e.text }}</div>
+            </div>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
 
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
     <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
@@ -68,22 +110,74 @@
 
 <sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
 <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div onClick="{{ unreadToggle.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ unreadToggle.bg }};color:{{ unreadToggle.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ unreadToggle.label }}</div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">{{ unreadLabel }}</div>
+    <div style="flex:1"></div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+  </div>
   <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
     <div onClick="{{ r.open }}" style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
       <div style="display:flex;justify-content:space-between;gap:10px">
-        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.who }}</div>
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F"><span style="color:#DA501C">{{ r.dot }}</span>{{ r.who }}</div>
         <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.state }}</div>
       </div>
       <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.last }} · {{ r.acct }}</div>
     </div>
   </sc-for>
+
+  <sc-if value="{{ threadLoading }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">открываю диалог…</div>
+  </sc-if>
+
+  <sc-if value="{{ threadError }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Диалог не открылся: {{ threadError }}</div>
+  </sc-if>
+
+  <sc-if value="{{ thread }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.24)">
+    <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(19,30,95,0.16)">
+      <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ thread.peer }}</div>
+      <div style="flex:1"></div>
+      <div onClick="{{ closeThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">✕ закрыть</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;padding:12px">
+      <sc-for list="{{ thread.events }}" as="e" hint-placeholder-count="4">
+        <sc-if value="{{ e.mine }}">
+          <div style="display:flex;justify-content:flex-end">
+            <div style="max-width:88%;background:#131E5F;color:#F8F3E0;padding:9px 12px">
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:rgba(248,243,224,0.66)">{{ e.who }} · {{ e.whenLabel }}</div>
+              <div style="margin-top:6px;font:400 12px/1.55 'JetBrains Mono',monospace">{{ e.text }}</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ e.theirs }}">
+          <div style="display:flex;justify-content:flex-start">
+            <div style="max-width:88%;background:#EDF4F3;color:#184153;padding:9px 12px">
+              <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">{{ e.who }} · {{ e.whenLabel }}</div>
+              <div style="margin-top:6px;font:400 12px/1.55 'JetBrains Mono',monospace">{{ e.text }}</div>
+            </div>
+          </div>
+        </sc-if>
+      </sc-for>
+    </div>
+    <div style="padding:0 12px 12px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ thread.meta }}</div>
+  </div>
+  </sc-if>
+
+  <div style="border:1px dashed rgba(19,30,95,0.24);padding:12px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Панель ответа</div>
+    <div style="margin-top:6px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ panelNote }}</div>
+  </div>
 </div>
 </sc-if>
 
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
-  state = { rows:[], total:0, states:[], note:'', loading:true, error:null };
+  state = { rows:[], total:0, unreadTotal:0, states:[], note:'',
+            loading:true, error:null,
+            thread:null, threadError:null, threadLoading:false };
 
   // Поиска нет: в таблице диалогов нет текстовых полей, по которым его вести —
   // имя собеседника хранится у лида, а не здесь.
@@ -108,7 +202,13 @@ class Component extends DCLogic {
     this.table = new Table({
       key:'conversations', size:50, sort:'created', order:'desc',
       sorts:[{key:'created'}, {key:'sent'}, {key:'last'}, {key:'state'}],
-      filters:{state:''},
+      // Пустой `unread_only` — это не «фильтр сброшен», а осмысленное умолчание:
+      // Table.query() пустое значение на сервер не отправляет вовсе, а сервер
+      // без этого параметра сам отдаёт только непрочитанные. Поэтому «показать
+      // все» включается явной строкой 'false', а возврат к непрочитанным —
+      // пустотой; строка 'true' здесь не нужна никогда: её сервер и так
+      // предполагает, и она только замусорила бы запрос.
+      filters:{state:'', unread_only:''},
     });
     this.table.attach(()=>this.load());
     this.load();
@@ -119,21 +219,105 @@ class Component extends DCLogic {
     try {
       const { get } = await import('./radar-api.js');
       const data = await get('/conversations', this.table.query());
-      this.setState({rows:data.rows, total:data.total, states:data.states || [],
-                     note:data.note || '', loading:false, error:null});
+      this.setState({rows:data.rows, total:data.total,
+                     unreadTotal:data.unread_total || 0,
+                     states:data.states || [], note:data.note || '',
+                     loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
       this.setState({error:describe(e), loading:false});
     }
   }
 
+  async openThread(row){
+    if(!row || !row.id) return;
+    this.setState({threadLoading:true, thread:null, threadError:null});
+    let data;
+    try {
+      const { get } = await import('./radar-api.js');
+      data = await get('/conversations/' + row.id);
+    } catch (e) {
+      // Сбой нитки живёт в threadError рядом с ниткой и список не трогает:
+      // в прошлый раз падение одной нитки уносило с собой всю таблицу.
+      const { describe } = await import('./radar-api.js');
+      this.setState({threadLoading:false, thread:null, threadError:describe(e)});
+      return;
+    }
+
+    // Порядок сообщений наводим сами по created_at: база отдаёт события в каком
+    // попало порядке, и доверять ему — значит показывать переписку от нового
+    // к старому.
+    const events = (data.events || []).slice().sort((a, b) => {
+      const ta = String((a || {}).created_at || '');
+      const tb = String((b || {}).created_at || '');
+      return ta < tb ? -1 : (ta > tb ? 1 : 0);
+    });
+
+    const conv = data.conversation || {};
+    const who = conv.peer_name || row.peer_name || '—';
+    const uname = conv.peer_username || row.peer_username || '';
+    const stateLabel = this.STATE_LABEL[conv.state] || conv.state || '—';
+    const thread = {
+      id: row.id,
+      peer: uname ? (who + ' ' + uname) : who,
+      meta: 'acc-' + (conv.account || row.account) + ' · ' + stateLabel
+            + ' · лид #' + (conv.lead_id || row.lead_id),
+      events: events.map(ev => ({
+        id:(ev || {}).id,
+        kind:(ev || {}).kind,
+        // Направление продублировано двумя флагами: разметка этого фреймворка
+        // умеет только sc-if по готовому значению, отрицать она не умеет.
+        mine: (ev || {}).kind === 'outbound',
+        theirs: (ev || {}).kind === 'inbound',
+        who: (ev || {}).kind === 'outbound' ? 'мы' : who,
+        text: ((ev || {}).payload || {}).text || '',
+        // Полный ISO-штамп: строки такого вида сравниваются по возрастанию
+        // как есть — на этом держится и сортировка, и контракт проверки.
+        when: String((ev || {}).created_at || ''),
+        whenLabel: String((ev || {}).created_at || '').slice(0, 16).replace('T', ' '),
+      })),
+    };
+    this.setState({thread, threadLoading:false, threadError:null});
+
+    // Отмечаем прочитанным по строке списка, а не по ответу нитки: в строке —
+    // свежее знание о том, что человек уже открывал. Иначе повторное открытие
+    // той же нитки звало бы /read второй раз.
+    if(row.unread){
+      try {
+        const { post } = await import('./radar-api.js');
+        await post('/conversations/' + row.id + '/read', {});
+        // Строку и счётчик правим локально, без перезапроса списка: при
+        // перезапросе непрочитанных строка исчезла бы у человека из-под
+        // курсора, и он решил бы, что диалог потерян.
+        const rows = (this.state.rows || []).map(r =>
+          r.id === row.id ? Object.assign({}, r, {unread:false}) : r);
+        this.setState({rows,
+                       unreadTotal: Math.max(0, (this.state.unreadTotal || 0) - 1)});
+      } catch (e) {
+        // Не отметили — при следующей загрузке строка останется непрочитанной,
+        // это честнее ложного «прочитано». Нитка при этом уже показана.
+      }
+    }
+  }
+
+  closeThread(){
+    this.setState({thread:null, threadError:null, threadLoading:false});
+  }
+
   renderVals(){
-    const api = this.props.api || {};
     const S = this.state;
     const rows = S.rows || [];
 
+    // До загрузки отдаём все дырки разметки, включая пустую нитку: отсутствующий
+    // ключ в этом фреймворке не даёт ошибки — ячейка молча остаётся пустой, и
+    // поломка всплывает у человека, а не здесь.
     if(!this.table){
       return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              unreadLabel:'', unreadToggle:{label:'показать все', active:false,
+                                            bg:'transparent', fg:'#156479',
+                                            pick:()=>{}},
+              thread:null, threadError:null, threadLoading:false,
+              closeThread:()=>{},
               rows:[], cols:[], pages:[], sizes:[], stateFilters:[],
               range:'загрузка…', panelNote:'', reload:()=>{},
               prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
@@ -151,31 +335,49 @@ class Component extends DCLogic {
                 pick:()=>this.table.setFilter('state', f.k)};
       });
 
+    const showAll = String(this.table.filters.unread_only || '') === 'false';
+    const unreadToggle = {
+      // Подпись — доступное действие, подсветка — включён ли нестандартный режим
+      // «показать все»; по умолчанию экран показывает только непрочитанные.
+      label: showAll ? 'только непрочитанные' : 'показать все',
+      active: showAll,
+      bg: showAll ? '#131E5F' : 'transparent',
+      fg: showAll ? '#F8F3E0' : '#156479',
+      pick: ()=>this.table.setFilter('unread_only', showAll ? '' : 'false'),
+    };
+
     return {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      unreadLabel: 'непрочитанных: ' + (S.unreadTotal || 0),
+      unreadToggle,
+      thread: S.thread || null,
+      threadError: S.threadError || null,
+      threadLoading: !!S.threadLoading,
+      closeThread: ()=>this.closeThread(),
       ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
                                    error:S.error}),
       reload:()=>this.load(),
       stateFilters,
+      // Панель ответа — надпись, а не форма, и это договорённость с заказчиком:
+      // ответы собираются и уходят только через раздел ручных отправок.
+      // Единственный POST этого экрана — отметка о прочтении.
       panelNote: rows.length
-        ? 'Выберите диалог в таблице. Ответ собирается и отправляется '
-          + 'только после переключения системы в режим LIVE.'
+        ? 'Здесь никто ничего не отправляет: ответ на диалог записывается '
+          + 'в разделе «Ручные отправки». Ничего не уходит наружу, пока '
+          + 'система в сухом прогоне.'
         : (S.note || 'Появится вместе с первым диалогом. Пока система в сухом прогоне, '
            + 'ни одно сообщение не отправляется, отвечать не на что.'),
       rows:rows.map(c=>({
         who:(c.peer_name || '—') + ' ' + (c.peer_username || ''),
+        // Точка слева от имени — непрочитанное; видно в режиме «показать все»,
+        // когда прочитанные строки приезжают в тот же список.
+        dot: c.unread ? '● ' : '',
         acct:'acc-' + c.account,
         state:this.STATE_LABEL[c.state] || c.state,
         c: c.state === 'replied' ? '#2E7D57' : '#C98A1E',
         wait:String(c.sent_count) + ' отправлено',
         last:(c.last_sent_at || '—').slice(0, 16).replace('T', ' '),
-        open:()=>api.drill && api.drill({
-          title:c.peer_name || ('Диалог #' + c.id),
-          subtitle:'лид #' + c.lead_id + ' · аккаунт acc-' + c.account,
-          rows:[{k:'Состояние', v:this.STATE_LABEL[c.state] || c.state},
-                {k:'Отправлено сообщений', v:String(c.sent_count)},
-                {k:'Последнее сообщение', v:c.last_sent_at || '—'}],
-          json:JSON.stringify(c, null, 2)})
+        open:()=>this.openThread(c)
       }))
     };
   }
