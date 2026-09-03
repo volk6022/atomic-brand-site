@@ -402,14 +402,48 @@ async function table() {
   }
 
   // 21. Ссылка на срез открывает срез: адрес читается ДО первой загрузки.
+  //
+  // Хеш взят в том виде, в каком его пишет оболочка, — с приставкой сценария.
+  // Раньше здесь стоял голый «#draftsTable», и проверка описывала мир, которого
+  // нет: внутри сценария оболочка такого адреса не ставит никогда, а экран под
+  // этот выдуманный адрес и подгонялся.
   {
     const {c, calls} = build(F, {workflow: WF},
-                             {hash: '#draftsTable?account=13&filter=pending'});
+                             {hash: '#wf:public_reply:draftsTable?account=13&filter=pending'});
     await c.componentDidMount();
     await settle();
     const first = q(calls, /^\/workflows\/public_reply\/drafts$/)[0];
     check('таблица: срез из адреса применён к ПЕРВОМУ запросу',
           !!first && String(first.q.account_id) === '13');
+  }
+
+  // 21a. Обратная запись обязана сохранить сценарий. Адрес — это то, что человек
+  //      скопирует из строки браузера и пришлёт себе же завтра; потеряв приставку,
+  //      он открывает СТАРУЮ общую очередь: без колонки аккаунта, с другим числом
+  //      строк и без фильтра, ради которого экран и делался.
+  {
+    const {c, ctx} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const h = String(ctx.location.hash || '');
+    check('таблица: в адресе сохранён маршрут сценария, а не общий',
+          h.indexOf('#wf:public_reply:draftsTable') === 0, h);
+
+    const v = vals(c);
+    if (typeof v.setAccount === 'function') { v.setAccount({target: {value: '12'}}); await settle(); }
+    const h2 = String(ctx.location.hash || '');
+    check('таблица: срез по аккаунту записан внутри маршрута сценария',
+          h2.indexOf('#wf:public_reply:draftsTable?') === 0 && /account=12/.test(h2), h2);
+  }
+
+  // 21b. Вне сценария адрес прежний, дословно: у общего раздела приставки нет.
+  {
+    const {c, ctx} = build(F, {});
+    await c.componentDidMount();
+    await settle();
+    const h = String(ctx.location.hash || '');
+    check('таблица: без сценария адрес остался голым «#draftsTable»',
+          h === '#draftsTable' || h.indexOf('#draftsTable?') === 0, h);
   }
 
   // 22. Недоступный список аккаунтов не уносит с собой очередь: фильтр — удобство,

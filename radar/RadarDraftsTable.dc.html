@@ -142,6 +142,13 @@ class Component extends DCLogic {
 
   base(){ return this.wf() ? '/workflows/' + this.wf() : ''; }
 
+  // Собственный маршрут в адресе. Внутри сценария у него есть приставка
+  // `wf:<ключ>:` — та же грамматика, по которой оболочка и открыла этот экран.
+  // Держать её обязаны обе стороны: чтение (иначе ссылка со срезом не
+  // применяется) и запись (иначе адрес в строке браузера ведёт на СТАРУЮ общую
+  // очередь — другой список, без колонки аккаунта и без фильтра по нему).
+  route(){ return (this.wf() ? 'wf:' + this.wf() + ':' : '') + 'draftsTable'; }
+
   componentDidMount(){
     // Срез читается из адреса до первой загрузки: ссылка вида
     // #draftsTable?filter=pending&channel=… обязана открыть тот же вид, а не
@@ -168,7 +175,7 @@ class Component extends DCLogic {
   hashPatch(){
     const raw = String(location.hash || '').replace(/^#/, '');
     const q = raw.indexOf('?');
-    if((q === -1 ? raw : raw.slice(0, q)) !== 'draftsTable') return null;
+    if((q === -1 ? raw : raw.slice(0, q)) !== this.route()) return null;
     const p = new URLSearchParams(q === -1 ? '' : raw.slice(q + 1));
     const patch = {};
     if(p.has('filter')) patch.filter = p.get('filter') || 'all';
@@ -200,7 +207,7 @@ class Component extends DCLogic {
     if(S.minScore) p.set('min_score', String(S.minScore));
     if(S.query) p.set('q', S.query);
     const q = p.toString();
-    history.replaceState(null, '', '#draftsTable' + (q ? '?' + q : ''));
+    history.replaceState(null, '', '#' + this.route() + (q ? '?' + q : ''));
   }
 
   async load(){
