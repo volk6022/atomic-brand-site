@@ -211,6 +211,50 @@
       </div>
     </div>
   </sc-if>
+
+  <sc-if value="{{ isFiles }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px;display:flex;flex-direction:column;gap:12px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Весь набор настроек одним файлом</div>
+        <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ filesNote }}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button onClick="{{ doExport }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#131E5F;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Выгрузить текущие</button>
+          <sc-if value="{{ canLoadFiles }}" hint-placeholder-val="{{ false }}">
+            <label style="border:0;background:#131E5F;color:#F8F3E0;padding:9px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer;display:inline-block">
+              <input type="file" accept="application/json,.json" onChange="{{ doImport }}" style="display:none">{{ importLabel }}</label>
+          </sc-if>
+        </div>
+      </div>
+
+      <sc-for list="{{ files }}" as="f" hint-placeholder-count="3">
+        <div style="background:#fff;border:1px solid {{ f.border }};padding:14px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px;display:flex;flex-direction:column;gap:4px">
+            <div style="font:400 15px/1.3 'Architexture',sans-serif;color:#131E5F">{{ f.name }}</div>
+            <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ f.meta }}</div>
+          </div>
+          <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ f.stateFg }};white-space:nowrap">{{ f.stateLabel }}</div>
+          <div onClick="{{ f.download }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">скачать</div>
+          <sc-if value="{{ f.canApply }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ f.apply }}" disabled="{{ fileBusy }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:7px 14px;font:400 11px/1 'JetBrains Mono',monospace;cursor:pointer">Включить</button>
+          </sc-if>
+          <sc-if value="{{ f.askDelete }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;gap:8px;align-items:center">
+              <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">удалить набор?</div>
+              <button onClick="{{ f.confirmDelete }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:7px 12px;font:400 11px/1 'JetBrains Mono',monospace;cursor:pointer">да</button>
+              <div onClick="{{ f.cancelDelete }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#184153;cursor:pointer">отмена</div>
+            </div>
+          </sc-if>
+          <sc-if value="{{ f.canDelete }}" hint-placeholder-val="{{ true }}">
+            <div onClick="{{ f.remove }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">удалить</div>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <sc-if value="{{ filesEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px dashed rgba(19,30,95,0.3);padding:18px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ filesEmptyText }}</div>
+      </sc-if>
+    </div>
+  </sc-if>
 </div>
 
 </x-dc>
@@ -221,7 +265,8 @@ class Component extends DCLogic {
   // (см. `app/api/v1/profile.py` в Atomic-Radar). Владелец видит правку включённой
   // сразу, заказчик — как предложение, которое ждёт активации (баннер сверху).
   state = {
-    d:null, versions:null, loading:true, error:null, tab:'biz', saving:false,
+    d:null, versions:null, files:null, loading:true, error:null, tab:'biz',
+    saving:false, fileBusy:false, askDelete:null,
     bizEditing:false, bizDraft:'',
     editingPain:null, painAnchors:'', painProtos:'',
     newPainOpen:false, newPainName:'', newPainAnchors:'', newPainProtos:'',
@@ -237,8 +282,9 @@ class Component extends DCLogic {
   async load(){
     try {
       const { get } = await import('./radar-api.js');
-      const [d, versions] = await Promise.all([get('/profile'), get('/profile/versions')]);
-      this.setState({d, versions, loading:false, error:null});
+      const [d, versions, files] = await Promise.all([
+        get('/profile'), get('/profile/versions'), get('/profile/config/files')]);
+      this.setState({d, versions, files:files.files || [], loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
       this.setState({error:describe(e), loading:false});
@@ -287,6 +333,86 @@ class Component extends DCLogic {
     }
   }
 
+  // ── настройки одним файлом ──────────────────────────────────────────────────
+  //
+  // Единица работы снаружи — файл, а не версия. Выгрузил, поправил в редакторе,
+  // залил обратно; загрузка применяет набор целиком и сразу, отдельного «включить»
+  // у неё нет. Прежняя лесенка версий с кнопками осталась только для предложений
+  // заказчика (баннер сверху) — там она означает решение, а не способ править.
+
+  saveJson(name, body){
+    const blob = new Blob([JSON.stringify(body, null, 2)],
+                          {type:'application/json;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = String(name || 'radar-config').replace(/[\/:*?"<>|]/g, '-') + '.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  async withFiles(fn, okMsg){
+    const api = this.props.api || {};
+    const { describe } = await import('./radar-api.js');
+    this.setState({fileBusy:true});
+    try {
+      const r = await fn();
+      api.toast && api.toast(okMsg, '#2E7D57');
+      this.setState({fileBusy:false, askDelete:null});
+      await this.load();
+      return r;
+    } catch (e) {
+      this.setState({fileBusy:false});
+      api.toast && api.toast(describe(e), '#DA501C');
+      return null;
+    }
+  }
+
+  async exportCurrent(){
+    const api = this.props.api || {};
+    const { get, describe } = await import('./radar-api.js');
+    try {
+      const body = await get('/profile/config');
+      this.saveJson(body.name || 'radar-config', body);
+    } catch (e) {
+      api.toast && api.toast(describe(e), '#DA501C');
+    }
+  }
+
+  async downloadFile(row){
+    const api = this.props.api || {};
+    const { get, describe } = await import('./radar-api.js');
+    try {
+      this.saveJson(row.name, await get('/profile/config/files/' + row.id));
+    } catch (e) {
+      api.toast && api.toast(describe(e), '#DA501C');
+    }
+  }
+
+  // Файл читается и разбирается здесь, а не отправляется как есть: сломанный JSON
+  // должен объясняться человеку словами про файл, а не приходить ответом сервера
+  // про тело запроса.
+  async uploadFile(event){
+    const api = this.props.api || {};
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+
+    let body;
+    try {
+      body = JSON.parse(await file.text());
+    } catch (e) {
+      api.toast && api.toast('Файл «' + file.name + '» — не JSON: ' + e.message, '#DA501C');
+      return;
+    }
+    const { post } = await import('./radar-api.js');
+    await this.withFiles(()=>post('/profile/config/files', body),
+                         'Набор загружен и применён: ' + (body.name || file.name));
+  }
+
   renderVals(){
     const api = this.props.api || {};
     const S = this.state, d = S.d || {};
@@ -320,13 +446,59 @@ class Component extends DCLogic {
 
     const staleN = d.stale_l3_verdicts || 0;
 
+    // Наборы настроек. Строка здесь — снимок, которым настройки в последний раз
+    // приводили в порядок, а не сами настройки: поэтому удаление набора ничего не
+    // меняет в отборе, и об этом прямо сказано в подписи.
+    const when = (iso)=> iso ? String(iso).slice(0, 16).replace('T', ' ') : '';
+    const files = (S.files || []).map(f=>({
+      id: f.id, name: f.name,
+      meta: [when(f.created_at), f.created_by || '—', f.pains + ' болей',
+             f.prototypes + ' эталонов',
+             (f.prompts || []).length + ' промптов'].join(' · '),
+      border: f.is_current ? '#2E7D57' : 'rgba(19,30,95,0.16)',
+      stateLabel: f.is_current ? 'применён сейчас'
+                : (f.applied_at ? 'применялся ' + when(f.applied_at)
+                                : 'не применялся'),
+      stateFg: f.is_current ? '#2E7D57' : (f.applied_at ? '#8A8F9E' : '#C98A1E'),
+      canApply: !!editable.can_edit && !f.is_current,
+      canDelete: !!editable.can_edit && S.askDelete !== f.id,
+      askDelete: S.askDelete === f.id,
+      download: ()=>this.downloadFile(f),
+      apply: ()=>this.withFiles(async ()=>{
+        const { post } = await import('./radar-api.js');
+        return post('/profile/config/files/' + f.id + '/apply');
+      }, 'Включён набор: ' + f.name),
+      remove: ()=>this.setState({askDelete:f.id}),
+      cancelDelete: ()=>this.setState({askDelete:null}),
+      confirmDelete: ()=>this.withFiles(async ()=>{
+        const { del } = await import('./radar-api.js');
+        return del('/profile/config/files/' + f.id);
+      }, 'Набор удалён: ' + f.name),
+    }));
+
     return {
       pad: this.props.mobile ? '12px' : '0',
       versionLabel: note || ('Версия профиля: ' + (d.version || '—') +
                              (c.l3_prompt_version ? ' · промпт ' + c.l3_prompt_version : '')),
-      tabs:[tab('biz', 'Бизнес'), tab('pains', 'Боли и шум'), tab('cascade', 'Каскад')],
+      tabs:[tab('biz', 'Бизнес'), tab('pains', 'Боли и шум'), tab('cascade', 'Каскад'),
+            tab('files', 'Наборы')],
       isBiz: S.tab === 'biz', isPains: S.tab === 'pains', isCascade: S.tab === 'cascade',
+      isFiles: S.tab === 'files',
       canWrite, saveLabel, saving: S.saving,
+
+      // ── наборы настроек ─────────────────────────────────────────────────────
+      files, filesEmpty: files.length === 0, fileBusy: S.fileBusy,
+      canLoadFiles: !!editable.can_edit,
+      filesNote: 'Выгрузка отдаёт то, по чему система работает прямо сейчас: '
+               + 'правьте файл в редакторе и заливайте обратно. Загрузка применяет '
+               + 'набор целиком и сразу — отдельного «включить» у неё нет. '
+               + 'Удаление набора из списка на отбор не влияет: это снимок, а не '
+               + 'сами настройки.',
+      filesEmptyText: 'Загруженных наборов пока нет. Начните с «Выгрузить текущие»: '
+                    + 'получится файл, который можно поправить и залить обратно.',
+      importLabel: S.fileBusy ? 'Загружаю…' : 'Загрузить файл',
+      doExport: ()=>this.exportCurrent(),
+      doImport: (e)=>this.uploadFile(e),
 
       pendingOpen: pending.length > 0, pending,
 
