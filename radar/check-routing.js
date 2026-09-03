@@ -58,8 +58,12 @@ async function mountShell(hash, me, workflows){
 }
 
 (async () => {
+  // Список разделов — ДОСЛОВНО тот, что отдаёт `/auth/me` (проверено на проде 03.09).
+  // Здесь стоял лишний `draftsTable`, и это ровно та ошибка, из-за которой харнесс
+  // пропустил отказ прав у табличного вида сценария: заглушка описывала мир, которого
+  // нет. Имя экрана в этот список попадать не должно — сервер знает только разделы.
   const owner = {role:'owner', sections:['dashboard','fleet','channels','stream','leads','drafts',
-    'draftsTable','conversations','manual_sends','activity','profile','runs','evals',
+    'conversations','activity','manual_sends','profile','runs','evals',
     'attribution','observability','safety','admin']};
 
   // 1. Пустой хеш — дашборд.
