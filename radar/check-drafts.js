@@ -246,6 +246,22 @@ async function card() {
           v.postLink === '' || v.postLink === null || v.postLink === undefined);
   }
 
+  // 6b. Четвёртое состояние. «Всё, что не pending, — отклонено» подписывало
+  //     правленый черновик как «отклонён: —»: человек читает про отказ там, где
+  //     его никто не выносил.
+  {
+    const draft = clone(NEXT);
+    draft.draft.state = 'edited';
+    draft.draft.reject_reason = null;
+    const {c} = build('RadarDrafts.dc.html', {workflow: WF}, {next: draft});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('карточка: правленый черновик не подписан отказом',
+          typeof v.queueLabel === 'string' && v.queueLabel.indexOf('отклонён') === -1,
+          String(v.queueLabel));
+  }
+
   // 7. Отказ буфера обмена — сбой окружения, а не повод потерять экран.
   {
     const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
@@ -366,6 +382,23 @@ async function table() {
           typeof r0.text === 'string' && r0.text.trim().length > 0);
     check('таблица: счётчики состояний разобраны из массива, а не из объекта',
           Array.isArray(v.filters) && v.filters.some((f) => /\d/.test(String(f.count))));
+  }
+
+  // 20b. Чипсы строятся по тому, что вернул сервер. Зашитый список из трёх
+  //      состояний прятал целое четвёртое: черновик считался только под «Все»,
+  //      а в строке светилось английское слово из базы.
+  {
+    const {c} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    const labels = (v.filters || []).map((f) => String(f.label));
+    const serverStates = (QUEUE.states || []).map((x) => x.key);
+    check('таблица: у каждого состояния сервера есть свой чипс',
+          serverStates.length + 1 === labels.length, labels.join(' / '));
+    const row = (v.rows || []).filter((r) => /^[a-z]+$/.test(String(r.state)));
+    check('таблица: ни одно состояние не показано английским словом из базы',
+          row.length === 0, JSON.stringify(row.map((r) => r.state)));
   }
 
   // 21. Ссылка на срез открывает срез: адрес читается ДО первой загрузки.

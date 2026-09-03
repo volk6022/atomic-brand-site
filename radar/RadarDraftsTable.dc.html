@@ -35,13 +35,20 @@
         <option value="{{ s.value }}">{{ s.label }}</option>
       </sc-for>
     </select>
+    <sc-if value="{{ hasAccounts }}" hint-placeholder-val="{{ true }}">
+    <select value="{{ account }}" onChange="{{ setAccount }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ accounts }}" as="a" hint-placeholder-count="3">
+        <option value="{{ a.value }}">{{ a.label }}</option>
+      </sc-for>
+    </select>
+    </sc-if>
     <div onClick="{{ resetFilters }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
   </div>
 
   <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
     <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
       <thead><tr>
-        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="8">
           <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
         </sc-for>
       </tr></thead>
@@ -52,8 +59,17 @@
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">
               <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
               <div style="font:400 11px/1.3 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.username }}</div>
+              <div style="margin-top:5px;display:flex;gap:6px;flex-wrap:wrap">
+                <sc-if value="{{ r.copyUsername.show }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ r.copyUsername.act }}" style="cursor:pointer;padding:3px 7px;border:1px solid rgba(19,30,95,0.24);font:400 10px/1 'JetBrains Mono',monospace;color:#156479" style-hover="background:#EDF4F3">⧉ {{ r.copyUsername.label }}</div>
+                </sc-if>
+                <sc-if value="{{ r.copyLink.show }}" hint-placeholder-val="{{ false }}">
+                  <div onClick="{{ r.copyLink.act }}" style="cursor:pointer;padding:3px 7px;border:1px solid rgba(19,30,95,0.24);font:400 10px/1 'JetBrains Mono',monospace;color:#156479" style-hover="background:#EDF4F3">⧉ {{ r.copyLink.label }}</div>
+                </sc-if>
+              </div>
             </td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:160px">{{ r.channel }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#8A8F9E;width:110px">{{ r.accounts }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:150px">{{ r.pain }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);font:400 15px/1 'JetBrains Mono',monospace;color:#131E5F;width:60px">{{ r.score }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);width:130px">
@@ -62,7 +78,16 @@
                 <div style="margin-top:4px;font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E">правлено вручную</div>
               </sc-if>
             </td>
-            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.text }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <sc-if value="{{ r.isComment }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-bottom:5px;font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E">комментарий
+                  <sc-if value="{{ r.postLink }}" hint-placeholder-val="{{ false }}">
+                    <a href="{{ r.postLink }}" target="_blank" rel="noopener" onClick="{{ r.openPost }}" style="color:#156479;text-decoration:none;border-bottom:1px dashed rgba(21,100,121,0.6)">{{ r.postLabel }}</a>
+                  </sc-if>
+                </div>
+              </sc-if>
+              {{ r.text }}
+            </td>
           </tr>
         </sc-for>
       </tbody>
@@ -85,17 +110,37 @@
         <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
         <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:3px 6px">{{ r.state }}</div>
       </div>
+      <div style="margin-top:4px;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">аккаунт: {{ r.accounts }}</div>
+      <sc-if value="{{ r.isComment }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:4px;font:400 11px/1 'JetBrains Mono',monospace;color:#C98A1E">комментарий<sc-if value="{{ r.postLink }}" hint-placeholder-val="{{ false }}"> · <a href="{{ r.postLink }}" target="_blank" rel="noopener" onClick="{{ r.openPost }}" style="color:#156479">{{ r.postLabel }}</a></sc-if></div>
+      </sc-if>
       <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.text }}</div>
+      <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+        <sc-if value="{{ r.copyUsername.show }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ r.copyUsername.act }}" style="cursor:pointer;padding:4px 8px;border:1px solid rgba(19,30,95,0.24);font:400 11px/1 'JetBrains Mono',monospace;color:#156479">⧉ {{ r.copyUsername.label }}</div>
+        </sc-if>
+        <sc-if value="{{ r.copyLink.show }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ r.copyLink.act }}" style="cursor:pointer;padding:4px 8px;border:1px solid rgba(19,30,95,0.24);font:400 11px/1 'JetBrains Mono',monospace;color:#156479">⧉ {{ r.copyLink.label }}</div>
+        </sc-if>
+      </div>
     </div>
   </sc-for>
 </div>
 </sc-if>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
 class Component extends DCLogic {
   state = { d:null, loading:true, error:null,
-            filter:'all', query:'', channel:'', minScore:0 };
+            filter:'all', query:'', channel:'', account:'', minScore:0 };
+
+  // Очередь личных сообщений и очередь публичных ответов — один экран. Пустой
+  // `workflow` оставляет прежнее поведение дословно: та же ручка `/drafts/list`,
+  // те же поля. С заданным сценарием строки несёт ручка сценария — только там
+  // есть аккаунт приёма, ссылка на Telegram и признак комментария.
+  wf(){ return this.props.workflow || ''; }
+
+  base(){ return this.wf() ? '/workflows/' + this.wf() : ''; }
 
   componentDidMount(){
     // Срез читается из адреса до первой загрузки: ссылка вида
@@ -129,6 +174,10 @@ class Component extends DCLogic {
     if(p.has('filter')) patch.filter = p.get('filter') || 'all';
     if(p.has('q')) patch.query = p.get('q') || '';
     if(p.has('channel')) patch.channel = p.get('channel') || '';
+    // Аккаунт читается из адреса только у сценария: общая ручка такого фильтра не
+    // понимает, и набранный руками `#draftsTable?account=12` слал бы ей параметр,
+    // на который она не смотрит, — срез выглядел бы применённым, не будучи им.
+    if(p.has('account') && this.wf()) patch.account = p.get('account') || '';
     if(p.has('min_score')) patch.minScore = +p.get('min_score') || 0;
     return Object.keys(patch).length ? patch : null;
   }
@@ -139,13 +188,15 @@ class Component extends DCLogic {
   // перебирает клики по фильтрам.
   writeHash(){
     const S = this.state;
-    // Порядок фиксирован от общего к частному — состояние, канал, порог, строка
-    // поиска. Он ни на что не влияет при чтении (разбирает URLSearchParams), но
-    // делает адрес одинаковым для одного и того же среза: иначе две ссылки на
-    // один вид выглядят разными, и их невозможно ни сравнить, ни узнать.
+    // Порядок фиксирован от общего к частному — состояние, канал, аккаунт
+    // приёма, порог, строка поиска. Он ни на что не влияет при чтении
+    // (разбирает URLSearchParams), но делает адрес одинаковым для одного и того
+    // же среза: иначе две ссылки на один вид выглядят разными, и их невозможно
+    // ни сравнить, ни узнать.
     const p = new URLSearchParams();
     if(S.filter && S.filter !== 'all') p.set('filter', S.filter);
     if(S.channel) p.set('channel', S.channel);
+    if(S.account && this.wf()) p.set('account', S.account);
     if(S.minScore) p.set('min_score', String(S.minScore));
     if(S.query) p.set('q', S.query);
     const q = p.toString();
@@ -166,18 +217,38 @@ class Component extends DCLogic {
       if(S.filter !== 'all') params.state = S.filter;
       if(S.query) params.q = S.query;
       if(S.channel) params.channel = S.channel;
+      if(S.account && this.wf()) params.account_id = S.account;
       if(S.minScore) params.min_score = S.minScore;
+
+      // Ручка списка — по сценарию. Пустой `workflow` ведёт в старую общую
+      // очередь `/drafts/list` дословно; заданный — в `/workflows/{key}/drafts`,
+      // чьи строки несут аккаунт приёма и Telegram, которых в общей очереди нет.
+      const listPath = this.wf() ? this.base() + '/drafts' : '/drafts/list';
 
       // `/channels/options` вместо `/channels`: нужен только список названий для
       // выпадающего фильтра, а тяжёлая ручка считает по каждому каналу количество
       // сообщений и долю прошедших. К тому же она теперь отдаёт конверт со
       // страницей, а не массив, — и этот экран об этом не знал и падал на `.filter`.
-      const [d, channels] = await Promise.all([
-        get('/drafts/list', params),
+      //
+      // Справочник аккаунтов приёма существует только у сценария: общая ручка
+      // фильтр по аккаунту не понимает, поэтому и запроса за списком при пустом
+      // `workflow` нет. Как и каналы, запрашивается один раз и живёт в состоянии.
+      const [d, channels, accounts] = await Promise.all([
+        get(listPath, params),
         this.state.channelList ? Promise.resolve(this.state.channelList)
-                               : get('/channels/options')
+                               : get('/channels/options'),
+        // Отказ ловится здесь, а не общим `catch` ниже: `Promise.all` падает целиком
+        // от одной отклонённой ветки, и недоступный справочник аккаунтов унёс бы с
+        // собой всю очередь черновиков. Фильтр — удобство, черновики — работа;
+        // менять их местами нельзя. Без списка выпадающий фильтр просто не рисуется.
+        this.wf() ? (this.state.accountList
+                       ? Promise.resolve(this.state.accountList)
+                       : get(this.base() + '/drafts/accounts').catch(()=>null))
+                  : Promise.resolve(null)
       ]);
-      this.setState({d, channelList:channels, loading:false, error:null});
+      this.setState({d, channelList:channels,
+                     accountList:accounts || this.state.accountList || null,
+                     loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
       this.setState({error:describe(e), loading:false});
@@ -186,14 +257,82 @@ class Component extends DCLogic {
 
   set(patch){ this.setState({...patch, loading:true}, ()=>this.load()); }
 
-  STATE_LABEL = {pending:'на ревью', approved:'одобрен', rejected:'отклонён'};
-  STATE_COLOR = {pending:'#C98A1E', approved:'#2E7D57', rejected:'#DA501C'};
+  // Четвёртое состояние есть только у очереди сценария. Без него строка
+  // подписывалась английским словом из базы, а чипса, который её считает, не было
+  // вовсе: черновик находился только под «Все», и это выглядело как расхождение
+  // счётчиков.
+  STATE_LABEL = {pending:'на ревью', approved:'одобрен', rejected:'отклонён',
+                 edited:'правлен'};
+  STATE_COLOR = {pending:'#C98A1E', approved:'#2E7D57', rejected:'#DA501C',
+                 edited:'#156479'};
+
+  // ── поля строки в форме сценария ───────────────────────────────────────────
+
+  // Текста одним полем в форме сценария нет: правка человека важнее генерации,
+  // выбранная генерация — прочих вариантов, quote — крайний запас. Выбор
+  // варианта сверяется с null явно: в JS `variants[null]` — это `variants[0]`,
+  // и без проверки «выбранный вариант» молча выдавал бы первый.
+  rowText(r){
+    if(r.final_text) return r.final_text;
+    const vs = Array.isArray(r.variants) ? r.variants : [];
+    const chosen = (r.chosen_variant == null) ? null : vs[r.chosen_variant];
+    if(chosen && chosen.text) return chosen.text;
+    if(vs.length && vs[0] && vs[0].text) return vs[0].text;
+    return r.quote || '';
+  }
+
+  // Аккаунт приёма — кто из вошедших аккаунтов видел этого автора: писать
+  // человек должен с него, иначе приходит адресату «ниоткуда». Старые записи
+  // приходят с пустым `readers` — это не поломка, а прочерк.
+  readersLabel(r){
+    const list = Array.isArray(r.readers) ? r.readers : [];
+    const labels = list.map(x=>x && x.label).filter(Boolean);
+    return labels.length ? labels.join(', ') : '—';
+  }
+
+  // ── копирование ────────────────────────────────────────────────────────────
+
+  // Отказ буфера обмена не должен ронять экран: try/catch вокруг всего пути,
+  // плюс запасной путь через execCommand для окружений без navigator.clipboard
+  // (не-HTTPS, старые вебвью). В конце — короткое подтверждение тостом.
+  copyText(text, okMessage){
+    const done = ()=>{ const api = this.props.api || {};
+                       api.toast && api.toast(okMessage); };
+    const fallback = ()=>this.copyViaExecCommand(text, done);
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(done, fallback);
+      } else fallback();
+    } catch (e) { fallback(); }
+  }
+
+  copyViaExecCommand(text, done){
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      if(ok) done();
+    } catch (e) { /* не скопировали — и ладно, список важнее */ }
+  }
 
   renderVals(){
     const api = this.props.api || {};
     const S = this.state, d = S.d || {};
     const rows = d.rows || [];
-    const counts = d.states || {};
+    // Формы состояний у двух ручек разные: общая очередь несёт объект
+    // `{pending: N, ...}`, ручка сценария — массив `[{key, count}]`. Сводим обе
+    // к одному виду здесь, чтобы фильтрам было всё равно, откуда числа.
+    const rawStates = d.states;
+    const counts = Array.isArray(rawStates)
+      ? rawStates.reduce((m, s)=>{ if(s && s.key !== undefined) m[s.key] = s.count;
+                                   return m; }, {})
+      : (rawStates || {});
     const total = d.total || 0;
 
     const headline = S.loading ? 'загрузка…'
@@ -206,16 +345,38 @@ class Component extends DCLogic {
     const channels = [{value:'', label:'все каналы'}].concat(
       (S.channelList || []).map(c=>({value:c.title, label:c.title})));
 
+    // Выпадающий список аккаунтов приёма есть только у сценария: при пустом
+    // `workflow` его нет вовсе — ни пунктов, ни запроса за ними. Значение —
+    // строкой: так его принимает и `select`, и адресная строка.
+    const hasAccounts = !!this.wf();
+    const accountRows = (S.accountList && Array.isArray(S.accountList.rows))
+      ? S.accountList.rows : [];
+    const accounts = hasAccounts
+      ? [{value:'', label:'все аккаунты'}].concat(accountRows.map(a=>({
+          value:String(a.account_id),
+          label:a.label + ' · ' + (a.drafts === undefined ? '—' : a.drafts)})))
+      : [];
+
     return {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
       headline,
       shown: rows.length ? ('Показано ' + rows.length + ' из ' + total)
                          : (S.error || 'Под фильтр ничего не подошло'),
       reload:()=>this.set({}),
-      cols:['#','Автор','Канал','Боль','Скор','Статус','Текст'],
+      // Колонка аккаунта — только у сценария: в общей очереди поля `readers` нет
+      // вовсе, и столбец стоял бы с прочерком во всех строках до единой. Пустой
+      // столбец читается как «данных нет», хотя их и не бывает.
+      cols: hasAccounts
+        ? ['#','Автор','Канал','Аккаунт','Боль','Скор','Статус','Текст']
+        : ['#','Автор','Канал','Боль','Скор','Статус','Текст'],
 
+      // Состав чипсов — по тому, что вернул сервер, а не по зашитому списку: у
+      // общей очереди состояний три, у очереди сценария четыре. Зашитый список
+      // молча прятал бы целое состояние — черновик считался бы только в «Все».
       filters:[{k:'all', label:'Все'}, {k:'pending', label:'На ревью'},
-               {k:'approved', label:'Одобренные'}, {k:'rejected', label:'Отклонённые'}]
+               {k:'approved', label:'Одобренные'}, {k:'rejected', label:'Отклонённые'},
+               {k:'edited', label:'Правленые'}]
+        .filter(f=>f.k === 'all' || counts[f.k] !== undefined)
         .map(f=>({label:f.label,
                   count: f.k === 'all'
                     ? '' : '· ' + (counts[f.k] === undefined ? '—' : counts[f.k]),
@@ -230,24 +391,59 @@ class Component extends DCLogic {
       query:S.query, setQuery:(e)=>this.set({query:e.target.value}),
       channel:S.channel, setChannel:(e)=>this.set({channel:e.target.value}),
       channels,
+      account:String(S.account || ''),
+      setAccount:(e)=>this.set({account:e.target.value}),
+      accounts, hasAccounts,
       minScore:String(S.minScore),
       scores:[{value:'0', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
               {value:'40', label:'скор ≥ 40'}, {value:'50', label:'скор ≥ 50'}],
       setMinScore:(e)=>this.set({minScore:+e.target.value}),
-      resetFilters:()=>this.set({filter:'all', query:'', channel:'', minScore:0}),
+      resetFilters:()=>this.set({filter:'all', query:'', channel:'', account:'', minScore:0}),
 
-      rows:rows.map(r=>({
-        id:'#' + r.id,
-        author:r.author_name, username:r.author_username || '',
-        channel:r.channel, pain:r.pain || '—', score:String(r.score),
-        state:this.STATE_LABEL[r.state] || r.state,
-        c:this.STATE_COLOR[r.state] || '#8A8F9E',
-        edited:r.edited,
-        text:(r.text || '').slice(0, 150) + ((r.text || '').length > 150 ? '…' : ''),
-        // Переход в очередь именно на этот черновик — иначе из таблицы некуда
-        // нажать, и она остаётся справочником, из которого ничего не сделать.
-        open:()=>api.go && api.go('drafts', {focusDraft:r.id})
-      }))
+      rows:rows.map(r=>{
+        const username = r.author_username || '';
+        const tgLink = r.tg_link || '';
+        const src = r.source || {};
+        const postLink = src.post_link || '';
+        // В общей очереди текст лежит полем `text`, в форме сценария его надо
+        // собрать (правка → выбранный вариант → первый → quote).
+        const raw = this.wf() ? this.rowText(r) : (r.text || '');
+        return {
+          id:'#' + r.id,
+          author:r.author_name, username,
+          channel:r.channel, pain:r.pain || '—', score:String(r.score),
+          state:this.STATE_LABEL[r.state] || r.state,
+          c:this.STATE_COLOR[r.state] || '#8A8F9E',
+          // Признак правки: в общей очереди — поле `edited`, в форме сценария
+          // отдельного флага нет, там правка это непустой `final_text`.
+          edited: this.wf() ? !!r.final_text : !!r.edited,
+          text: raw.slice(0, 150) + (raw.length > 150 ? '…' : ''),
+          // Аккаунт приёма: человек вошёл в конкретный аккаунт и обязан видеть,
+          // с какого из них этот адресат уже был виден.
+          accounts:this.readersLabel(r),
+          isComment:!!src.is_comment, postLink,
+          postLabel: postLink ? ('пост в «' + (src.post_channel || 'канале') + '»') : '',
+          // Кнопки копирования — человеку надо взять юзернейм и ссылку и зайти
+          // с нужного аккаунта. `stopPropagation` обязателен: клик по кнопке не
+          // должен заодно открывать черновик (onClick висит на всей строке).
+          copyUsername:{show:!!username, label:username,
+                        act:(e)=>{ e && e.stopPropagation && e.stopPropagation();
+                                   this.copyText(username, 'Скопировано: ' + username); }},
+          copyLink:{show:!!tgLink, label:'ссылка в TG',
+                    act:(e)=>{ e && e.stopPropagation && e.stopPropagation();
+                               this.copyText(tgLink, 'Скопирована ссылка: ' + tgLink); }},
+          // Ссылка на пост открывает новую вкладку браузера, но не должна заодно
+          // переключать раздел: гасим всплытие, переход остаётся самому href.
+          openPost:(e)=>{ e && e.stopPropagation && e.stopPropagation(); },
+          // Переход в очередь именно на этот черновик — иначе из таблицы некуда
+          // нажать, и она остаётся справочником, из которого ничего не сделать.
+          //
+          // Внутри сценария маршрут свой: голое 'drafts' увело бы в ОБЩУЮ очередь,
+          // то есть в другой конвейер, а номер черновика там значит другое.
+          open:()=>api.go && api.go(
+            this.wf() ? ('wf:' + this.wf() + ':drafts') : 'drafts', {focusDraft:r.id})
+        };
+      })
     };
   }
 }

@@ -37,6 +37,33 @@
         <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ d.channel }}</div>
         <div style="margin-top:10px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ d.addressLabel }}</div>
         <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ d.author }} <span style="font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ d.username }}</span></div>
+        <!-- Аккаунт приёма — условие работы, а не подпись: человек пишет руками из
+             ОДНОГО аккаунта, и писать адресату приходится именно тем, кто читал
+             группу. Сообщение с чужого аккаунта приходит «ниоткуда» — первый
+             признак спама. Пустой readers — старая запись до атрибуции приёма. -->
+        <div style="margin-top:10px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Получено аккаунтами</div>
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ readerNames }}<sc-if value="{{ noReaders }}" hint-placeholder-val="{{ true }}"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:#C98A1E"> · аккаунт не записан</span></sc-if></div>
+        <!-- Копирование руками: человек рассылает из своего клиента, а не экран.
+             Кнопки существуют только при наличии значения — нерабочая кнопка хуже
+             отсутствующей. -->
+        <div style="margin-top:6px;display:flex;gap:8px">
+          <sc-if value="{{ copyUsername.show }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ copyUsername.act }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 11px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ copyUsername.label }}</button>
+          </sc-if>
+          <sc-if value="{{ copyLink.show }}" hint-placeholder-val="{{ true }}">
+            <button onClick="{{ copyLink.act }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;padding:7px 11px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479">{{ copyLink.label }}</button>
+          </sc-if>
+        </div>
+        <!-- Комментарий живёт под постом канала: найти сообщение в группе и найти
+             его в канале — разные действия, пока в канал не вступил. -->
+        <sc-if value="{{ isComment }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px">
+            <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#C98A1E">комментарий под постом</div>
+            <sc-if value="{{ postLink }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ openPost }}" style="margin-top:2px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">{{ postLabel }}</div>
+            </sc-if>
+          </div>
+        </sc-if>
         <div style="margin-top:16px;border-top:1px solid rgba(19,30,95,0.12);padding-top:14px;display:flex;flex-direction:column;gap:10px">
           <sc-for list="{{ d.thread }}" as="t" hint-placeholder-count="4">
             <div style="border-left:3px solid {{ t.mark }};padding-left:10px;background:{{ t.bg }}">
@@ -149,6 +176,18 @@
     <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ queueLabel }}</div>
     <div style="margin-top:10px;font:400 15px/1.2 'Architexture',sans-serif;color:#131E5F">{{ d.channel }}</div>
     <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#156479">{{ d.author }} {{ d.username }}</div>
+    <div style="margin-top:6px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Получено аккаунтами: {{ readerNames }}<sc-if value="{{ noReaders }}" hint-placeholder-val="{{ true }}"><span style="color:#C98A1E"> · аккаунт не записан</span></sc-if></div>
+    <sc-if value="{{ isComment }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:6px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#C98A1E">комментарий под постом<sc-if value="{{ postLink }}" hint-placeholder-val="{{ false }}"><span onClick="{{ openPost }}" style="color:#156479;cursor:pointer"> · {{ postLabel }}</span></sc-if></div>
+    </sc-if>
+    <div style="margin-top:8px;display:flex;gap:8px">
+      <sc-if value="{{ copyUsername.show }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ copyUsername.act }}" style="flex:1;border:1px solid rgba(19,30,95,0.24);background:transparent;padding:12px 10px;font:400 13px/1 'JetBrains Mono',monospace;color:#156479">{{ copyUsername.label }}</button>
+      </sc-if>
+      <sc-if value="{{ copyLink.show }}" hint-placeholder-val="{{ true }}">
+        <button onClick="{{ copyLink.act }}" style="flex:1;border:1px solid rgba(19,30,95,0.24);background:transparent;padding:12px 10px;font:400 13px/1 'JetBrains Mono',monospace;color:#156479">{{ copyLink.label }}</button>
+      </sc-if>
+    </div>
     <div onClick="{{ toggleContext }}" style="margin-top:12px;border:1px solid rgba(19,30,95,0.24);padding:12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;display:flex;justify-content:space-between;cursor:pointer"><span>Контекст ветки</span><span>{{ contextArrow }}</span></div>
     <sc-if value="{{ contextOpen }}" hint-placeholder-val="{{ false }}">
       <div style="border:1px solid rgba(19,30,95,0.16);border-top:0;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff">
@@ -339,6 +378,35 @@ class Component extends DCLogic {
 
   t(text, c){ const api = this.props.api || {}; if(api.toast) api.toast(text, c); }
 
+  // Копирование не должно ронять экран: буфер обмена может отсутствовать
+  // (небезопасный контекст, старый WebView) или отказать по политике браузера.
+  // Основной путь — navigator.clipboard, запасной — execCommand на временном
+  // textarea за краем экрана; оба под try/catch, отказ — тост, а не исключение.
+  async copyText(text, okMessage){
+    if(!text) return;
+    const fail = () => this.t('Скопировать не удалось — выделите значение вручную', '#C98A1E');
+    try {
+      if(typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText){
+        await navigator.clipboard.writeText(text);
+        this.t(okMessage, '#2E7D57');
+        return;
+      }
+    } catch(e) { /* буфер недоступен — пробуем запасной путь */ }
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.top = '-1000px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      if(ok) this.t(okMessage, '#2E7D57');
+      else fail();
+    } catch(e) { fail(); }
+  }
+
   // ── очередь ────────────────────────────────────────────────────────────────
 
   async load(after){
@@ -520,6 +588,17 @@ class Component extends DCLogic {
     const addressing = (S.draft && S.draft.addressing) || null;
     const toThread = !!addressing && addressing.kind === 'message';
 
+    // Атрибуция приёма и источник сообщения. `readers`/`tg_link`/`source` на
+    // конверте и в черновике одинаковые — берём из черновика. Старые записи
+    // (общая очередь) этих полей не несут вовсе: пустой readers — не ошибка,
+    // а «аккаунт не записан», отсутствие source — просто нет комментария.
+    const draft0 = S.draft;
+    const readers = (draft0 && Array.isArray(draft0.readers)) ? draft0.readers : [];
+    const readerLabels = readers.map(r => r && r.label).filter(Boolean);
+    const username = (draft0 && draft0.author_username) || '';
+    const tgLink = (draft0 && draft0.tg_link) || '';
+    const src = (draft0 && draft0.source) || null;
+
     const shell = {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
       // Общая очередь остаётся «Drafts»: переименовывать существующий раздел
@@ -533,14 +612,33 @@ class Component extends DCLogic {
       // ровно так же — а из ветки «очередь разобрана» он бы иначе выпал и кнопка
       // в шапке перестала бы нажиматься.
       //
-      // У сценария переключателя нет, и это не забывчивость. Экран `draftsTable`
-      // про сценарии не знает: он читает общую таблицу черновиков и показал бы
-      // числа, не относящиеся к тому конвейеру, из которого на него нажали. Кнопка,
-      // молча уводящая в чужие данные, хуже отсутствующей — по той же причине, по
-      // которой в блок сценария не попали разделы без ручек. Появится табличный
-      // вид, знающий сценарий, — переключатель вернётся сам.
-      hasTableView: !this.wf(),
-      goTable:()=>api.go && api.go('draftsTable'),
+      // Переключатель вернулся: с 03.09 табличный вид знает сценарий (проп
+      // `workflow`, ручка `/workflows/{key}/drafts`) и у него есть собственный
+      // маршрут `wf:<ключ>:draftsTable`. До этого кнопки у сценария не было
+      // намеренно — она увела бы в общую таблицу, то есть в числа чужого
+      // конвейера, молча и правдоподобно.
+      hasTableView: true,
+      goTable:()=>api.go && api.go(
+        this.wf() ? ('wf:' + this.wf() + ':draftsTable') : 'draftsTable'),
+      // Контракт карточки: семь ключей живут в shell, потому что нужны разметке
+      // всегда — и до загрузки, и при ошибке тоже. Дырка, которой нет в
+      // renderVals, молча остаётся пустой, и поломку замечает заказчик, а не
+      // проверка.
+      readerNames: readerLabels.length ? readerLabels.join(', ') : '—',
+      hasReaders: readerLabels.length > 0,
+      noReaders: readerLabels.length === 0,
+      copyUsername:{
+        show: !!username, label: 'Скопировать юзернейм',
+        act:()=>this.copyText(username, 'Скопировано: ' + username)
+      },
+      copyLink:{
+        show: !!tgLink, label: 'Скопировать ссылку',
+        act:()=>this.copyText(tgLink, 'Скопировано: ' + tgLink)
+      },
+      isComment: !!src && !!src.is_comment,
+      postLink: (src && src.post_link) || '',
+      postLabel: (src && src.post_channel) || 'пост в канале',
+      openPost:()=>{ if(src && src.post_link) window.open(src.post_link, '_blank', 'noopener'); },
       editing:S.editing, notEditing: !S.editing, editText:S.editText,
       editLen:String(S.editText.length),
       setEditText:(e)=>this.setState({editText:e.target.value}),
@@ -608,8 +706,14 @@ class Component extends DCLogic {
 
     return {
       ...shell,
+      // «Всё, что не pending, — отклонено» было неверно: у сценария состояний
+      // четыре, и черновик в состоянии `edited` подписывался как «отклонён: —».
+      // Разбирается явно, а незнакомое состояние называет себя, а не врёт.
       queueLabel: decided
-        ? (d.state === 'approved' ? 'одобрен' : 'отклонён: ' + (d.reject_reason || '—'))
+        ? (d.state === 'approved' ? 'одобрен'
+           : d.state === 'rejected' ? 'отклонён: ' + (d.reject_reason || '—')
+           : d.state === 'edited' ? 'правлен вручную'
+           : 'состояние: ' + d.state)
           + (d.decided_by ? ' · ' + d.decided_by : '')
         : S.remaining + ' в очереди',
       d:{
