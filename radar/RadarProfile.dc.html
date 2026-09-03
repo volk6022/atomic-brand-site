@@ -431,15 +431,35 @@ class Component extends DCLogic {
     // Предложения, которые ещё не активированы — из любой из трёх версионируемых
     // частей. Показываются, только если их видно и есть право включить: заказчик
     // своё предложение и так видит по тому, что правка не применилась.
+    //
+    // ⚠️ Неактивная версия — это ДВА разных случая: предложение, которое ещё не
+    // включали, и версия, которую включали раньше и сменили. Отдельного поля,
+    // которое их различает, в базе нет, а показывать оба нельзя: каждая загрузка
+    // набора гасит прежнюю активную версию, и баннер за неделю превратился бы в
+    // ту самую лесенку кнопок, ради избавления от которой всё и затевалось.
+    // Различаем по возрасту: предложение всегда МОЛОЖЕ действующей версии (его
+    // завели после неё), смещённая — всегда старше.
+    // `by` — поле, по которому версии разбиты на независимые лесенки. У промптов L3
+    // это `prompt_key`: у `dm_v1` и `public_v1` своя действующая версия, и общий
+    // порог по всему списку прятал бы предложение одного контура за возрастом
+    // другого.
+    const newerThanActive = (rows, by)=>{
+      const floor = {};
+      for (const r of (rows || [])) {
+        const g = by ? r[by] : '*';
+        if (r.is_active) floor[g] = Math.max(floor[g] || 0, r.id);
+      }
+      return (rows || []).filter(r=>!r.is_active && r.id > (floor[by ? r[by] : '*'] || 0));
+    };
     const pending = [];
     if (editable.can_activate) {
-      for (const r of (v.cascade || [])) if (!r.is_active) pending.push(
+      for (const r of newerThanActive(v.cascade)) pending.push(
         {text:'Таксономия ' + r.version + ' от ' + (r.created_by || '—') + ' · ' + r.pains + ' болей',
          activate:()=>this.activate('cascade', r.id, 'таксономия ' + r.version)});
-      for (const r of (v.l3_prompts || [])) if (!r.is_active) pending.push(
+      for (const r of newerThanActive(v.l3_prompts, 'prompt_key')) pending.push(
         {text:'Промпт L3 (' + r.prompt_key + ') ' + r.version + ' от ' + (r.created_by || '—'),
          activate:()=>this.activate('prompt', r.id, 'промпт ' + r.version)});
-      for (const r of (v.business || [])) if (!r.is_active) pending.push(
+      for (const r of newerThanActive(v.business)) pending.push(
         {text:'Описание бизнеса ' + r.version + ' от ' + (r.created_by || '—'),
          activate:()=>this.activate('business', r.id, 'описание ' + r.version)});
     }
