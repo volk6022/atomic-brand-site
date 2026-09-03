@@ -11,7 +11,7 @@ const shellLogic = shellSrc.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/s
 const tableSrc = fs.readFileSync(DIR + '/radar-table.js', 'utf8').replace(/^export /gm, '');
 
 const results = [];
-function check(name, cond){ results.push([cond ? 'ok  ' : 'FAIL', name]); }
+function check(name, cond, why){ results.push([cond ? 'ok  ' : 'FAIL', name + (cond || !why ? '' : ' | ' + why)]); }
 
 // ── оболочка ──────────────────────────────────────────────────────────────────
 function makeShell(hash, me, workflows){
@@ -90,6 +90,28 @@ async function mountShell(hash, me, workflows){
           c.state.route === 'wf:cold_dm:targets' && v.v.leads === true && v.workflowKey === 'cold_dm');
     check('параметры среза разобраны в routeParams',
           c.state.routeParams && c.state.routeParams.size === '25' && c.state.routeParams.page === '3');
+  }
+
+  // 4b. Табличный вид очереди внутри сценария. До этого маршрута не было вовсе, и
+  //     кнопка «Таблица» уводила из сценария в общую очередь — то есть в числа
+  //     чужого конвейера, молча и правдоподобно.
+  {
+    const {c} = await mountShell('#wf:cold_dm:draftsTable?account=12', owner,
+      [{key:'cold_dm', title:'Cold DM', sections:[{key:'drafts', title:'Черновики'}]}]);
+    // Реестр сценариев приезжает отдельным запросом, а `setState` в этом стенде не
+    // зовёт продолжение: без паузы блок сценария в меню ещё не построен, и проверка
+    // про подсветку меряла бы скорость стенда, а не поведение оболочки.
+    await new Promise(r=>setTimeout(r, 10));
+    const v = c.renderVals();
+    check('#wf:cold_dm:draftsTable -> смонтирована таблица, а не очередь',
+          v.v.draftsTable === true && v.v.drafts !== true);
+    check('таблице сценария передан ключ сценария', v.workflowKey === 'cold_dm');
+    const wfItems = [].concat(...(v.nav || []).map(g=>g.items || []));
+    check('в меню подсвечен пункт очереди сценария, а не ничего',
+          wfItems.some(i=>i.key === 'wf:cold_dm:drafts' && i.mark !== 'transparent'),
+          JSON.stringify(wfItems.map(i=>[i.key, i.mark])));
+    check('переход из таблицы сценария несёт номер черновика',
+          'focusDraft' in v);
   }
 
   // 5. wf-форма с незнакомым разделом — отказ, а не дашборд и не обход.

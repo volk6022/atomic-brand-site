@@ -164,7 +164,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
-      <sc-if value="{{ v.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ v.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ v.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.manual_sends }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarManualSends" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ v.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
@@ -208,7 +208,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
-      <sc-if value="{{ m.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
+      <sc-if value="{{ m.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ m.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.manual_sends }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarManualSends" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ m.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
@@ -489,7 +489,18 @@ class Component extends DCLogic {
   // выводится на сервере из осей сценария, и «Активность» приходит там, где
   // `visibility='public'`, — вместо «Переписок».
   WF_SECTION = {stream:'stream', targets:'leads', drafts:'drafts',
-                activity:'activity'};
+                activity:'activity',
+                // Табличный вид очереди — не отдельный раздел: сервер такой секции не
+                // присылает, в меню он не появляется, и пункт «Черновики» остаётся
+                // подсвеченным. Маршрут ему нужен затем, что до сих пор кнопка
+                // «Таблица» уводила из сценария в общую очередь — то есть в чужие
+                // числа. Права у него свои и совпадают с правами черновиков.
+                draftsTable:'draftsTable'};
+
+  // Пункт меню, который подсвечивается для раздела сценария. Здесь только те, у кого
+  // маршрут и пункт расходятся: у табличного вида пункта нет вовсе, подсвечивается
+  // очередь — как и у общего раздела через `SECTION_OF`.
+  WF_NAV_ALIAS = {draftsTable:'drafts'};
 
   WF_CODE = {stream:'ST', targets:'LD', drafts:'DR', activity:'AC'};
 
@@ -908,7 +919,9 @@ class Component extends DCLogic {
     // один, и он остаётся подсвеченным, в каком бы виде человек сейчас ни был.
     // У сценария подсвечивается его собственный пункт, а не общий «Leads»: блоки
     // на то и заведены, чтобы было видно, в каком конвейере человек находится.
-    const navKey = w ? route : (this.SECTION_OF[route] || route);
+    const navKey = w
+      ? ('wf:' + w.key + ':' + (this.WF_NAV_ALIAS[w.section] || w.section))
+      : (this.SECTION_OF[route] || route);
     const nav = this.NAV.map(g=>({
       title:g.title,
       items:g.items.filter(i=>this.allows(i.key)).map(i=>({
@@ -974,7 +987,10 @@ class Component extends DCLogic {
     return {
       // id черновика, который просили открыть из таблицы. Живёт до следующего
       // перехода: иначе возврат в очередь всегда открывал бы один и тот же.
-      focusDraft: (route === 'drafts' && S.routeParams && S.routeParams.focusDraft) || 0,
+      // Сравнивается ЭКРАН, а не маршрут: у сценария маршрут выглядит как
+      // `wf:cold_dm:drafts`, и сравнение с 'drafts' давало ноль — переход из таблицы
+      // сценария открывал бы очередь с начала, а не тот черновик, по которому нажали.
+      focusDraft: (screen === 'drafts' && S.routeParams && S.routeParams.focusDraft) || 0,
       // Ключ сценария и его название — пропсы экранам. Пустая строка означает общий
       // раздел: экран по ней и различает два своих вида. Название передаётся, чтобы
       // экран не ходил за ним в реестр второй раз — оболочка его уже запросила.
