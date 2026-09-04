@@ -17,6 +17,9 @@
       <button onClick="{{ addToggle }}" style="border:1px solid #131E5F;background:transparent;color:#131E5F;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">{{ addToggleLabel }}</button>
     </sc-if>
     <button onClick="{{ scanDiscussions }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Разобрать группы обсуждения</button>
+    <sc-if value="{{ canJoin }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ joinDiscussions }}" style="border:0;background:#156479;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Вступить в группы</button>
+    </sc-if>
   </div>
 
   <sc-if value="{{ hasSummary }}" hint-placeholder-val="{{ true }}">
@@ -212,6 +215,35 @@ class Component extends DCLogic {
     } catch (e) { t(describe(e), '#DA501C'); }
   }
 
+  // Вступление в группы обсуждения (план 1.6, шаг 7). Отдельно от разбора, потому
+  // что это другое действие: разбор только читает, а вступление меняет поведение
+  // аккаунта в Telegram — он появляется в списке участников чужой группы, тратит
+  // другой дневной лимит и делает это под правом владельца, а не оператора.
+  async runJoin(){
+    const { post, describe } = await import('./radar-api.js');
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      const r = await post('/channels/discussions/join', {scope:'pending'});
+      t('Вступление запущено · задача #' + r.run_id + ' — ход виден в Runs', '#156479');
+      this.load();
+    } catch (e) { t(describe(e), '#DA501C'); }
+  }
+
+  // Сколько групп ждёт вступления. Берётся из сводки сервера (`to_join`), которую
+  // он считает той же функцией, что и сам прогон. Выводить это число из чипса
+  // «история, потока нет» нельзя: состояния считаются по каналам, а вступают в
+  // группы, и на закрытых группах два счёта разошлись бы.
+  joinCount(){
+    const s = this.state.summary;
+    if (!s || s.to_join === undefined) return 'все группы без вступления';
+    return this.plural(s.to_join, 'группу', 'группы', 'групп');
+  }
+
+  // Потолок вступлений на аккаунт в сутки — `joins_per_day` профиля `public_reply`
+  // в safety.yaml Engage. Здесь он нужен только для честной подписи «за раз
+  // возьмём столько-то»: режет пачку сервер, а не экран.
+  JOINS_PER_ACCOUNT = 3;
+
   // Пять состояний обсуждения (см. app/services/discussions.py, STATES). Подписи
   // называют следующий шаг, а не внутреннее имя: «не читаем» — это работа, которую
   // ещё предстоит сделать, «истории нет потока» — что аккаунт не в группе, и
@@ -222,7 +254,11 @@ class Component extends DCLogic {
     unread:  {label:'не читаем', c:'#DA501C'},
     history: {label:'история, потока нет', c:'#C98A1E'},
     live:    {label:'читаем', c:'#156479'},
-    group:   {label:'это группа', c:'#94BEBE'},
+    // Строка самой группы. Раньше подпись была одна на оба случая — «это группа», —
+    // и по ней нельзя было понять главного: состоим мы в ней или только читали
+    // историю. А это ровно то, ради чего вступление и делается.
+    group:   {label:'группа · не вступали', c:'#C98A1E'},
+    group_in:{label:'группа · мы в ней', c:'#156479'},
   };
 
   GROUP_TYPES = ['supergroup', 'group', 'forum'];
@@ -230,7 +266,8 @@ class Component extends DCLogic {
   disc(c){
     // Строка группы обсуждения — сама не «канал без обсуждения»: у неё обсуждение
     // и есть она сама, а `linked` указывает обратно на канал.
-    if (this.GROUP_TYPES.indexOf(c.chat_type) >= 0) return this.DISC.group;
+    if (this.GROUP_TYPES.indexOf(c.chat_type) >= 0)
+      return c.joined_at ? this.DISC.group_in : this.DISC.group;
     return this.DISC[((c.discussion || {}).state) || 'unknown'] || this.DISC.unknown;
   }
 
@@ -257,7 +294,11 @@ class Component extends DCLogic {
     const d = c.discussion || {};
     if (this.GROUP_TYPES.indexOf(c.chat_type) >= 0)
       return 'это и есть группа обсуждения' +
-             (c.linked_chat_username ? ' канала @' + c.linked_chat_username : '');
+             (c.linked_chat_username ? ' канала @' + c.linked_chat_username : '') +
+             (c.joined_at
+                ? ' · вступили ' + this.when(c.joined_at) +
+                  (c.subscribed_account_id ? ', аккаунт ' + c.subscribed_account_id : '')
+                : ' · не вступали, комментарии живьём не придут');
     if (!d.username) return this.disc(c).label;
     return '@' + d.username + ' — ' + this.disc(c).label;
   }
@@ -271,6 +312,7 @@ class Component extends DCLogic {
     ['unknown', 'не проверяли',         '#8A8F9E'],
     ['none',    'без обсуждения',       '#8A8F9E'],
     ['groups',  'строк-групп',          '#94BEBE'],
+    ['to_join', 'ждут вступления',      '#C98A1E'],
   ];
 
   // Сколько каналов возьмёт разбор. Считается по той же сводке, что видна над
@@ -388,6 +430,7 @@ class Component extends DCLogic {
               discChips:[], chatTypes:[], chatType:'', setChatType:()=>{},
               hasFilters:false,
               reload:()=>{}, scanDiscussions:()=>{}, setQ:()=>{}, resetAll:()=>{},
+              canJoin:false, joinDiscussions:()=>{},
               prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
               canAdd:false, addOpen:false, addToggle:()=>{}, addToggleLabel:'',
               addUsername:'', setAddUsername:()=>{}, addAccount:1, setAddAccount:()=>{},
@@ -436,6 +479,22 @@ class Component extends DCLogic {
                {text:'Идёт долго, ход и отмена — в разделе Runs'}],
         confirm:'Запустить', btnBg:'#131E5F', done:'Разбор поставлен в очередь',
         run:()=>this.runScan('pending')}),
+
+      // `channel.join` — право владельца, и на сервере тоже: вступление тратит
+      // дневной лимит аккаунта и оставляет след, который видит администратор чужой
+      // группы. Кнопка скрыта не вместо проверки, а чтобы не показывать заказчику
+      // рычаг, которым он всё равно не сможет воспользоваться.
+      canJoin: api.role === 'owner',
+      joinDiscussions:()=>api.modal && api.modal({
+        title:'Вступить в группы обсуждения',
+        lines:[{text:'Аккаунты войдут в группы, историю которых мы уже читаем: без вступления Telegram шлёт апдейты только участнику, и группа после разовой выгрузки молчит'},
+               {text:'Ждут вступления: ' + this.joinCount() + '. За раз возьмём не больше ' + this.JOINS_PER_ACCOUNT + ' на аккаунт — это суточный лимит Engage, остальные пойдут следующим запуском'},
+               {text:'Только открытые группы: вступаем по @username. Заявок в закрытые не отправляем ни одной'},
+               {text:'Историю при этом не читаем — «вступить» и «дочитать» разные кнопки и разные бюджеты'},
+               {text:'Вступает тот аккаунт, который эту группу и читал, — чтобы наводка и ответ шли с одного'},
+               {text:'Идёт с паузой хьюманайзера (1–5 минут на вступление), ход и отмена — в разделе Runs'}],
+        confirm:'Вступить', btnBg:'#156479', done:'Вступление поставлено в очередь',
+        run:()=>this.runJoin()}),
 
       // `channel.add` — та же роль, что открывает Safety на переключение LIVE
       // (owner + customer); проверяется и на сервере, кнопка здесь — только чтобы
