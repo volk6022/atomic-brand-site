@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Дочитывание</div>
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">порядок строк — порядок воркера, сортировки здесь нет</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="6">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ hasByAccount }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:#F8F3E0;border:1px solid rgba(19,30,95,0.16);padding:9px 12px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">По аккаунтам</div>
+      <sc-for list="{{ byAccounts }}" as="a" hint-placeholder-count="3">
+        <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#184153"><span style="color:#131E5F">{{ a.label }}</span> — {{ a.note }}</div>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{ noByAccount }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Разбивка по аккаунтам не пришла — чем занят каждый аккаунт, по этому ответу сказать нельзя.</div>
+  </sc-if>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">загружаю очередь…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Очередь не открылась: {{ errorMsg }}. Можно попробовать ещё раз — «обновить» выше.</div>
+  </sc-if>
+
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="8">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+          <tr style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.title }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">
+                <sc-if value="{{ r.hasLink }}" hint-placeholder-val="{{ true }}"><a href="{{ r.link }}" target="_blank" rel="noopener">{{ r.uname }}</a></sc-if><sc-if value="{{ r.noLink }}" hint-placeholder-val="{{ false }}">{{ r.uname }}</sc-if> · поз. {{ r.pos }}
+              </div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.state }}</span></td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.acct }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.progress }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              {{ r.depth }}
+              <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.depthNote }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);text-align:center">{{ r.attempts }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.scheduled }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);min-width:260px">
+              <sc-if value="{{ r.hasError }}" hint-placeholder-val="{{ false }}"><div style="white-space:pre-wrap;word-break:break-word;color:#DA501C">{{ r.errorText }}</div></sc-if>
+              <sc-if value="{{ r.noError }}" hint-placeholder-val="{{ true }}">—</sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              <sc-if value="{{ r.canRemove }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ r.remove }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">Снять с очереди</div>
+              </sc-if>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:22px 24px;text-align:center">
+      <div style="font:400 17px/1.2 'Architexture',sans-serif;color:#131E5F">{{ emptyTitle }}</div>
+      <div style="margin-top:8px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ emptyNote }}</div>
+    </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">порядок строк — порядок воркера</div>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="6">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 10px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ hasByAccount }}" hint-placeholder-val="{{ false }}">
+    <sc-for list="{{ byAccounts }}" as="a" hint-placeholder-count="3">
+      <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#184153"><span style="color:#131E5F">{{ a.label }}</span> — {{ a.note }}</div>
+    </sc-for>
+  </sc-if>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">загружаю очередь…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Очередь не открылась: {{ errorMsg }}</div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:16px;text-align:center">
+      <div style="font:400 15px/1.2 'Architexture',sans-serif;color:#131E5F">{{ emptyTitle }}</div>
+      <div style="margin-top:6px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ emptyNote }}</div>
+    </div>
+  </sc-if>
+
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.title }}</div>
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:3px 6px">{{ r.state }}</div>
+      </div>
+      <div style="margin-top:5px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">
+        <sc-if value="{{ r.hasLink }}" hint-placeholder-val="{{ true }}"><a href="{{ r.link }}" target="_blank" rel="noopener">{{ r.uname }}</a></sc-if><sc-if value="{{ r.noLink }}" hint-placeholder-val="{{ false }}">{{ r.uname }}</sc-if> · поз. {{ r.pos }} · {{ r.acct }}
+      </div>
+      <div style="margin-top:5px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ r.progress }}</div>
+      <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.depth }} · {{ r.depthNote }} · попыток: {{ r.attempts }}</div>
+      <sc-if value="{{ r.hasSchedule }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#C98A1E">отложенный старт: {{ r.scheduled }}</div>
+      </sc-if>
+      <sc-if value="{{ r.hasError }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:6px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#DA501C;white-space:pre-wrap;word-break:break-word">{{ r.errorText }}</div>
+      </sc-if>
+      <sc-if value="{{ r.canRemove }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ r.remove }}" style="margin-top:8px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">Снять с очереди</div>
+      </sc-if>
+    </div>
+  </sc-for>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { items:[], total:0, summary:null, loading:true, error:null, busyId:null };
+
+  // Пять состояний работы — тот словарь, которым говорит ручка /backfill/queue.
+  // Порядок здесь — порядок чипсов на экране, а не приоритет воркера.
+  STATE = {queued:{label:'в очереди', c:'#C98A1E'}, running:{label:'читается', c:'#156479'},
+           done:{label:'прочитано', c:'#2E7D57'}, failed:{label:'ошибка', c:'#DA501C'},
+           canceled:{label:'отменено', c:'#8A8F9E'}};
+  ORDER = ['queued', 'running', 'done', 'failed', 'canceled'];
+
+  // Родительный падеж для подписи «история с 6 августа».
+  MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+            'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    // Сортировок у таблицы нет вовсе, и это не лень: очередь на экране обязана
+    // совпадать с очередью воркера, а его порядок — это (position, id) сервера.
+    // Своя сортировка сделала бы «следующий канал» на экране и «следующий канал»
+    // в работе разными каналами. Table заведён без sorts, чтобы заголовки и не
+    // притворялись кнопками; срез (страница, размер, фильтр состояния) при этом
+    // живёт в адресе, как у соседних экранов.
+    this.table = new Table({
+      key:'backfill', size:50, sorts:[], filters:{state:''},
+    });
+    this.table.attach(()=>this.load());
+    this.load();
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/backfill/queue', this.table.query());
+      this.setState({items:data.items || [], total:data.total || 0,
+                     summary:data.summary || null,
+                     loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  // «Снять с очереди» честно называется снятием, а не отменой: работу, которую
+  // воркер уже взял (running) или довёл до конца (done/failed/canceled), вернуть
+  // нельзя — пометить её отменённой на экране значило бы соврать. Поэтому кнопка
+  // есть только у queued.
+  async remove(item){
+    if(!item || this.state.busyId) return;
+    const t = (this.props.api || {}).toast || (()=>{});
+    this.setState({busyId:item.id});
+    try {
+      const { del } = await import('./radar-api.js');
+      await del('/backfill/queue/' + item.id);
+      this.setState({busyId:null});
+      // Строку не выбрасываем локально: у соседей по очереди сдвинутся позиции,
+      // и экран разошёлся бы с тем, что реально возьмёт воркер. Перечитываем.
+      t('Снято с очереди: ' + ((item.channel || {}).title || ('#' + item.id)), '#C98A1E');
+      this.load();
+    } catch (e) {
+      this.setState({busyId:null});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  // Человеческая дата без года: глубина и отложенный старт живут в пределах
+  // пары месяцев, и год в ячейке — шум. Нечитаемый вход показываем как есть.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    const p = (n)=>String(n).padStart(2, '0');
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // «История с 6 августа» — ответ на вопрос «насколько глубоко дочитываем»,
+  // а сырой штамп ответом не является.
+  since(iso){
+    if(!iso) return '';
+    const d = new Date(iso);
+    if(isNaN(d)) return '';
+    return 'история с ' + d.getDate() + ' ' + this.MONTHS[d.getMonth()];
+  }
+
+  renderVals(){
+    const S = this.state;
+    const items = S.items || [];
+    const summary = S.summary || null;
+    const states = summary ? summary.states : null;
+    const byAcc = summary ? summary.by_account : null;
+    const filter = this.table ? (this.table.filters.state || '') : '';
+
+    // До загрузки отдаём все дырки разметки: отсутствующий ключ в этом
+    // фреймворке не даёт ошибки — ячейка молча остаётся пустой, и поломка
+    // всплывает у человека, а не здесь.
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              reload:()=>{}, stateFilters:[], hasByAccount:false, noByAccount:false,
+              byAccounts:[], cols:[], rows:[],
+              loading:true, hasError:false, errorMsg:'',
+              isEmpty:false, emptyTitle:'', emptyNote:'', hasRows:false,
+              range:'загрузка…', sizes:[], pages:[],
+              prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
+    }
+
+    // Чипсы — все пять состояний всегда, включая нулевые: «работ этого состояния
+    // ноль» и «сервер не прислал это состояние» — разные новости, и прятать ноль
+    // значило бы выдавать отсутствие данных за пустоту.
+    const stateFilters = [{k:'', label:'Все'}]
+      .concat(this.ORDER.map(k=>({k, label:this.STATE[k].label})))
+      .map(f=>{
+        const n = states ? states[f.k] : undefined;
+        return {label:f.label,
+                count: f.k === '' ? '' : ('· ' + (n === undefined || n === null ? '—' : n)),
+                bg: filter === f.k ? '#131E5F' : 'transparent',
+                fg: filter === f.k ? '#F8F3E0' : '#156479',
+                pick:()=>this.table.setFilter('state', f.k)};
+      });
+
+    // Чем занят каждый аккаунт: перечисляем только непустые состояния — строка
+    // «отменено 0» про аккаунт ничего не сообщает. Пустой ответ аккаунта —
+    // «свободен», а не прочерк.
+    const byAccounts = byAcc ? Object.keys(byAcc)
+      .sort((a, b)=>Number(a) - Number(b))
+      .map(k=>{
+        const counts = byAcc[k] || {};
+        const parts = this.ORDER.filter(st=>(counts[st] || 0) > 0)
+          .map(st=>this.STATE[st].label + ' ' + counts[st]);
+        return {label:'аккаунт ' + k, note: parts.length ? parts.join(' · ') : 'свободен'};
+      }) : [];
+    const hasByAccount = byAccounts.length > 0;
+
+    const loaded = !S.loading && !S.error;
+    const hasRows = loaded && items.length > 0;
+    const isEmpty = loaded && items.length === 0;
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      reload:()=>this.load(),
+      stateFilters, hasByAccount, noByAccount: !!summary && !hasByAccount, byAccounts,
+
+      // Колонки без сортировки: кликабельная шапка обещала бы пересортировку,
+      // которой здесь быть не может.
+      cols:['Канал', 'Состояние', 'Аккаунт', 'Ход', 'Глубина', 'Попытки',
+            'Отложенный старт', 'Причина отказа', ''],
+      ...this.table.vals(S.total, {loading:S.loading, error:S.error}),
+
+      loading:!!S.loading,
+      hasError:!!S.error, errorMsg:S.error || '',
+      hasRows, isEmpty,
+      emptyTitle: filter ? 'Под фильтр ничего не подошло' : 'Очередь пуста',
+      emptyNote: filter
+        ? ('Работ в состоянии «' + (this.STATE[filter] ? this.STATE[filter].label : filter)
+           + '» сейчас нет. Чипсом «Все» фильтр снимается — или просто подождите: очередь живёт сама.')
+        : ('Это норма, а не ошибка: очередь наполняется, когда в разделе Channels '
+           + 'заказывают дочитывание. Как только работа появится, она встанет здесь — '
+           + 'в том же порядке, в каком её возьмёт воркер.'),
+
+      rows:items.map(it=>{
+        const ch = it.channel || {};
+        const st = this.STATE[it.state] || {label:it.state || '—', c:'#8A8F9E'};
+        return {
+          id:it.id,
+          title: ch.title || ('канал #' + (ch.id !== undefined ? ch.id : it.id)),
+          uname: ch.username ? '@' + ch.username : 'без username',
+          hasLink: !!ch.username,
+          noLink: !ch.username,
+          link: ch.username ? 'https://t.me/' + ch.username : '',
+          pos: it.position === undefined ? '—' : it.position,
+          state:st.label, c:st.c,
+          acct: it.account_id ? ('acc-' + it.account_id) : '—',
+          progress:'прочитано ' + (it.read_total || 0) + ' из ' + (it.target || 0),
+          depth:this.when(it.min_date),
+          depthNote:this.since(it.min_date),
+          attempts:it.attempts || 0,
+          scheduled:this.when(it.scheduled_for),
+          hasSchedule:!!it.scheduled_for,
+          // Причина отказа показывается целиком: обрезка многоточием отправила бы
+          // человека разбираться в базе ровно тогда, когда текст нужнее всего.
+          hasError:!!it.error, noError:!it.error,
+          errorText:it.error || '',
+          canRemove: it.state === 'queued',
+          remove:()=>this.remove(it),
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

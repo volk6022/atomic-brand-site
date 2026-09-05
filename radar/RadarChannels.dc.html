@@ -17,6 +17,7 @@
       <button onClick="{{ addToggle }}" style="border:1px solid #131E5F;background:transparent;color:#131E5F;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">{{ addToggleLabel }}</button>
     </sc-if>
     <button onClick="{{ scanDiscussions }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Разобрать группы обсуждения</button>
+    <button onClick="{{ bfToggle }}" style="border:1px solid #131E5F;background:transparent;color:#131E5F;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">{{ bfToggleLabel }}</button>
     <sc-if value="{{ canJoin }}" hint-placeholder-val="{{ false }}">
       <button onClick="{{ joinDiscussions }}" style="border:0;background:#156479;color:#F8F3E0;padding:8px 14px;font:400 12px/1 'JetBrains Mono',monospace">Вступить в группы</button>
     </sc-if>
@@ -44,6 +45,37 @@
         <button onClick="{{ addSubmit }}" disabled="{{ adding }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace">Подключить</button>
       </div>
       <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Аккаунт вступит в канал и, если у него есть привязанная группа обсуждения, вступит и в неё — иначе комментарии не будут видны вотчеру. Занимает до нескольких минут: Engage подписывает не мгновенно. Ход виден в разделе Runs.</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ bfOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:14px;display:flex;flex-direction:column;gap:10px">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Дочитать историю: поставить пачку в очередь</div>
+      <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">В очередь встанут каналы с текущей страницы — {{ bfScope }}. Сама очередь, распределение по аккаунтам и снятие работ — в разделе «Дочитывание».</div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end">
+        <label style="display:flex;flex-direction:column;gap:4px;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">цель, сообщений (до 2000)
+          <input value="{{ bfTarget }}" onInput="{{ setBfTarget }}" type="number" min="1" max="2000" step="1" placeholder="2000" style="width:130px;padding:7px 10px;border:1px solid rgba(19,30,95,0.24);background:#fff;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">глубина, дней (до 30)
+          <input value="{{ bfDepth }}" onInput="{{ setBfDepth }}" type="number" min="1" max="30" step="1" placeholder="30" style="width:130px;padding:7px 10px;border:1px solid rgba(19,30,95,0.24);background:#fff;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:4px;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">отложить до (необязательно)
+          <input value="{{ bfWhen }}" onInput="{{ setBfWhen }}" type="datetime-local" style="padding:6px 10px;border:1px solid rgba(19,30,95,0.24);background:#fff;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </label>
+        <button onClick="{{ bfSubmit }}" disabled="{{ bfBusy }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace">В очередь</button>
+      </div>
+      <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Пустое поле — очередь берёт серверное умолчание. Сервер отвергает превышение потолков с текстом, поэтому здесь они ограничены вводом, а не тихой подрезкой числа.</div>
+      <sc-if value="{{ bfError }}" hint-placeholder-val="{{ false }}">
+        <div style="border-left:3px solid #DA501C;background:#FBEEE8;padding:8px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8F2F0C;white-space:pre-wrap;word-break:break-word">{{ bfError }}</div>
+      </sc-if>
+      <sc-if value="{{ bfHasResult }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid rgba(19,30,95,0.16);background:#fff;padding:10px 12px;display:flex;flex-direction:column;gap:6px">
+          <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#2E7D57">{{ bfResultLine }}</div>
+          <sc-for list="{{ bfRefused }}" as="x" hint-placeholder-count="3">
+            <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#DA501C;white-space:pre-wrap;word-break:break-word">{{ x.label }}</div>
+          </sc-for>
+        </div>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -132,7 +164,9 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:420},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
 class Component extends DCLogic {
   state = { rows:[], total:0, loading:true, error:null, summary:null,
-           addOpen:false, addUsername:'', addAccount:1, adding:false };
+           addOpen:false, addUsername:'', addAccount:1, adding:false,
+           bfOpen:false, bfTarget:'2000', bfDepth:'', bfWhen:'',
+           bfBusy:false, bfError:'', bfResult:null };
 
   // Колонки и их серверные ключи сортировки. Какие ключи сервер примет — он
   // объявляет сам в поле `sorts` ответа /channels; здесь этого списка нет.
@@ -370,6 +404,79 @@ class Component extends DCLogic {
   // Подключение канала (FIXES.md #7): резолв, подписка выбранным аккаунтом и,
   // если найдётся, вступление в группу обсуждения — всё асинхронно вебхуками
   // Engage, поэтому ответ здесь означает «запрошено», а не «готово».
+  // Пачечная постановка в очередь дочитывания (ручка POST /backfill/queue).
+  // Потолки — цель не больше 2000 сообщений, глубина не больше 30 дней — сервер
+  // проверяет сам и отказывает с текстом; здесь они продублированы ограничением
+  // ввода и внятным отказом, потому что тихо подрезать число значило бы поставить
+  // в очередь не то, что человек ввёл.
+  //
+  // В очередь идут каналы текущей страницы: это ровно те строки, которые человек
+  // видит и про которые принимает решение. Отказ ручки (409 — ничего не встало,
+  // 404 — среди названных есть несуществующий канал) приходит исключением с телом
+  // сервера, и показываем его текст, а не общее «ошибка».
+  BF_TARGET_MAX = 2000;
+  BF_DEPTH_MAX = 30;
+
+  async bfSubmit(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const S = this.state;
+    const rows = S.rows || [];
+    if(!rows.length){
+      this.setState({bfError:'На странице нет каналов — ставить в очередь нечего.'});
+      return;
+    }
+    const body = {channel_ids: rows.map(r=>r.id)};
+    const target = String(S.bfTarget || '').trim();
+    if(target !== ''){
+      const n = Number(target);
+      if(!Number.isInteger(n) || n < 1){
+        this.setState({bfError:'Цель — целое число сообщений, не меньше 1.'});
+        return;
+      }
+      if(n > this.BF_TARGET_MAX){
+        this.setState({bfError:'Цель не может быть больше ' + this.BF_TARGET_MAX +
+          ' сообщений — столько сервер не примет. Введите ' + this.BF_TARGET_MAX + ' или меньше.'});
+        return;
+      }
+      body.target = n;
+    }
+    const depth = String(S.bfDepth || '').trim();
+    if(depth !== ''){
+      const n = Number(depth);
+      if(!Number.isInteger(n) || n < 1){
+        this.setState({bfError:'Глубина — целое число дней, не меньше 1.'});
+        return;
+      }
+      if(n > this.BF_DEPTH_MAX){
+        this.setState({bfError:'Глубина не может быть больше ' + this.BF_DEPTH_MAX +
+          ' дней — столько сервер не примет. Введите ' + this.BF_DEPTH_MAX + ' или меньше.'});
+        return;
+      }
+      body.depth_days = n;
+    }
+    if(S.bfWhen){
+      const d = new Date(S.bfWhen);
+      if(isNaN(d)){
+        this.setState({bfError:'Дата отложенного старта не разобралась — выберите её заново.'});
+        return;
+      }
+      body.scheduled_for = d.toISOString();
+    }
+    const { post, describe } = await import('./radar-api.js');
+    this.setState({bfBusy:true, bfError:'', bfResult:null});
+    try {
+      const r = await post('/backfill/queue', body);
+      // Ответ несёт оба списка, и показать нужно оба: сколько встало и что
+      // отвергнуто с причиной по каждому. Перечитываем таблицу — счётчики
+      // каналов могли измениться.
+      this.setState({bfBusy:false, bfResult:{queued:r.queued || [], refused:r.refused || []}});
+      this.load();
+    } catch (e) {
+      this.setState({bfBusy:false, bfError:describe(e)});
+    }
+  }
+
   async addChannel(){
     const S = this.state;
     const t = (this.props.api || {}).toast || (()=>{});
@@ -434,7 +541,11 @@ class Component extends DCLogic {
               prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
               canAdd:false, addOpen:false, addToggle:()=>{}, addToggleLabel:'',
               addUsername:'', setAddUsername:()=>{}, addAccount:1, setAddAccount:()=>{},
-              accountOptions:[], addSubmit:()=>{}, adding:false};
+              accountOptions:[], addSubmit:()=>{}, adding:false,
+              bfOpen:false, bfToggleLabel:'', bfToggle:()=>{}, bfScope:'',
+              bfTarget:'', setBfTarget:()=>{}, bfDepth:'', setBfDepth:()=>{},
+              bfWhen:'', setBfWhen:()=>{}, bfSubmit:()=>{}, bfBusy:false,
+              bfError:'', bfHasResult:false, bfResultLine:'', bfRefused:[]};
     }
 
     // Ширина полоски — доля от лучшего канала в списке, а не абсолютное число:
@@ -510,6 +621,57 @@ class Component extends DCLogic {
       accountOptions: this.ACCOUNTS.map(id=>({value:id, label:'аккаунт ' + id})),
       addSubmit:()=>this.addChannel(),
       adding: S.adding,
+
+      // Пачечное дочитывание: форма обещает ровно то, что уйдёт в очередь, —
+      // каналы текущей страницы и названные человеком потолки.
+      bfOpen: S.bfOpen,
+      bfToggleLabel: S.bfOpen ? 'скрыть форму' : 'Дочитать всем',
+      bfToggle:()=>this.setState({bfOpen:!S.bfOpen, bfError:'', bfResult:null}),
+      bfScope: rows.length
+        ? (this.plural(rows.length, 'канал', 'канала', 'каналов')
+           + ' · ' + rows.slice(0, 4).map(c=>c.title || ('#' + c.id)).join(', ')
+           + (rows.length > 4 ? ' и ещё ' + (rows.length - 4) : ''))
+        : 'страница пуста',
+      bfTarget:String(S.bfTarget || ''),
+      setBfTarget:(e)=>this.setState({bfTarget:e.target.value}),
+      bfDepth:String(S.bfDepth || ''),
+      setBfDepth:(e)=>this.setState({bfDepth:e.target.value}),
+      bfWhen:String(S.bfWhen || ''),
+      setBfWhen:(e)=>this.setState({bfWhen:e.target.value}),
+      bfSubmit:()=>this.bfSubmit(),
+      bfBusy:!!S.bfBusy,
+      bfError:S.bfError || '',
+      bfHasResult:!!S.bfResult,
+      // Вставшие перечисляются по названиям: человеку сверять список с экраном по
+      // номерам каналов нечем. Неузнанный идентификатор (канал уже уехал со
+      // страницы) показывается как #id, а не выбрасывается. Пустая пачка при
+      // ответе 200 — отдельная фраза: «0 каналов встали» — не русская фраза.
+      bfResultLine: S.bfResult
+        ? ((S.bfResult.queued || []).length === 0
+           ? 'Ни один канал не встал в очередь'
+           : (this.plural((S.bfResult.queued || []).length,
+                          'канал встал', 'канала встали', 'каналов встали')
+              + ' в очередь: '
+              + (S.bfResult.queued || []).map(q=>{
+                  // Ручка отдаёт элементы очереди целиком, и канал в них лежит
+                  // вложенным объектом. Брать `q.id` нельзя: это номер СТРОКИ
+                  // ОЧЕРЕДИ, и он совпал бы с номером постороннего канала —
+                  // человек прочитал бы чужое название как своё.
+                  const id = (q && typeof q === 'object')
+                    ? (q.channel && q.channel.id !== undefined ? q.channel.id
+                       : (q.channel_id !== undefined ? q.channel_id : undefined))
+                    : q;
+                  const c = id === undefined ? null : rows.find(r=>r.id === id);
+                  return c ? c.title
+                           : (q && q.channel && q.channel.title ? q.channel.title
+                              : '#' + (id === undefined ? '?' : id));
+                }).join(', ')))
+        : '',
+      bfRefused: S.bfResult ? (S.bfResult.refused || []).map(x=>{
+        const c = rows.find(r=>r.id === x.channel_id);
+        return {label:(c ? '«' + c.title + '»' : 'канал #' + x.channel_id)
+                     + ' — ' + (x.reason || 'причина не названа')};
+      }) : [],
 
       rows:rows.map(c=>({
         name:c.title,

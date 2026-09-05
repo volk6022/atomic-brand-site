@@ -161,6 +161,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.dashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="RadarDashboard" api="{{ api }}" mobile="{{ false }}" hint-size="100%,600px"></dc-import></sc-if>
       <sc-if value="{{ v.fleet }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarFleet" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.backfill }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarBackfill" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
@@ -205,6 +206,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.dashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="RadarDashboard" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.fleet }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarFleet" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.backfill }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarBackfill" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
@@ -411,7 +413,11 @@ class Component extends DCLogic {
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
-    channels:['owner','customer','reviewer'], stream:['owner','customer','reviewer'],
+    channels:['owner','customer','reviewer'],
+    // Очередь дочитывания — работа с каналами, и права у неё канальные:
+    // совпадает с Section.CHANNELS на сервере. Настоящая проверка там.
+    backfill:['owner','customer','reviewer'],
+    stream:['owner','customer','reviewer'],
     leads:['owner','customer','reviewer'], drafts:['owner','customer','reviewer'],
     draftsTable:['owner','customer','reviewer'],
     conversations:['owner','customer','reviewer'],
@@ -431,7 +437,7 @@ class Component extends DCLogic {
 
   NAV = [
     {title:'Dashboard', items:[{key:'dashboard', label:'Dashboard', code:'DS'}]},
-    {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'stream', label:'Stream', code:'ST'}]},
+    {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'backfill', label:'Дочитывание', code:'BF'},{key:'stream', label:'Stream', code:'ST'}]},
     {title:'Конвейер лидов', items:[{key:'leads', label:'Leads', code:'LD'},{key:'drafts', label:'Drafts', code:'DR', badgeKey:'drafts'},{key:'conversations', label:'Conversations', code:'CV', badgeKey:'conversations'},{key:'manual_sends', label:'Ручные отправки', code:'MS'}]},
     {title:'Настройка', items:[{key:'profile', label:'Profile & Prompts', code:'PP'},{key:'runs', label:'Runs', code:'RN'},{key:'evals', label:'Evaluations', code:'EV'}]},
     {title:'Бизнес', items:[{key:'attribution', label:'Attribution', code:'AT'}]},
@@ -448,7 +454,7 @@ class Component extends DCLogic {
   // Ключ здесь — имя экрана, а не маршрута: у раздела сценария общего маршрута нет
   // вовсе, и подпись мобильной шапки берётся по `w.screen`. Поэтому `activity`
   // лежит в этой же карте, хотя перейти на него по имени раздела нельзя.
-  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin'};
+  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin'};
 
   // Здесь лежали три выдуманные тревоги с выдуманными датами — «vertsanov-03 ушёл
   // в паузу», «run_20260805_regen упал», «новый ответ от Игоря С.». Они показывались
@@ -1007,7 +1013,7 @@ class Component extends DCLogic {
       v:{
         login: !authed, stepLogin: S.step === 'login', stepTotp: S.step === 'totp',
         appDesktop: authed && !isMobile, mobile: authed && isMobile,
-        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), stream:on('stream'),
+        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), backfill:on('backfill'), stream:on('stream'),
         leads:on('leads'), drafts:on('drafts'), draftsTable:on('draftsTable'),
         conversations:on('conversations'), manual_sends:on('manual_sends'),
         activity:on('activity'),
@@ -1016,7 +1022,7 @@ class Component extends DCLogic {
         observability:on('observability'), safety:on('safety'), admin:on('admin')
       },
       m:{
-        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), stream:onM('stream'),
+        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), backfill:onM('backfill'), stream:onM('stream'),
         leads:onM('leads'), drafts:onM('drafts'), draftsTable:onM('draftsTable'),
         conversations:onM('conversations'), manual_sends:onM('manual_sends'),
         activity:onM('activity'),
