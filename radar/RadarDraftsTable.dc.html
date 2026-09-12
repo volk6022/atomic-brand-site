@@ -35,6 +35,9 @@
         <option value="{{ s.value }}">{{ s.label }}</option>
       </sc-for>
     </select>
+    <!-- Отдельный переключатель, а не чипс состояния: отзывы есть и у
+         разобранных черновиков, пересекать его с состоянием нельзя. -->
+    <div onClick="{{ commentsChip.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ commentsChip.bg }};color:{{ commentsChip.fg }};font:400 12px/1 'JetBrains Mono',monospace">С комментариями</div>
     <sc-if value="{{ hasAccounts }}" hint-placeholder-val="{{ true }}">
     <select value="{{ account }}" onChange="{{ setAccount }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
       <sc-for list="{{ accounts }}" as="a" hint-placeholder-count="3">
@@ -78,6 +81,7 @@
                 <div style="margin-top:4px;font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E">правлено вручную</div>
               </sc-if>
             </td>
+            <td style="padding:9px 6px;border-bottom:1px solid rgba(19,30,95,0.08);text-align:center;color:#156479;white-space:nowrap;width:44px">{{ r.commentsLabel }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
               <sc-if value="{{ r.isComment }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-bottom:5px;font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E">комментарий
@@ -131,8 +135,10 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
 class Component extends DCLogic {
+  // Фильтр «с комментариями» ортогонален состоянию разбора: отзыв пишут и на
+  // одобренный, и на отклонённый черновик, поэтому он не чипс состояния.
   state = { d:null, loading:true, error:null,
-            filter:'all', query:'', channel:'', account:'', minScore:0 };
+            filter:'all', query:'', channel:'', account:'', minScore:0, comments:false };
 
   // Очередь личных сообщений и очередь публичных ответов — один экран. Пустой
   // `workflow` оставляет прежнее поведение дословно: та же ручка `/drafts/list`,
@@ -186,6 +192,9 @@ class Component extends DCLogic {
     // на который она не смотрит, — срез выглядел бы применённым, не будучи им.
     if(p.has('account') && this.wf()) patch.account = p.get('account') || '';
     if(p.has('min_score')) patch.minScore = +p.get('min_score') || 0;
+    // В адресе признак пишется только как «comments=1»: выключенного фильтра
+    // в адресе не бывает, как и пустого канала.
+    if(p.has('comments')) patch.comments = p.get('comments') === '1';
     return Object.keys(patch).length ? patch : null;
   }
 
@@ -196,16 +205,17 @@ class Component extends DCLogic {
   writeHash(){
     const S = this.state;
     // Порядок фиксирован от общего к частному — состояние, канал, аккаунт
-    // приёма, порог, строка поиска. Он ни на что не влияет при чтении
-    // (разбирает URLSearchParams), но делает адрес одинаковым для одного и того
-    // же среза: иначе две ссылки на один вид выглядят разными, и их невозможно
-    // ни сравнить, ни узнать.
+    // приёма, порог, строка поиска, признак комментариев. Он ни на что не
+    // влияет при чтении (разбирает URLSearchParams), но делает адрес
+    // одинаковым для одного и того же среза: иначе две ссылки на один вид
+    // выглядят разными, и их невозможно ни сравнить, ни узнать.
     const p = new URLSearchParams();
     if(S.filter && S.filter !== 'all') p.set('filter', S.filter);
     if(S.channel) p.set('channel', S.channel);
     if(S.account && this.wf()) p.set('account', S.account);
     if(S.minScore) p.set('min_score', String(S.minScore));
     if(S.query) p.set('q', S.query);
+    if(S.comments) p.set('comments', '1');
     const q = p.toString();
     history.replaceState(null, '', '#' + this.route() + (q ? '?' + q : ''));
   }
@@ -226,6 +236,9 @@ class Component extends DCLogic {
       if(S.channel) params.channel = S.channel;
       if(S.account && this.wf()) params.account_id = S.account;
       if(S.minScore) params.min_score = S.minScore;
+      // Фильтр по отзывам считает сервер тем же параметром, что и остальные:
+      // отбирать по уже загруженной странице значило бы фильтровать не то.
+      if(S.comments) params.has_comments = true;
 
       // Ручка списка — по сценарию. Пустой `workflow` ведёт в старую общую
       // очередь `/drafts/list` дословно; заданный — в `/workflows/{key}/drafts`,
@@ -372,10 +385,11 @@ class Component extends DCLogic {
       reload:()=>this.set({}),
       // Колонка аккаунта — только у сценария: в общей очереди поля `readers` нет
       // вовсе, и столбец стоял бы с прочерком во всех строках до единой. Пустой
-      // столбец читается как «данных нет», хотя их и не бывает.
+      // столбец читается как «данных нет», хотя их и не бывает. 💬 стоит сразу
+      // после состояния в обоих контурах.
       cols: hasAccounts
-        ? ['#','Автор','Канал','Аккаунт','Боль','Скор','Статус','Текст']
-        : ['#','Автор','Канал','Боль','Скор','Статус','Текст'],
+        ? ['#','Автор','Канал','Аккаунт','Боль','Скор','Статус','💬','Текст']
+        : ['#','Автор','Канал','Боль','Скор','Статус','💬','Текст'],
 
       // Состав чипсов — по тому, что вернул сервер, а не по зашитому списку: у
       // общей очереди состояний три, у очереди сценария четыре. Зашитый список
@@ -405,7 +419,15 @@ class Component extends DCLogic {
       scores:[{value:'0', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
               {value:'40', label:'скор ≥ 40'}, {value:'50', label:'скор ≥ 50'}],
       setMinScore:(e)=>this.set({minScore:+e.target.value}),
-      resetFilters:()=>this.set({filter:'all', query:'', channel:'', account:'', minScore:0}),
+      // Отдельный переключатель рядом с выбором скора, а не чипс в ряду
+      // состояний: комментарии бывают у разобранных черновиков любого состояния.
+      commentsChip:{
+        bg: S.comments ? '#131E5F' : 'transparent',
+        fg: S.comments ? '#F8F3E0' : '#156479',
+        pick:()=>this.set({comments: !S.comments})
+      },
+      resetFilters:()=>this.set({filter:'all', query:'', channel:'', account:'',
+                                 minScore:0, comments:false}),
 
       rows:rows.map(r=>{
         const username = r.author_username || '';
@@ -421,6 +443,9 @@ class Component extends DCLogic {
           channel:r.channel, pain:r.pain || '—', score:String(r.score),
           state:this.STATE_LABEL[r.state] || r.state,
           c:this.STATE_COLOR[r.state] || '#8A8F9E',
+          // 💬 — число отзывов: ноль показываем прочерком, чтобы столбец не
+          // превращался в стену нулей.
+          commentsLabel: r.comments_count ? String(r.comments_count) : '—',
           // Признак правки: в общей очереди — поле `edited`, в форме сценария
           // отдельного флага нет, там правка это непустой `final_text`.
           edited: this.wf() ? !!r.final_text : !!r.edited,

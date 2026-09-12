@@ -29,7 +29,11 @@ const QUEUE = fixtures['/workflows/{key}/drafts'];
 const OPTIONS = fixtures['/workflows/{key}/drafts/accounts'];
 const LEGACY = fixtures['/drafts/list'];
 const REASONS = fixtures['/drafts/reasons'];
-if (!NEXT || !QUEUE || !OPTIONS || !LEGACY) {
+// Карточки старого контура: комментарии живут по тем же адресам без приставки
+// сценария, поэтому стенду нужны и их образцы.
+const OLD_NEXT = fixtures['/drafts/next'];
+const OLD_ONE = fixtures['/drafts/{id}'];
+if (!NEXT || !QUEUE || !OPTIONS || !LEGACY || !OLD_NEXT) {
   console.error('нет образцов ответа. Пересними: python scripts/dump_gui_fixtures.py');
   process.exit(2);
 }
@@ -49,7 +53,7 @@ function build(file, props, opts) {
   opts = opts || {};
   const src = fs.readFileSync(DIR + '/' + file, 'utf8');
   const logic = src.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
-  const calls = {get: [], post: [], copied: [], toasts: []};
+  const calls = {get: [], post: [], del: [], copied: [], toasts: []};
 
   const api = {
     get: async (p, q) => {
@@ -68,6 +72,7 @@ function build(file, props, opts) {
       throw new Error('нет образца ответа для ' + p);
     },
     post: async (p, body) => { calls.post.push({p: p, body: body || {}}); return {ok: true}; },
+    del: async (p) => { calls.del.push({p: p}); return {deleted: 7}; },
     patch: async () => ({ok: true}),
     describe: (e) => 'ошибка: ' + (e && e.message ? e.message : e),
     isUnauthorized: () => false,
@@ -277,6 +282,192 @@ async function card() {
   }
 }
 
+// ── комментарии к черновику ───────────────────────────────────────────────────
+
+// Фейковое событие клавиатуры для this._key: хоткеи вешаются на window, а окно
+// стенда слушателей не исполняет — дергаем обработчик напрямую.
+function keyEvent(code) {
+  return {code: code, key: code, target: {tagName: 'BODY'},
+          metaKey: false, ctrlKey: false, altKey: false, shiftKey: false};
+}
+
+async function comments() {
+  // Образцы старого контура: комментарии приходят внутри карточки по тем же
+  // адресам, что и сам черновик, — приставки сценария нет.
+  const OLD = {next: fixtures['/drafts/next'], one: fixtures['/drafts/{id}']};
+
+  // Лента из образца: число в заголовке, текст, авторы, метки цели.
+  {
+    const {c} = build('RadarDrafts.dc.html', {}, OLD);
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('комментарии: число в заголовке блока равно comments_count образца',
+          v.commentsCount === '2', String(v.commentsCount));
+    check('комментарии: лента отдаёт оба комментария образца',
+          Array.isArray(v.comments) && v.comments.length === 2);
+    check('комментарии: текст первого комментария показан с переносом',
+          v.comments[0].text === OLD_NEXT.draft.comments[0].text
+          && v.comments[0].text.indexOf('\n') >= 0);
+    check('комментарии: автор показан до собаки', v.comments[0].author === 'andrey');
+    check('комментарии: дата в форме дд.мм чч:мм',
+          /^\d{2}\.\d{2} \d{2}:\d{2}$/.test(v.comments[0].when), String(v.comments[0].when));
+    check('комментарии: у комментария с индексом метка «вариант N»',
+          v.comments[0].target === 'вариант 2', v.comments[0].target);
+    check('комментарии: у variant_index: null метка «черновик целиком»',
+          v.comments[1].target === 'черновик целиком', v.comments[1].target);
+    check('комментарии: у каждого комментария есть ссылка удаления',
+          v.comments.every((cm) => cm.delLabel === 'удалить'
+                                  && typeof cm.delAct === 'function'));
+  }
+
+  // Лента обязана жить и у разобранного черновика: отзыв чаще пишут после
+  // решения, а не до него.
+  {
+    const next = clone(OLD_NEXT);
+    next.draft.state = 'rejected';
+    next.draft.reject_reason = 'Звучит как реклама';
+    const {c} = build('RadarDrafts.dc.html', {}, {next: next, one: OLD_ONE});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('комментарии: у отклонённого черновика лента на месте',
+          v.commentsCount === '2' && v.comments.length === 2);
+  }
+
+  // Панель: C открывает, Esc закрывает, placeholder дословный.
+  {
+    const {c} = build('RadarDrafts.dc.html', {}, OLD);
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('комментарии: клавиша C есть в списке горячих клавиш',
+          v.hotkeys.some((h) => h.k === 'C'));
+    c._key(keyEvent('KeyC'));
+    check('комментарии: нажатие C открывает панель', c.state.commenting === true);
+    check('комментарии: placeholder дословно как в задании',
+          v.commentPlaceholder === 'Что понравилось и что нет · где попали в боль, '
+            + 'где не очень · что стоит поправить в промпте', v.commentPlaceholder);
+    check('комментарии: счётчик длины считает введённое', v.commentLen === '0');
+    c._key(keyEvent('Escape'));
+    check('комментарии: Esc закрывает панель', c.state.commenting === false);
+  }
+
+  // Пустой текст: ни одного запроса, тост, панель не закрывается.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {}, OLD);
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    v.startComment();
+    v.setCommentText({target: {value: '   '}});
+    const before = calls.post.length;
+    await v.saveComment();
+    await settle();
+    check('комментарии: пустой текст не отправляет ни одного запроса',
+          calls.post.length === before);
+    check('комментарии: пустой текст — тост про пустой комментарий',
+          calls.toasts.some((t) => String(t).indexOf('Пустой комментарий') >= 0),
+          calls.toasts.join(' | '));
+    check('комментарии: пустой текст не закрывает панель', c.state.commenting === true);
+  }
+
+  // С текстом: ровно один post по адресу старого контура с активным вариантом;
+  // после сохранения панель закрыта, текст пуст, черновик перечитан.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {}, OLD);
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    v.startComment();
+    v.setCommentText({target: {value: 'Боль попала точно, второе предложение — как реклама'}});
+    await v.saveComment();
+    await settle();
+    const posts = calls.post.filter((p) => /\/comments$/.test(p.p));
+    check('комментарии: сохранение шлёт ровно один post', posts.length === 1);
+    check('комментарии: post уходит на /drafts/<id>/comments',
+          posts[0] && posts[0].p === '/drafts/1/comments', posts[0] && posts[0].p);
+    check('комментарии: тело несёт текст и активный вариант',
+          !!posts[0]
+          && posts[0].body.text === 'Боль попала точно, второе предложение — как реклама'
+          && posts[0].body.variant_index === 0);
+    check('комментарии: после сохранения панель закрыта', c.state.commenting === false);
+    check('комментарии: после сохранения текст очищен', c.state.commentText === '');
+    check('комментарии: после сохранения черновик перечитан',
+          calls.get.some((g) => g.p === '/drafts/1'));
+    check('комментарии: человек получил подтверждение с упоминанием Ивана',
+          calls.toasts.some((t) => String(t).indexOf('Комментарий сохранён') >= 0));
+  }
+
+  // Галка «целиком» вместо активного варианта.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {}, OLD);
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('комментарии: по умолчанию цель — активный вариант',
+          v.commentVariantBg === '#131E5F' && v.commentWholeBg === 'transparent');
+    v.startComment();
+    v.setCommentWhole();
+    // Подписи переключателя живут в результате renderVals, поэтому после
+    // переключения перечитываем их, а не смотрим в старый снимок.
+    check('комментарии: переключатель «целиком» подсвечен после включения',
+          vals(c).commentWholeBg === '#131E5F' && vals(c).commentVariantBg === 'transparent');
+    v.setCommentText({target: {value: 'К черновику целиком: формат хороший'}});
+    await v.saveComment();
+    await settle();
+    const post = calls.post.find((p) => /\/comments$/.test(p.p));
+    check('комментарии: с галкой «целиком» variant_index в теле равен null',
+          !!post && post.body.variant_index === null,
+          post && JSON.stringify(post.body));
+  }
+
+  // В контуре сценария тот же post уходит по адресу сценария.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    v.startComment();
+    v.setCommentText({target: {value: 'Ответ по существу, без обещаний'}});
+    await v.saveComment();
+    await settle();
+    const posts = calls.post.filter((p) => /\/comments$/.test(p.p));
+    check('комментарии: в контуре wf post уходит на /workflows/<key>/drafts/<id>/comments',
+          posts.length === 1 && posts[0].p === '/workflows/' + WF + '/drafts/28/comments',
+          posts[0] && posts[0].p);
+  }
+
+  // Удаление: первое нажатие спрашивает подтверждение, чужое действие его
+  // сбрасывает, второе нажатие подряд удаляет и перечитывает черновик.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {}, OLD);
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    await v.comments[0].delAct();
+    await settle();
+    check('комментарии: первое нажатие ничего не удаляет', calls.del.length === 0);
+    check('комментарии: первое нажатие требует подтверждения',
+          vals(c).comments[0].delLabel === 'точно удалить?');
+    v.tabs[0].pick();
+    await settle();
+    check('комментарии: другое действие сбрасывает подтверждение',
+          vals(c).comments[0].delLabel === 'удалить');
+    await v.comments[0].delAct();
+    await settle();
+    check('комментарии: сброшенное подтверждение не удаляет сразу',
+          calls.del.length === 0);
+    await v.comments[0].delAct();
+    await settle();
+    check('комментарии: второе нажатие подряд удаляет по адресу комментария',
+          calls.del.length === 1 && calls.del[0].p === '/drafts/1/comments/7',
+          calls.del[0] && calls.del[0].p);
+    check('комментарии: после удаления черновик перечитан',
+          calls.get.some((g) => g.p === '/drafts/1'));
+  }
+}
+
 // ── таблица ───────────────────────────────────────────────────────────────────
 
 async function table() {
@@ -457,10 +648,72 @@ async function table() {
     check('таблица: сбой списка аккаунтов оставляет строки на месте',
           Array.isArray(v.rows) && v.rows.length > 0);
   }
+
+  // 23. Колонка 💬: сразу после состояния, число у строки с комментариями,
+  //     прочерк у строки без них.
+  {
+    const {c} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('таблица: колонка комментариев объявлена сразу после состояния',
+          Array.isArray(v.cols) && v.cols.indexOf('💬') === v.cols.indexOf('Статус') + 1,
+          JSON.stringify(v.cols));
+    const r0 = (v.rows || [])[0] || {};
+    const r1 = (v.rows || [])[1] || {};
+    check('таблица: у строки с комментариями показано их число',
+          String(r0.commentsLabel) === '2', String(r0.commentsLabel));
+    check('таблица: ноль комментариев показан прочерком',
+          String(r1.commentsLabel) === '—', String(r1.commentsLabel));
+  }
+
+  // 24. Переключатель «С комментариями»: параметр has_comments в запросе
+  //     сценария и адрес в форме comments=1; при выключении — ни того, ни другого.
+  {
+    const {c, calls, ctx} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    const listReq = () => q(calls, /\/drafts$/).pop() || {};
+    check('таблица: без переключателя параметра has_comments в запросе нет',
+          listReq().q && !('has_comments' in listReq().q));
+    v.commentsChip.pick();
+    await settle();
+    check('таблица: включённый переключатель шлёт has_comments: true',
+          listReq().q && listReq().q.has_comments === true);
+    check('таблица: включённый переключатель записан в адрес как comments=1',
+          /comments=1/.test(String(ctx.location.hash || '')),
+          String(ctx.location.hash || ''));
+    // pick замыкается на состояние момента рендера: выключать нужно свежим
+    // снимком, каким в живом экране был бы клик после перерисовки.
+    vals(c).commentsChip.pick();
+    await settle();
+    check('таблица: выключенный переключатель убирает параметр из запроса',
+          listReq().q && !('has_comments' in listReq().q));
+    check('таблица: выключенный переключатель убирает comments из адреса',
+          !/comments=1/.test(String(ctx.location.hash || '')),
+          String(ctx.location.hash || ''));
+  }
+
+  // 24b. Общий контур: тот же переключатель работает и для /drafts/list.
+  {
+    const {c, calls} = build(F, {});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    v.commentsChip.pick();
+    await settle();
+    const req = calls.get.filter((g) => g.p === '/drafts/list').pop();
+    check('таблица: общий список тоже получает has_comments',
+          !!req && req.q.has_comments === true);
+    check('таблица: в общем контуре метка строки берётся из comments_count',
+          String(((vals(c).rows || [])[0] || {}).commentsLabel) === '2');
+  }
 }
 
 async function main() {
   await card();
+  await comments();
   await table();
 
   for (const [mark, name] of results) console.log(mark + ' ' + name);
