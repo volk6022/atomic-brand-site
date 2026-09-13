@@ -294,6 +294,172 @@ async function main() {
     check('аккаунт без работ назван свободным', !!idle && idle.note === 'свободен');
   }
 
+  // ── блок Б (волна К1): колонка «Поставил» и чипс источника ───────────────────
+  // TESTS-autoflow-gui.md G-01…G-05. Значения — дословно из api-fixtures.json:
+  // items[0].requested_by === 'ivan@example.com', в фикстуре уже есть работа
+  // id 13 с requested_by === 'auto:join'.
+
+  // G-01. Колонка «Поставил» дословно: requested_by показывается без
+  // переписывания — это данные о том, кто заказал работу; обрезанный домен или
+  // префикс делает «кто поставил» неразличимым, а колонку — декорацией.
+  {
+    const {c} = build();
+    await c.componentDidMount();
+    await sleep();
+    const v = vals(c);
+    check('G-01 колонка «Поставил» есть в cols',
+          v.cols.indexOf('Поставил') >= 0);
+    check('G-01 «Поставил» стоит после «Аккаунта»',
+          v.cols.indexOf('Поставил') > v.cols.indexOf('Аккаунт'));
+    check('G-01 каждая строка показывает requested_by своего item дословно',
+          v.rows.every((r) => {
+            const it = LIST.items.find((i) => i.id === r.id);
+            return r.reqBy === it.requested_by;
+          }));
+    const first = LIST.items[0];
+    const row0 = v.rows.find((r) => r.id === first.id);
+    check('G-01 items[0] — «ivan@example.com» без переписывания',
+          !!row0 && row0.reqBy === 'ivan@example.com');
+    check('G-01 метка «автоматика» стоит ровно у строк с префиксом auto:',
+          v.rows.every((r) => {
+            const it = LIST.items.find((i) => i.id === r.id);
+            return (String(it.requested_by || '').indexOf('auto:') === 0) === !!r.isAuto;
+          }) && !!row0 && row0.isAuto === false);
+
+    // Пустой requested_by — прочерк, а не пустая клетка: «неизвестно» и
+    // «поломка экрана» должны отличаться на взгляд.
+    const noReq = clone(LIST);
+    noReq.items[0].requested_by = null;
+    const c2 = build({list: noReq}).c;
+    await c2.componentDidMount();
+    await sleep();
+    const v2 = vals(c2);
+    const row = v2.rows.find((r) => r.id === first.id);
+    check('G-01 пустой requested_by показан прочерком',
+          !!row && row.reqBy === '—' && row.noReq === true &&
+          row.hasReq === false && row.isAuto === false);
+  }
+
+  // G-02. Автоматика помечена: префикс auto: — метка «автоматика» цветом
+  // #C98A1E и ПОЛНЫЙ текст рядом (auto:join от auto:channel_add отличить —
+  // единственная причина префикса). Метка ставится по префиксу, а не всем
+  // подряд. Второй префикс — auto:channel_add из CONTRACT-autoflow-gui.md §4.1.
+  {
+    const withAuto = clone(LIST);
+    withAuto.items[1].requested_by = 'auto:join';
+    withAuto.items[2].requested_by = 'auto:channel_add';
+    const {c} = build({list: withAuto});
+    await c.componentDidMount();
+    await sleep();
+    const v = vals(c);
+    // Авто-множество выводим из самого поданного списка (items[1], items[2]
+    // мутированы + в фикстуре уже есть id 13 с auto:join) — метка обязана
+    // стоять ровно у строк с префиксом, у остальных её быть не должно.
+    check('G-02 ровно строки с auto: несут метку «автоматика» #C98A1E',
+          v.rows.every((r) => {
+            const it = withAuto.items.find((i) => i.id === r.id);
+            const want = String(it.requested_by || '').indexOf('auto:') === 0;
+            return want
+              ? (r.isAuto === true && r.autoLabel === 'автоматика' &&
+                 r.autoColor === '#C98A1E')
+              : r.isAuto === false;
+          }));
+    check('G-02 полный текст auto:join / auto:channel_add стоит рядом с меткой',
+          v.rows.find((r) => r.id === withAuto.items[1].id).reqBy === 'auto:join' &&
+          v.rows.find((r) => r.id === withAuto.items[2].id).reqBy === 'auto:channel_add');
+    check('G-02 фикстурная работа auto:join (id 13) тоже помечена',
+          (() => {
+            const r = v.rows.find((x) => x.id === 13);
+            return !!r && r.isAuto === true && r.reqBy === 'auto:join';
+          })());
+  }
+
+  // G-03. Чипсы источника: три, «Все / авто / руками»; без фильтра подсвечен
+  // «Все», подсветка — той же парой цветов, что у состояний (#131E5F/#F8F3E0).
+  {
+    const {c} = build();
+    await c.componentDidMount();
+    await sleep();
+    let v = vals(c);
+    check('G-03 чипсов источника три: «Все / авто / руками»',
+          v.sourceFilters.length === 3 &&
+          v.sourceFilters.map((f) => f.label).join('/') === 'Все/авто/руками');
+    check('G-03 без фильтра подсвечен «Все», остальные прозрачны',
+          v.sourceFilters[0].bg === '#131E5F' &&
+          v.sourceFilters[1].bg === 'transparent' &&
+          v.sourceFilters[2].bg === 'transparent');
+    const autoChip = v.sourceFilters.find((f) => f.label === 'авто');
+    check('G-03 чипс источника несёт обработчик',
+          !!autoChip && typeof autoChip.pick === 'function');
+    if (autoChip) { autoChip.pick(); await sleep(); }
+    v = vals(c);
+    check('G-03 активный чипс источника подсвечен',
+          v.sourceFilters.find((f) => f.label === 'авто').bg === '#131E5F' &&
+          v.sourceFilters.find((f) => f.label === 'Все').bg === 'transparent');
+  }
+
+  // G-04. Выбор источника уходит на сервер параметром source=auto|manual,
+  // «Все» не шлёт параметра вовсе («пустые не отправляются»); состояние и
+  // источник — независимые срезы, клик по одному не сбрасывает другой.
+  {
+    const {c, calls} = build();
+    await c.componentDidMount();
+    await sleep();
+    let v = vals(c);
+    const autoChip = v.sourceFilters.find((f) => f.label === 'авто');
+    if (autoChip) { autoChip.pick(); await sleep(); }
+    const second = queueGets(calls)[1];
+    check('G-04 чипс «авто» шлёт source=auto',
+          !!second && second.q.source === 'auto');
+
+    v = vals(c);
+    const manualChip = v.sourceFilters.find((f) => f.label === 'руками');
+    if (manualChip) { manualChip.pick(); await sleep(); }
+    const third = queueGets(calls)[2];
+    check('G-04 чипс «руками» шлёт source=manual',
+          !!third && third.q.source === 'manual');
+
+    v = vals(c);
+    const allChip = v.sourceFilters.find((f) => f.label === 'Все');
+    if (allChip) { allChip.pick(); await sleep(); }
+    const fourth = queueGets(calls)[3];
+    check('G-04 чипс «Все» не шлёт параметра source',
+          !!fourth && !('source' in fourth.q));
+
+    // Независимость срезов — на свежем стенде: предыдущие клики в этом сценарии
+    // закончились «Все», и source закономерно пуст.
+    const again = build();
+    await again.c.componentDidMount();
+    await sleep();
+    const v3 = vals(again.c);
+    const autoChip2 = v3.sourceFilters.find((f) => f.label === 'авто');
+    const queuedChip = v3.stateFilters.find((f) => f.label === 'в очереди');
+    if (autoChip2) { autoChip2.pick(); await sleep(); }
+    if (queuedChip) { queuedChip.pick(); await sleep(); }
+    const fifth = queueGets(again.calls)[2];
+    check('G-04 фильтр источника держится при смене состояния',
+          !!fifth && fifth.q.source === 'auto' && fifth.q.state === 'queued');
+  }
+
+  // Пустота под фильтром источника — «под фильтр», а не «очередь пуста»:
+  // две разные новости, как и у состояний.
+  {
+    const {c} = build();
+    await c.componentDidMount();
+    await sleep();
+    const v = vals(c);
+    const manualChip = v.sourceFilters.find((f) => f.label === 'руками');
+    if (manualChip) { manualChip.pick(); await sleep(); }
+    const v2 = vals(c);
+    check('G-04 пустота под фильтром источника названа «Под фильтр ничего не подошло»',
+          v2.emptyTitle === 'Под фильтр ничего не подошло');
+  }
+
+  // G-05. Существующее не сломано — это сам прогон: проверки 1–11 этого файла
+  // (чипсы состояний против summary.states, порядок строк, снятие только у
+  // queued, пустые состояния, разбивка по аккаунтам) остаются зелёными без
+  // единой правки; итоговая строка ниже считает и их, и блок Б.
+
   // ── итог ────────────────────────────────────────────────────────────────────
   for (const [mark, name] of results) console.log(mark + ' ' + name);
   const bad = results.filter((r) => r[0] === 'FAIL').length;

@@ -578,7 +578,7 @@
         "running": 2
       }
     },
-    "total": 12
+    "total": 13
   },
   "/channels": {
     "limit": 50,
@@ -2779,7 +2779,7 @@
       "l2": false,
       "l3": false
     },
-    "total": 1
+    "total": 2
   },
   "/system/mode": {
     "changed_by": null,

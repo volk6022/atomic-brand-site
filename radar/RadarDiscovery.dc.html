@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Подбор каналов</div>
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">кандидаты, решения, история поисков — права раздела как у Channels</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+  </div>
+
+  <sc-if value="{{ canScan }}" hint-placeholder-val="{{ false }}">
+  <div style="background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:14px;display:flex;flex-direction:column;gap:10px">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Скан сейчас</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <select value="{{ scanKind }}" onChange="{{ setScanKind }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        <sc-for list="{{ scanKindOptions }}" as="o" hint-placeholder-count="2">
+          <option value="{{ o.value }}">{{ o.label }}</option>
+        </sc-for>
+      </select>
+      <sc-if value="{{ scanSimilar }}" hint-placeholder-val="{{ true }}">
+        <select value="{{ scanSeed }}" onChange="{{ setScanSeed }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <sc-for list="{{ seedOptions }}" as="o" hint-placeholder-count="7">
+            <option value="{{ o.value }}">{{ o.label }}</option>
+          </sc-for>
+        </select>
+      </sc-if>
+      <sc-if value="{{ scanSearch }}" hint-placeholder-val="{{ false }}">
+        <input value="{{ scanQuery }}" onInput="{{ setScanQuery }}" placeholder="что искать, до 255 символов" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
+      </sc-if>
+      <button onClick="{{ scanSubmit }}" disabled="{{ scanning }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace">Запустить скан</button>
+    </div>
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">«Похожие» — поиск идёт от выбранного канала; рабочий аккаунт сервер выберет сам. «По строке» — текст поискового заказа. Ход прогона виден в разделе Runs.</div>
+    <sc-if value="{{ hasScanError }}" hint-placeholder-val="{{ false }}">
+      <div style="border-left:3px solid #DA501C;background:#FBEEE8;padding:8px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8F2F0C">{{ scanError }}</div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="5">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+    <div style="width:8px"></div>
+    <select value="{{ sourceFilter }}" onChange="{{ setSource }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ sourceOptions }}" as="o" hint-placeholder-count="4">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ verdictFilter }}" onChange="{{ setVerdict }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ verdictOptions }}" as="o" hint-placeholder-count="4">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск среди кандидатов" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+    <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">загружаю кандидатов…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Кандидаты не открылись: {{ errorMsg }}. Можно попробовать ещё раз — «обновить» выше.</div>
+  </sc-if>
+
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="10">
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap;cursor:{{ c.cursor }}">{{ c.label }} {{ c.arrow }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+          <tr style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.title }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">
+                <sc-if value="{{ r.hasLink }}" hint-placeholder-val="{{ true }}"><a href="{{ r.link }}" target="_blank" rel="noopener">{{ r.uname }}</a></sc-if><sc-if value="{{ r.noLink }}" hint-placeholder-val="{{ false }}">{{ r.uname }}</sc-if>
+              </div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.members }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.chatType }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              {{ r.sourceLabel }}
+              <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.seed }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              {{ r.liveness }}
+              <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.livenessAt }}</div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="white-space:nowrap">{{ r.llm }}</div>
+              <sc-if value="{{ r.hasLlmNote }}" hint-placeholder-val="{{ false }}"><div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E;max-width:280px;white-space:pre-wrap;word-break:break-word">{{ r.llmNote }}</div></sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.decisionC }};border:1px solid {{ r.decisionC }};padding:4px 7px">{{ r.decisionLabel }}</span></td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="white-space:nowrap">{{ r.decidedBy }} · {{ r.decidedAt }}</div>
+              <sc-if value="{{ r.hasReason }}" hint-placeholder-val="{{ false }}"><div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E;max-width:280px;white-space:pre-wrap;word-break:break-word">{{ r.decisionReason }}</div></sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);min-width:190px">
+              <sc-if value="{{ r.canApprove }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ r.approve }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#2E7D57">Одобрить</div>
+              </sc-if>
+              <sc-if value="{{ r.canReject }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ r.rejectToggle }}" style="margin-top:6px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">Отклонить…</div>
+              </sc-if>
+              <sc-if value="{{ r.rejectOpen }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:8px;background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:10px;display:flex;flex-direction:column;gap:8px">
+                  <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">причина отказа</div>
+                  <input value="{{ r.reason }}" onInput="{{ r.setReason }}" placeholder="почему отклоняется" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:230px">
+                  <div style="display:flex;gap:10px;align-items:center">
+                    <button onClick="{{ r.rejectSubmit }}" disabled="{{ r.rejectDisabled }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace">Отклонить</button>
+                    <div onClick="{{ r.rejectCancel }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">отмена</div>
+                  </div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.canConnect }}" hint-placeholder-val="{{ false }}">
+                <sc-if value="{{ r.connectOpen }}" hint-placeholder-val="{{ false }}">
+                  <div style="margin-top:8px;background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:10px;display:flex;flex-direction:column;gap:8px">
+                    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">аккаунт для вступления</div>
+                    <select value="{{ r.connectAccount }}" onChange="{{ r.setConnectAccount }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+                      <sc-for list="{{ r.accountOptions }}" as="a" hint-placeholder-count="3">
+                        <option value="{{ a.value }}">{{ a.label }}</option>
+                      </sc-for>
+                    </select>
+                    <div style="display:flex;gap:10px;align-items:center">
+                      <button onClick="{{ r.connectSubmit }}" disabled="{{ r.connecting }}" style="border:0;background:#156479;color:#F8F3E0;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace">Подключить</button>
+                      <div onClick="{{ r.connectCancel }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">отмена</div>
+                    </div>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ r.connectClosed }}" hint-placeholder-val="{{ true }}">
+                  <div onClick="{{ r.connectToggle }}" style="margin-top:6px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">Подключить</div>
+                </sc-if>
+              </sc-if>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:22px 24px;text-align:center">
+      <div style="font:400 17px/1.2 'Architexture',sans-serif;color:#131E5F">{{ emptyTitle }}</div>
+      <div style="margin-top:8px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ emptyNote }}</div>
+    </div>
+  </sc-if>
+
+  <div style="display:flex;align-items:center;gap:12px;margin-top:6px">
+    <div style="font:400 15px/1 'Architexture',sans-serif;color:#131E5F">История поисков</div>
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ queriesNote }}</div>
+  </div>
+  <sc-if value="{{ hasQueriesError }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#DA501C">История поисков не открылась: {{ queriesError }}</div>
+  </sc-if>
+  <sc-if value="{{ queriesEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:14px;text-align:center;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Поисков ещё не было — скан ни разу не доходил до выдачи.</div>
+  </sc-if>
+  <sc-if value="{{ hasQueries }}" hint-placeholder-val="{{ false }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 12px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ queryCols }}" as="qc" hint-placeholder-count="9">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ qc }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ queries }}" as="qr" hint-placeholder-count="4">
+          <tr style-hover="background:#EDF4F3">
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ qr.id }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ qr.kind }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ qr.query }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ qr.seed }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ qr.account }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ qr.run }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);text-align:center">{{ qr.found }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);text-align:center">{{ qr.fresh }}</td>
+            <td style="padding:8px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ qr.when }}</td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="font:400 10px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">порядок строк — серверный, свежие сверху; ручка сортировок не имеет</div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">кандидаты, решения, история поисков</div>
+  </div>
+
+  <sc-if value="{{ canScan }}" hint-placeholder-val="{{ false }}">
+  <div style="background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:12px;display:flex;flex-direction:column;gap:8px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Скан сейчас</div>
+    <select value="{{ scanKind }}" onChange="{{ setScanKind }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ scanKindOptions }}" as="o" hint-placeholder-count="2">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+    <sc-if value="{{ scanSimilar }}" hint-placeholder-val="{{ true }}">
+      <select value="{{ scanSeed }}" onChange="{{ setScanSeed }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        <sc-for list="{{ seedOptions }}" as="o" hint-placeholder-count="7">
+          <option value="{{ o.value }}">{{ o.label }}</option>
+        </sc-for>
+      </select>
+    </sc-if>
+    <sc-if value="{{ scanSearch }}" hint-placeholder-val="{{ false }}">
+      <input value="{{ scanQuery }}" onInput="{{ setScanQuery }}" placeholder="что искать, до 255 символов" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+    </sc-if>
+    <button onClick="{{ scanSubmit }}" disabled="{{ scanning }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace">Запустить скан</button>
+    <sc-if value="{{ hasScanError }}" hint-placeholder-val="{{ false }}">
+      <div style="border-left:3px solid #DA501C;background:#FBEEE8;padding:8px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8F2F0C">{{ scanError }}</div>
+    </sc-if>
+  </div>
+  </sc-if>
+
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="5">
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 10px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+    </sc-for>
+  </div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+    <select value="{{ sourceFilter }}" onChange="{{ setSource }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ sourceOptions }}" as="o" hint-placeholder-count="4">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ verdictFilter }}" onChange="{{ setVerdict }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ verdictOptions }}" as="o" hint-placeholder-count="4">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+  </div>
+  <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск среди кандидатов" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+  <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+  </sc-if>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">загружаю кандидатов…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Кандидаты не открылись: {{ errorMsg }}</div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:16px;text-align:center">
+      <div style="font:400 15px/1.2 'Architexture',sans-serif;color:#131E5F">{{ emptyTitle }}</div>
+      <div style="margin-top:6px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ emptyNote }}</div>
+    </div>
+  </sc-if>
+
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.title }}</div>
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.decisionC }};border:1px solid {{ r.decisionC }};padding:3px 6px">{{ r.decisionLabel }}</div>
+      </div>
+      <div style="margin-top:5px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">
+        <sc-if value="{{ r.hasLink }}" hint-placeholder-val="{{ true }}"><a href="{{ r.link }}" target="_blank" rel="noopener">{{ r.uname }}</a></sc-if><sc-if value="{{ r.noLink }}" hint-placeholder-val="{{ false }}">{{ r.uname }}</sc-if> · {{ r.members }} · {{ r.chatType }}
+      </div>
+      <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.sourceLabel }} · {{ r.seed }}</div>
+      <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.liveness }}<sc-if value="{{ r.hasLivenessAt }}" hint-placeholder-val="{{ false }}"> · {{ r.livenessAt }}</sc-if></div>
+      <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#184153">LLM: {{ r.llm }}</div>
+      <sc-if value="{{ r.hasLlmNote }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:3px;font:400 10px/1.5 'JetBrains Mono',monospace;color:#8A8F9E;white-space:pre-wrap;word-break:break-word">{{ r.llmNote }}</div>
+      </sc-if>
+      <div style="margin-top:5px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.decidedBy }} · {{ r.decidedAt }}</div>
+      <sc-if value="{{ r.hasReason }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:3px;font:400 10px/1.5 'JetBrains Mono',monospace;color:#8A8F9E;white-space:pre-wrap;word-break:break-word">{{ r.decisionReason }}</div>
+      </sc-if>
+      <sc-if value="{{ r.canApprove }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ r.approve }}" style="margin-top:8px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#2E7D57">Одобрить</div>
+      </sc-if>
+      <sc-if value="{{ r.canReject }}" hint-placeholder-val="{{ false }}">
+        <div onClick="{{ r.rejectToggle }}" style="margin-top:6px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">Отклонить…</div>
+      </sc-if>
+      <sc-if value="{{ r.rejectOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:8px;background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:10px;display:flex;flex-direction:column;gap:8px">
+          <input value="{{ r.reason }}" onInput="{{ r.setReason }}" placeholder="почему отклоняется" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <div style="display:flex;gap:10px;align-items:center">
+            <button onClick="{{ r.rejectSubmit }}" disabled="{{ r.rejectDisabled }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace">Отклонить</button>
+            <div onClick="{{ r.rejectCancel }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">отмена</div>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ r.canConnect }}" hint-placeholder-val="{{ false }}">
+        <sc-if value="{{ r.connectOpen }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:8px;background:#F8F3E0;border:1px solid rgba(19,30,95,0.24);padding:10px;display:flex;flex-direction:column;gap:8px">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#156479">аккаунт для вступления</div>
+            <select value="{{ r.connectAccount }}" onChange="{{ r.setConnectAccount }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+              <sc-for list="{{ r.accountOptions }}" as="a" hint-placeholder-count="3">
+                <option value="{{ a.value }}">{{ a.label }}</option>
+              </sc-for>
+            </select>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button onClick="{{ r.connectSubmit }}" disabled="{{ r.connecting }}" style="border:0;background:#156479;color:#F8F3E0;padding:6px 12px;font:400 11px/1 'JetBrains Mono',monospace">Подключить</button>
+              <div onClick="{{ r.connectCancel }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">отмена</div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ r.connectClosed }}" hint-placeholder-val="{{ true }}">
+          <div onClick="{{ r.connectToggle }}" style="margin-top:6px;cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">Подключить</div>
+        </sc-if>
+      </sc-if>
+    </div>
+  </sc-for>
+
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div style="flex:1"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+    <div style="font:400 14px/1 'Architexture',sans-serif;color:#131E5F">История поисков</div>
+    <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ queriesNote }}</div>
+  </div>
+  <sc-if value="{{ hasQueriesError }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#DA501C">История поисков не открылась: {{ queriesError }}</div>
+  </sc-if>
+  <sc-if value="{{ queriesEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:12px;text-align:center;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Поисков ещё не было — скан ни разу не доходил до выдачи.</div>
+  </sc-if>
+  <sc-for list="{{ queries }}" as="qr" hint-placeholder-count="4">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:10px 12px">
+      <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#184153">{{ qr.kind }} · прогон {{ qr.run }} · {{ qr.when }}</div>
+      <div style="margin-top:2px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#131E5F">{{ qr.query }}</div>
+      <div style="margin-top:2px;font:400 10px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ qr.seed }} · {{ qr.account }} · найдено {{ qr.found }} · новых {{ qr.fresh }}</div>
+    </div>
+  </sc-for>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:520},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { rows:[], total:0, states:null, loading:true, error:null,
+            queries:[], perRun:null, queriesError:'',
+            seedOptions:[], accounts:[],
+            scanKind:'similar', scanSeed:'', scanQuery:'', scanning:false, scanError:'',
+            busyId:null, rejectId:null, rejectReason:'', connectId:null, connectAccount:'' };
+
+  // Четыре решения — тот словарь, которым говорит ручка /discovery/candidates
+  // (ChannelCandidate.DECISIONS). Порядок здесь — порядок чипсов на экране.
+  DECISION = {pending:{label:'на проверке', c:'#C98A1E'}, approved:{label:'одобрен', c:'#2E7D57'},
+              rejected:{label:'отклонён', c:'#8A8F9E'}, connected:{label:'подключён', c:'#156479'}};
+  DECISION_ORDER = ['pending', 'approved', 'rejected', 'connected'];
+
+  // Откуда кандидат и что сказал LLM — слова сервера (models.py), экран только
+  // подписывает их по-человечески.
+  SOURCE = {similar:'похожие', search:'поиск', manual:'вручную'};
+  VERDICT = {fit:'подходит', unfit:'не подходит', unclear:'неясно'};
+  QKIND = {similar:'похожие', search:'поиск'};
+
+  // Колонки кандидатов. Кликабельны только те, чей ключ сервер разрешил в
+  // `sorts` ответа: список заводится в таблицу при каждой загрузке.
+  CAND_COLS = [
+    {label:'Кандидат', sort:'title'},
+    {label:'Участники', sort:'members'},
+    {label:'Тип', sort:null},
+    {label:'Источник', sort:null},
+    {label:'Найден', sort:'created'},
+    {label:'Активность 7д', sort:null},
+    {label:'Вердикт LLM', sort:null},
+    {label:'Решение', sort:null},
+    {label:'Решение принял', sort:null},
+    {label:'', sort:null},
+  ];
+
+  QUERY_COLS = ['№', 'Вид', 'Запрос', 'Семя', 'Аккаунт', 'Прогон', 'Найдено', 'Новых', 'Дата'];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      // Список разрешённых сортировок экран не выдумывает: сервер присылает его
+      // в каждом ответе (sorts) — своя копия разошлась бы с ним, и клик по
+      // заголовку давал бы 422. Фильтры заведены через Table: живут в адресе,
+      // срез можно прислать ссылкой.
+      key:'discovery', size:50, sort:'created', order:'desc', sorts:[],
+      filters:{state:'', source:'', verdict:''},
+    });
+    this.table.attach(()=>this.load());
+    this.load();
+    this.loadQueries();
+    this.loadOptions();
+  }
+
+  async load(){
+    this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/discovery/candidates', this.table.query());
+      // Разрешённые ключи сортировки — слова сервера: обновляем на каждый ответ.
+      if (Array.isArray(data.sorts)) this.table.sorts = data.sorts.map(k=>({key:k}));
+      this.setState({rows:data.rows || [], total:data.total || 0,
+                     // `states` здесь — СПИСОК [{key, count}], а не словарь, как
+                     // в summary.states очереди дочитывания: скопированный без
+                     // правки чужой код чипсов показал бы undefined.
+                     states:Array.isArray(data.states) ? data.states : null,
+                     loading:false, error:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+  }
+
+  // История поисков — второй блок экрана: отказ у него свой и таблицу
+  // кандидатов не роняет. Сортировок ручка не имеет — параметров, кроме
+  // среза, ей не передаётся.
+  async loadQueries(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/discovery/queries', {limit:50, offset:0});
+      this.setState({queries:data.rows || [], perRun:(data.per_run || {}).queries,
+                     queriesError:''});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({queriesError:describe(e)});
+    }
+  }
+
+  // Семена «похожих» — это КАНАЛЫ (/channels/options), не аккаунты: рабочий
+  // аккаунт для поиска сервер выберет сам, поэтому экран его и не спрашивает.
+  // А список аккаунтов нужен только для кнопки «Подключить», то есть только
+  // владельцу (GET /accounts — Fleet) — запрашиваем в owner-ветке, а не на
+  // всякий случай у всех.
+  async loadOptions(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const options = await get('/channels/options');
+      const list = Array.isArray(options) ? options : [];
+      this.setState({seedOptions:list,
+                     scanSeed:this.state.scanSeed || (list.length ? String(list[0].id) : '')});
+    } catch (e) { this.setState({seedOptions:[]}); }
+    if (this.canConnectNow()) {
+      try {
+        const { get } = await import('./radar-api.js');
+        const accounts = await get('/accounts');
+        // Активные — единственные, кем можно вступать: warmup и прочие сервер
+        // бы отверг, поэтому в селекте их нет вовсе.
+        this.setState({accounts:(Array.isArray(accounts) ? accounts : [])
+          .filter(a=>a && a.status === 'active')});
+      } catch (e) {
+        const { describe } = await import('./radar-api.js');
+        const t = (this.props.api || {}).toast || (()=>{});
+        t(describe(e), '#DA501C');
+      }
+    }
+  }
+
+  // Право решений — CHANNEL_EDIT: owner и customer. Reviewer список видит,
+  // решать не может, поэтому у него ни одной кнопки и нет.
+  canDecide(){
+    const r = (this.props.api || {}).role;
+    return r === 'owner' || r === 'customer';
+  }
+
+  // Право скана — RUN_BACKFILL: owner и customer.
+  canScanNow(){
+    const r = (this.props.api || {}).role;
+    return r === 'owner' || r === 'customer';
+  }
+
+  // CHANNEL_ADD есть и у customer, но источник списка аккаунтов (GET /accounts,
+  // Fleet) — только owner: без списка кнопку «Подключить» показать нельзя, а
+  // константу аккаунтов экран выдумывать не имеет права. Поэтому — только owner
+  // до отдельного решения вопроса §8-1.
+  canConnectNow(){
+    return (this.props.api || {}).role === 'owner';
+  }
+
+  // Решения обратимы до `connected`: одобренный можно отклонить, отклонённый —
+  // одобрить. Поэтому «Одобрить» есть у всех неконнектных, кроме уже
+  // одобренных, «Отклонить…» — у всех неконнектных, кроме уже отклонённых.
+  async approve(item){
+    if(!item || this.state.busyId) return;
+    const t = (this.props.api || {}).toast || (()=>{});
+    this.setState({busyId:item.id});
+    try {
+      const { post, describe } = await import('./radar-api.js');
+      // Сразу POST, без подтверждения: решение обратимо, а лишний клик —
+      // дешевле лишней модалки. Причину сервер на одобрение не спрашивает.
+      const row = await post('/discovery/candidates/' + item.id + '/decide',
+                             {decision:'approved'});
+      // Строка обновляется из ответа на месте: перечитывать список значило бы
+      // гонку с параллельными решениями и лишний запрос.
+      this.setState({busyId:null, rows:this.replaceRow(item.id, row)});
+      t('Одобрен: @' + (row.username || ('id ' + row.id)), '#2E7D57');
+    } catch (e) {
+      this.setState({busyId:null});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  replaceRow(id, row){
+    return (this.state.rows || [])
+      .map(r=>r.id === id ? Object.assign({}, r, row) : r);
+  }
+
+  rejectToggle(item){
+    if(!item) return;
+    // Форма причины — встроенная в строку, а не модалка: у модалки нет
+    // произвольного текста. Одна форма на экран за раз.
+    this.setState({rejectId:this.state.rejectId === item.id ? null : item.id,
+                   rejectReason:''});
+  }
+
+  setReason(e){
+    this.setState({rejectReason:e && e.target ? e.target.value : ''});
+  }
+
+  rejectCancel(){
+    this.setState({rejectId:null, rejectReason:''});
+  }
+
+  async rejectSubmit(item){
+    const t = (this.props.api || {}).toast || (()=>{});
+    // Пустую причину экран не отправляет: сервер ответил бы 422 «отказ без
+    // причины не принимается», но до сервера доводить нечего — кнопка и так
+    // неактивна, здесь двойная страховка от двойного клика.
+    const reason = String(this.state.rejectReason || '').trim();
+    if(!item || !reason || this.state.busyId) return;
+    this.setState({busyId:item.id});
+    try {
+      const { post, describe } = await import('./radar-api.js');
+      const row = await post('/discovery/candidates/' + item.id + '/decide',
+                             {decision:'rejected', reason:reason});
+      this.setState({busyId:null, rows:this.replaceRow(item.id, row),
+                     rejectId:null, rejectReason:''});
+      t('Отклонён: @' + (row.username || ('id ' + row.id)), '#8A8F9E');
+    } catch (e) {
+      this.setState({busyId:null});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  setScanKind(e){
+    this.setState({scanKind:e && e.target ? e.target.value : 'similar', scanError:''});
+  }
+
+  setScanSeed(e){
+    this.setState({scanSeed:e && e.target ? e.target.value : ''});
+  }
+
+  setScanQuery(e){
+    this.setState({scanQuery:e && e.target ? e.target.value : ''});
+  }
+
+  async scanSubmit(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(!this.canScanNow() || this.state.scanning) return;
+    const S = this.state;
+    let body;
+    if(S.scanKind === 'search'){
+      const query = String(S.scanQuery || '').trim();
+      // Пустую и длиннее 255 сервер отвергает с 422 — до сервера не доводим.
+      if(!query){
+        this.setState({scanError:'Строка поиска пуста — введите, что искать.'});
+        return;
+      }
+      if(query.length > 255){
+        this.setState({scanError:'Строка длиннее 255 символов — сервер такую отвергнет. Сократите запрос.'});
+        return;
+      }
+      body = {kind:'search', query:query};
+    } else {
+      // account_id здесь нет принципиально: аккаунт на поиск выбирает сервер.
+      if(!S.scanSeed){
+        this.setState({scanError:'Выберите канал-источник — «похожие» ищутся от семени.'});
+        return;
+      }
+      body = {kind:'similar', seed_channel_id:Number(S.scanSeed)};
+    }
+    this.setState({scanning:true, scanError:''});
+    try {
+      const { post, describe } = await import('./radar-api.js');
+      const r = await post('/discovery/scan', body);
+      this.setState({scanning:false});
+      t('Поиск запущен · задача #' + r.run_id + ' — ход виден в Runs', '#156479');
+    } catch (e) {
+      // 409 «уже искали сегодня / идёт прогон» и 503 «флот пуст» — ответы
+      // сервера, а не поломка экрана; показываем текст сервера.
+      this.setState({scanning:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  connectToggle(item){
+    if(!item) return;
+    const S = this.state;
+    const firstActive = (S.accounts && S.accounts[0]) ? S.accounts[0].id : '';
+    this.setState({connectId:S.connectId === item.id ? null : item.id,
+                   // Дефолт селекта — первый активный аккаунт: чаще всего
+                   // вступают тем, кто свободен первым.
+                   connectAccount:(S.connectAccount !== '' && S.connectAccount !== null &&
+                                   S.connectAccount !== undefined)
+                                  ? S.connectAccount : firstActive});
+  }
+
+  setConnectAccount(e){
+    this.setState({connectAccount:e && e.target ? e.target.value : ''});
+  }
+
+  connectCancel(){
+    this.setState({connectId:null});
+  }
+
+  async connectSubmit(item){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const S = this.state;
+    if(!item || S.busyId) return;
+    // username без «@» — форма ручки /channels.
+    const username = String(item.username || '').replace(/^@/, '');
+    if(!username) return;
+    if(!S.connectAccount){
+      t('Нет активного аккаунта для вступления — проверьте флот', '#DA501C');
+      return;
+    }
+    this.setState({busyId:item.id});
+    try {
+      const { post, describe } = await import('./radar-api.js');
+      const r = await post('/channels',
+                           {username:username, engage_account_id:Number(S.connectAccount)});
+      this.setState({busyId:null, connectId:null});
+      t('Подключение @' + r.username + ' запрошено — ' + r.note, '#156479');
+      // Кандидат скоро станет connected — перечитываем список.
+      this.load();
+    } catch (e) {
+      this.setState({busyId:null});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  // Человеческая дата: dd.mm hh:mm — глубина и решения живут в пределах
+  // недели-двух, год в ячейке — шум.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    const p = (n)=>String(n).padStart(2, '0');
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  livenessOf(it){
+    const parts = [];
+    if(it.liveness_posts_7d !== null && it.liveness_posts_7d !== undefined)
+      parts.push('постов ' + it.liveness_posts_7d);
+    if(it.liveness_comments_7d !== null && it.liveness_comments_7d !== undefined)
+      parts.push('комментариев ' + it.liveness_comments_7d);
+    return parts.length ? parts.join(' · ') : '—';
+  }
+
+  hasLlm(it){
+    return !!(it.llm_verdict || it.llm_reason ||
+              (it.llm_score !== null && it.llm_score !== undefined));
+  }
+
+  llmOf(it){
+    const parts = [];
+    if(it.llm_verdict) parts.push(this.VERDICT[it.llm_verdict] || it.llm_verdict);
+    if(it.llm_score !== null && it.llm_score !== undefined) parts.push(String(it.llm_score));
+    return parts.length ? parts.join(' · ') : '—';
+  }
+
+  llmNoteOf(it){
+    const parts = [];
+    if(it.llm_reason) parts.push(it.llm_reason);
+    if(it.llm_at) parts.push('вердикт ' + this.when(it.llm_at));
+    return parts.join(' · ');
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const rows = S.rows || [];
+    const filter = this.table ? this.table.filters : {state:'', source:'', verdict:''};
+
+    // До загрузки отдаём все дырки разметки: отсутствующий ключ в этом
+    // фреймворке не даёт ошибки — ячейка молча остаётся пустой, и поломка
+    // всплывает у человека, а не здесь.
+    if(!this.table){
+      return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+              reload:()=>{},
+              canScan:false, scanKind:'similar', setScanKind:()=>{}, scanKindOptions:[],
+              scanSimilar:false, scanSearch:false,
+              scanSeed:'', setScanSeed:()=>{}, seedOptions:[],
+              scanQuery:'', setScanQuery:()=>{}, scanSubmit:()=>{}, scanning:false,
+              hasScanError:false, scanError:'',
+              stateFilters:[], sourceFilter:'', setSource:()=>{}, sourceOptions:[],
+              verdictFilter:'', setVerdict:()=>{}, verdictOptions:[],
+              q:'', setQ:()=>{}, hasFilters:false, resetAll:()=>{},
+              loading:true, hasError:false, errorMsg:'',
+              hasRows:false, isEmpty:false, emptyTitle:'', emptyNote:'',
+              cols:[], rows:[], range:'загрузка…', sizes:[], pages:[],
+              prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+              queriesNote:'', hasQueries:false, queriesEmpty:true, queryCols:[],
+              queries:[], hasQueriesError:false, queriesError:''};
+    }
+
+    // Счётчик чипса — поиском по СПИСКУ states: ключа нет — прочерк, а не ноль
+    // («сервер не прислал» и «ноль» — разные новости).
+    const chips = [{k:'', label:'Все'}]
+      .concat(this.DECISION_ORDER.map(k=>({k, label:this.DECISION[k].label})));
+    const stateList = Array.isArray(S.states) ? S.states : null;
+    const countOf = (k)=>{
+      if(!stateList) return undefined;
+      const f = stateList.find(s=>s && s.key === k);
+      return f ? f.count : undefined;
+    };
+    const stateFilters = chips.map(f=>{
+      const n = f.k === '' ? null : countOf(f.k);
+      return {label:f.label,
+              count:f.k === '' ? '' : ('· ' + (n === undefined || n === null ? '—' : n)),
+              bg:(filter.state || '') === f.k ? '#131E5F' : 'transparent',
+              fg:(filter.state || '') === f.k ? '#F8F3E0' : '#156479',
+              pick:()=>this.table.setFilter('state', f.k)};
+    });
+
+    // Селекты: значения фильтров проверяет сервер (чужие — 422 с перечнем),
+    // поэтому экран не выдумывает ни значений, ни новых ключей.
+    const sourceOptions = [{value:'', label:'все источники'},
+                           {value:'similar', label:'похожие'},
+                           {value:'search', label:'поиск'},
+                           {value:'manual', label:'вручную'}]
+      .map(o=>Object.assign({}, o, {selected:String(o.value) === String(filter.source || '')}));
+    const verdictOptions = [{value:'', label:'все вердикты'},
+                            {value:'fit', label:'подходит'},
+                            {value:'unfit', label:'не подходит'},
+                            {value:'unclear', label:'неясно'}]
+      .map(o=>Object.assign({}, o, {selected:String(o.value) === String(filter.verdict || '')}));
+
+    const scanKindOptions = [{value:'similar', label:'похожие', selected:S.scanKind === 'similar'},
+                             {value:'search', label:'по строке', selected:S.scanKind === 'search'}];
+    const seedOptions = (S.seedOptions || []).map(o=>({
+      value:String(o.id),
+      // username бывает не у всякого канала — название достаточно для выбора.
+      label:o.title || (o.username ? '@' + o.username : ('канал #' + o.id)),
+      selected:String(o.id) === String(S.scanSeed || ''),
+    }));
+    const accountOptions = (S.accounts || []).map(a=>({
+      value:String(a.id), label:a.label || ('аккаунт ' + a.id),
+      selected:String(a.id) === String(S.connectAccount || ''),
+    }));
+
+    const loaded = !S.loading && !S.error;
+    const hasRows = loaded && rows.length > 0;
+    const isEmpty = loaded && rows.length === 0;
+    // «Пусто» и «под фильтром пусто» — разные новости с разными текстами.
+    const hasAnyFilter = !!(filter.state || filter.source || filter.verdict || this.table.q);
+    const emptyTitle = !isEmpty ? '' : (hasAnyFilter ? 'Под фильтр ничего не подошло'
+                                                     : 'Скан не запускался ни разу');
+    const emptyNote = !isEmpty ? '' : (hasAnyFilter
+      ? 'Кандидаты есть — просто ни один не прошёл эти условия. Чипс «Все» и селекты «все …» снимают фильтр.'
+      : 'Запустите скан или подождите расписания — первые кандидаты появятся здесь. История поисков — в блоке ниже.');
+
+    const decidable = this.canDecide();
+    const connectable = this.canConnectNow();
+    const queryRows = S.queries || [];
+
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      reload:()=>this.load(),
+
+      canScan:this.canScanNow(),
+      scanKind:S.scanKind, setScanKind:(e)=>this.setScanKind(e), scanKindOptions,
+      scanSimilar:S.scanKind === 'similar', scanSearch:S.scanKind === 'search',
+      scanSeed:S.scanSeed, setScanSeed:(e)=>this.setScanSeed(e), seedOptions,
+      scanQuery:S.scanQuery, setScanQuery:(e)=>this.setScanQuery(e),
+      scanSubmit:()=>this.scanSubmit(), scanning:!!S.scanning,
+      hasScanError:!!S.scanError, scanError:S.scanError || '',
+
+      stateFilters,
+      sourceFilter:filter.source || '', setSource:(e)=>
+        this.table.setFilter('source', e && e.target ? e.target.value : ''),
+      sourceOptions,
+      verdictFilter:filter.verdict || '', setVerdict:(e)=>
+        this.table.setFilter('verdict', e && e.target ? e.target.value : ''),
+      verdictOptions,
+
+      // Колонки передаются сюда же: заголовки и их кликабельность собирает
+      // таблица по sorts ответа.
+      ...this.table.vals(S.total, {loading:S.loading, error:S.error,
+                                   columns:this.CAND_COLS}),
+
+      loading:!!S.loading,
+      hasError:!!S.error, errorMsg:S.error || '',
+      hasRows, isEmpty, emptyTitle, emptyNote,
+
+      // per_run — потолок прогона, НЕ остаток: суточного счётчика поисков нет.
+      queriesNote:'один прогон — до ' +
+        (S.perRun === null || S.perRun === undefined ? '—' : S.perRun) + ' поисковых заказов',
+      hasQueries: queryRows.length > 0,
+      queriesEmpty: loaded && queryRows.length === 0,
+      queryCols:this.QUERY_COLS,
+      queries:queryRows.map(q=>({
+        id:q.id,
+        kind:this.QKIND[q.kind] || q.kind || '—',
+        query:q.query || '—',
+        seed:q.seed_channel_id !== null && q.seed_channel_id !== undefined
+             ? ('канал #' + q.seed_channel_id) : '—',
+        account:q.account_id ? ('acc-' + q.account_id) : '—',
+        run:q.run_id !== null && q.run_id !== undefined ? ('#' + q.run_id) : '—',
+        found:q.found_total === null || q.found_total === undefined ? '—' : q.found_total,
+        fresh:q.new_total === null || q.new_total === undefined ? '—' : q.new_total,
+        when:this.when(q.created_at),
+      })),
+      hasQueriesError:!!S.queriesError, queriesError:S.queriesError || '',
+
+      rows:rows.map(it=>{
+        const d = this.DECISION[it.decision] || {label:it.decision || '—', c:'#8A8F9E'};
+        const llmNote = this.llmNoteOf(it);
+        const rejectOpen = S.rejectId === it.id;
+        const reason = rejectOpen ? String(S.rejectReason || '') : '';
+        return {
+          id:it.id,
+          username:it.username || '',
+          uname:it.username ? '@' + it.username : 'без @username',
+          hasLink:!!it.username, noLink:!it.username,
+          link:it.username ? 'https://t.me/' + it.username : '',
+          title:it.title || ('кандидат #' + it.id),
+          members:(it.members === null || it.members === undefined) ? '—' : String(it.members),
+          chatType:it.chat_type || '—',
+          sourceLabel:this.SOURCE[it.source] || it.source || '—',
+          seed:(it.seed_channel_id !== null && it.seed_channel_id !== undefined)
+               ? ('найден от канала #' + it.seed_channel_id) : '—',
+          liveness:this.livenessOf(it),
+          hasLivenessAt:!!it.liveness_checked_at,
+          livenessAt:it.liveness_checked_at ? ('проверено ' + this.when(it.liveness_checked_at)) : '',
+          hasLlm:this.hasLlm(it), noLlm:!this.hasLlm(it),
+          llm:this.llmOf(it),
+          hasLlmNote:!!llmNote, llmNote:llmNote,
+          decisionLabel:d.label, decisionC:d.c,
+          hasDecided:!!it.decided_by || !!it.decided_at,
+          decidedBy:it.decided_by || '—',
+          decidedAt:this.when(it.decided_at),
+          hasReason:!!it.decision_reason, noReason:!it.decision_reason,
+          decisionReason:it.decision_reason || '',
+
+          canApprove:decidable && it.decision !== 'connected' && it.decision !== 'approved',
+          approve:()=>this.approve(it),
+          canReject:decidable && it.decision !== 'connected' && it.decision !== 'rejected',
+          rejectToggle:()=>this.rejectToggle(it),
+          rejectOpen,
+          reason:reason, setReason:(e)=>this.setReason(e),
+          // Кнопка «Отклонить» неактивна, пока причина пуста.
+          rejectDisabled:!String(reason).trim(),
+          rejectSubmit:()=>this.rejectSubmit(it),
+          rejectCancel:()=>this.rejectCancel(),
+
+          canConnect:connectable && it.decision === 'approved' && !!it.username,
+          connectToggle:()=>this.connectToggle(it),
+          connectOpen:S.connectId === it.id,
+          connectClosed:S.connectId !== it.id,
+          connectAccount:String(S.connectAccount || ''),
+          setConnectAccount:(e)=>this.setConnectAccount(e),
+          accountOptions,
+          connectSubmit:()=>this.connectSubmit(it),
+          connecting:S.busyId === it.id,
+        };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

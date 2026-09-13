@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<sc-if value="{{ desktop }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Автоматика</div>
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">сводка сценариев и настройки · опрос каждые 30 с, кадр runs перечитывает сразу</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="flex:1"></div>
+  </div>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">загружаю сводку…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Автоматика не открылась: {{ errorMsg }}. Можно попробовать ещё раз — «обновить» выше.</div>
+  </sc-if>
+
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+    <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+      <thead><tr>
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+        </sc-for>
+      </tr></thead>
+      <tbody>
+        <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+          <tr style-hover="background:#EDF4F3">
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ r.name }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.paramsLine }}</div>
+              <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}">
+                <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#156479">{{ r.note }}</div>
+              </sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.onC }};border:1px solid {{ r.onC }};padding:4px 7px">{{ r.onLabel }}</span></td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              <sc-if value="{{ r.hasRun }}" hint-placeholder-val="{{ true }}">
+                <div onClick="{{ r.openRuns }}" style="cursor:pointer">
+                  <div style="color:#131E5F">{{ r.runName }}</div>
+                  <div style="margin-top:3px"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.runC }};border:1px solid {{ r.runC }};padding:4px 7px">{{ r.runStatus }}</span></div>
+                  <div style="margin-top:3px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.runWhen }}</div>
+                </div>
+              </sc-if>
+              <sc-if value="{{ r.noRun }}" hint-placeholder-val="{{ false }}">
+                <div style="color:#8A8F9E">запусков не было</div>
+              </sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);min-width:220px">
+              <sc-if value="{{ r.hasResult }}" hint-placeholder-val="{{ false }}">
+                <div style="white-space:pre-wrap;word-break:break-word">{{ r.resultText }}</div>
+              </sc-if>
+              <sc-if value="{{ r.noResult }}" hint-placeholder-val="{{ true }}">—</sc-if>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.nextText }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);min-width:200px">
+              <sc-if value="{{ r.hasErr }}" hint-placeholder-val="{{ false }}">
+                <div style="white-space:pre-wrap;word-break:break-word;color:#DA501C">{{ r.errText }}</div>
+              </sc-if>
+              <sc-if value="{{ r.noErr }}" hint-placeholder-val="{{ true }}">—</sc-if>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+  </div>
+  <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ cancelNote }}</div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:22px 24px;text-align:center">
+      <div style="font:400 17px/1.2 'Architexture',sans-serif;color:#131E5F">{{ emptyTitle }}</div>
+      <div style="margin-top:8px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ emptyNote }}</div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasSettings }}" hint-placeholder-val="{{ true }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font:400 15px/1 'Architexture',sans-serif;color:#131E5F">Настройки</div>
+      <sc-if value="{{ notOwner }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#C98A1E">{{ settingsHint }}</div>
+      </sc-if>
+    </div>
+    <table style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">
+      <tbody>
+        <sc-for list="{{ settingsRows }}" as="s" hint-placeholder-count="9">
+          <tr>
+            <td style="padding:7px 12px 7px 0;border-bottom:1px solid rgba(19,30,95,0.08)">
+              <div style="color:#131E5F">{{ s.label }}</div>
+              <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ s.keyLine }}</div>
+            </td>
+            <td style="padding:7px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap;color:#8A8F9E">{{ s.cur }}</td>
+            <td style="padding:7px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              <sc-if value="{{ s.isOn }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ s.toggle }}" style="display:inline-block;cursor:{{ s.cursor }};padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }}">{{ s.chipLabel }}</div>
+              </sc-if>
+              <sc-if value="{{ s.isNum }}" hint-placeholder-val="{{ true }}">
+                <input type="number" step="1" value="{{ s.value }}" onInput="{{ s.onInput }}" disabled="{{ s.disabled }}" style="width:120px;padding:7px 10px;border:1px solid rgba(19,30,95,0.24);background:#fff;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+              </sc-if>
+            </td>
+          </tr>
+        </sc-for>
+      </tbody>
+    </table>
+    <sc-if value="{{ isOwner }}" hint-placeholder-val="{{ true }}">
+      <div><button onClick="{{ save }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Сохранить</button></div>
+    </sc-if>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ false }}">
+<div style="padding:12px;display:flex;flex-direction:column;gap:8px">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+    <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">опрос каждые 30 с · кадр runs перечитывает сразу</div>
+  </div>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">загружаю сводку…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 12px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Автоматика не открылась: {{ errorMsg }}</div>
+  </sc-if>
+
+  <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:16px;text-align:center">
+      <div style="font:400 15px/1.2 'Architexture',sans-serif;color:#131E5F">{{ emptyTitle }}</div>
+      <div style="margin-top:6px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ emptyNote }}</div>
+    </div>
+  </sc-if>
+
+  <sc-for list="{{ rows }}" as="r" hint-placeholder-count="4">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px">
+      <div style="display:flex;justify-content:space-between;gap:10px">
+        <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.name }}</div>
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.onC }};border:1px solid {{ r.onC }};padding:3px 6px">{{ r.onLabel }}</div>
+      </div>
+      <div style="margin-top:5px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.paramsLine }}</div>
+      <sc-if value="{{ r.hasNote }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:3px;font:400 10px/1.4 'JetBrains Mono',monospace;color:#156479">{{ r.note }}</div>
+      </sc-if>
+      <sc-if value="{{ r.hasRun }}" hint-placeholder-val="{{ true }}">
+        <div onClick="{{ r.openRuns }}" style="margin-top:8px;cursor:pointer;border-top:1px solid rgba(19,30,95,0.08);padding-top:8px">
+          <div style="color:#131E5F">{{ r.runName }}</div>
+          <div style="margin-top:3px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.runC }};border:1px solid {{ r.runC }};padding:3px 6px">{{ r.runStatus }}</span>
+            <span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.runWhen }}</span>
+          </div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ r.noRun }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:8px;border-top:1px solid rgba(19,30,95,0.08);padding-top:8px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">запусков не было</div>
+      </sc-if>
+      <div style="margin-top:6px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">следующий: {{ r.nextText }}</div>
+      <sc-if value="{{ r.hasResult }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:6px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap;word-break:break-word">{{ r.resultText }}</div>
+      </sc-if>
+      <sc-if value="{{ r.hasErr }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:6px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#DA501C;white-space:pre-wrap;word-break:break-word">{{ r.errText }}</div>
+      </sc-if>
+    </div>
+  </sc-for>
+
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ cancelNote }}</div>
+  </sc-if>
+
+  <sc-if value="{{ hasSettings }}" hint-placeholder-val="{{ true }}">
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:12px;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font:400 14px/1 'Architexture',sans-serif;color:#131E5F">Настройки</div>
+      <sc-if value="{{ notOwner }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#C98A1E">{{ settingsHint }}</div>
+      </sc-if>
+    </div>
+    <sc-for list="{{ settingsRows }}" as="s" hint-placeholder-count="9">
+      <div style="border-top:1px solid rgba(19,30,95,0.08);padding-top:8px;display:flex;flex-direction:column;gap:4px">
+        <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F">{{ s.label }}</div>
+        <div style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ s.keyLine }} · сейчас: {{ s.cur }}</div>
+        <sc-if value="{{ s.isOn }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ s.toggle }}" style="display:inline-block;cursor:{{ s.cursor }};padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }}">{{ s.chipLabel }}</div>
+        </sc-if>
+        <sc-if value="{{ s.isNum }}" hint-placeholder-val="{{ true }}">
+          <input type="number" step="1" value="{{ s.value }}" onInput="{{ s.onInput }}" disabled="{{ s.disabled }}" style="width:110px;padding:7px 10px;border:1px solid rgba(19,30,95,0.24);background:#fff;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </sc-if>
+      </div>
+    </sc-for>
+    <sc-if value="{{ isOwner }}" hint-placeholder-val="{{ true }}">
+      <div><button onClick="{{ save }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Сохранить</button></div>
+    </sc-if>
+  </div>
+  </sc-if>
+</div>
+</sc-if>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  state = { data:null, loading:true, error:null, draft:{}, saving:false };
+
+  // Сервер присылает scenarios ОБЪЕКТОМ без названий и без порядка (ревью
+  // п.1). Порядок строк и русские названия — дело экрана: порядок фиксируем
+  // здесь, состав не хардкодим — чего в ответе нет, той строки нет, а лишний
+  // ключ едет в конец с самим собой в названии.
+  ORDER = ['join_backfill', 'reclassify', 'autoscan', 'autoapprove'];
+  NAMES = {join_backfill:'Вступил → дочитал', reclassify:'Доклассификация L2/L3',
+           autoscan:'Скан подбора', autoapprove:'Одобрен → вступил'};
+
+  COLS = ['Сценарий', 'Вкл', 'Последний запуск', 'Что сделал', 'Следующий',
+          'Последняя ошибка'];
+
+  // Словарь ПРОГОНОВ (RadarRuns), не очереди: у очереди дочитывания статус
+  // зовется canceled (одна l), у прогонов — cancelled. Экран автоматики
+  // показывает только прогоны и не смешивает два словаря (контракт §2.2, §5.5).
+  RUN_STATUS = {queued:'в очереди', running:'выполняется', done:'готово',
+                failed:'упала', cancelled:'остановлена',
+                interrupted:'прервана перезапуском'};
+  RUN_STATUS_C = {queued:'#C98A1E', running:'#156479', done:'#2E7D57',
+                  failed:'#DA501C', cancelled:'#8A8F9E', interrupted:'#DA501C'};
+
+  // Событийные сценарии без next_at: их «следующий удар» расписанием не
+  // задаётся, и «—» врал бы о том, что ударов не будет.
+  NEXT_NOTE = {join_backfill:'по событию', autoapprove:'каждые 5 мин'};
+
+  // Подписи ключей настроек — экрана (значения приходят из ответа). Состав
+  // ключей экран не выдумывает: чего в settings нет, того в форме нет.
+  SETTINGS_ORDER = ['autoflow_join_backfill_enabled', 'autoflow_backfill_depth_days',
+    'autoflow_backfill_target', 'autoflow_reclassify_enabled',
+    'autoflow_reclassify_interval_min', 'autoflow_reclassify_l3_limit',
+    'autoflow_reclassify_batch_channels', 'discovery_autoscan_enabled',
+    'discovery_autoconnect_enabled'];
+  SETTING_META = {
+    autoflow_join_backfill_enabled:{label:'Автопостановка дочитывания после вступления', unit:'вкл/выкл'},
+    autoflow_backfill_depth_days:{label:'Глубина автодочитывания', unit:'сутки'},
+    autoflow_backfill_target:{label:'Потолок сообщений на канал при автопостановке', unit:'сообщения'},
+    autoflow_reclassify_enabled:{label:'Автопрогоны доклассификации', unit:'вкл/выкл'},
+    autoflow_reclassify_interval_min:{label:'Ритм доклассификации', unit:'минуты'},
+    autoflow_reclassify_l3_limit:{label:'Потолок вопросов L3 одного автопрогона', unit:'вопросы'},
+    autoflow_reclassify_batch_channels:{label:'Каналов в одном автопрогоне', unit:'каналы'},
+    discovery_autoscan_enabled:{label:'Ежесуточный автоскан подбора по донорам', unit:'вкл/выкл'},
+    discovery_autoconnect_enabled:{label:'Автоодобрение и автоподключение кандидатов', unit:'вкл/выкл'},
+  };
+
+  isOwner(){ return (this.props.api || {}).role === 'owner'; }
+
+  async componentDidMount(){
+    // Кадр runs означает «прогоны менялись», а сводка автоматики считается
+    // из них, — перечитываем сразу, не дожидаясь таймера.
+    const events = (this.props.api || {}).events;
+    if(events) this.offRuns = events.on('runs', ()=>this.load());
+    this.load();
+  }
+
+  // Отписка обязательна: у раздела две точки монтирования (десктоп и мобильная),
+  // при пересечении брейкпоинта экземпляр размонтируется — оставшийся таймер
+  // или обработчик дёргал бы мёртвый компонент.
+  componentWillUnmount(){
+    this._gone = true;
+    clearTimeout(this.timer);
+    if(this.offRuns) this.offRuns();
+  }
+
+  // Опрос 30 000 мс — фикс по контракту §2.4: активность автоматики видна
+  // только внутри самой сводки, и меняется она редко.
+  schedule(){
+    if(this._gone) return;
+    clearTimeout(this.timer);
+    this.timer = setTimeout(()=>this.load(), 30000);
+  }
+
+  async load(){
+    if(this._gone) return;
+    // Первая загрузка честно показывает «загружаю»; перечитки по таймеру и по
+    // «↻» тихо обновляют уже показанную сводку — мигание на 30-секундном ритме
+    // только мешало бы.
+    if(!this.state.data) this.setState({loading:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const data = await get('/automation');
+      if(this._gone) return;
+      this.setState({data, loading:false, error:null});
+    } catch (e) {
+      if(this._gone) return;
+      const { describe } = await import('./radar-api.js');
+      this.setState({error:describe(e), loading:false});
+    }
+    this.schedule();
+  }
+
+  setNum(key, e){
+    const v = (e && e.target) ? e.target.value : e;
+    this.setState(s=>({draft:Object.assign({}, s.draft, {[key]: v})}));
+  }
+
+  toggle(key){
+    this.setState(s=>{
+      const settings = (s.data && s.data.settings) || {};
+      const cur = (key in s.draft) ? s.draft[key] : settings[key];
+      return {draft:Object.assign({}, s.draft, {[key]: cur ? 0 : 1})};
+    });
+  }
+
+  async save(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    // POST не-владельца сервер завернул бы с 403; у не-владельца и кнопки нет,
+    // а защита здесь — чтобы путь не срабатал ни при каком стечении.
+    if(api.role !== 'owner' || this.state.saving) return;
+    const S = this.state;
+    const settings = (S.data && S.data.settings) || {};
+    // Тело — ТОЛЬКО изменившиеся ключи: словарь целиком молча перезаписал бы
+    // чужую правку, сделанную, пока форма была открыта (гонка настроек).
+    const body = {};
+    for(const k of Object.keys(S.draft)){
+      if(String(S.draft[k]) === String(settings[k])) continue;
+      const raw = S.draft[k];
+      const n = Number(raw);
+      body[k] = (typeof raw === 'number' || (String(raw).trim() !== '' && Number.isFinite(n))) ? n : raw;
+    }
+    if(!Object.keys(body).length){
+      t('Изменений нет — сохранять нечего', '#8A8F9E');
+      return;
+    }
+    this.setState({saving:true});
+    try {
+      const { post } = await import('./radar-api.js');
+      const resp = await post('/automation/settings', body);
+      if(this._gone) return;
+      // Перерисовываем из ОТВЕТА, а не из локального состояния: сервер — место
+      // правды, и в ответе лежат действующие значения всех девяти ключей
+      // (ревью п.4).
+      const data = Object.assign({}, S.data,
+        {settings:(resp && resp.settings) || settings});
+      this.setState({data, draft:{}, saving:false});
+      t('Настройки автоматики сохранены', '#2E7D57');
+    } catch (e) {
+      if(this._gone) return;
+      this.setState({saving:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  // Человеческая дата без года — как у соседей (Backfill.when): глубина
+  // горизонта тут пара месяцев, год в ячейке — шум. Нечитаемый вход — как есть.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    const p = (n)=>String(n).padStart(2, '0');
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // «Следующий» — расчёт из интервала, не обещание воркера (план §13.6).
+  // Выключенному сценарию ритма нет вовсе; событийным — своя метка.
+  nextText(key, sc){
+    if(!sc.enabled) return '—';
+    if(!sc.next_at) return this.NEXT_NOTE[key] || '—';
+    return this.when(sc.next_at) + ' (расчёт)';
+  }
+
+  // Дополнительные поля сценариев — в подписи под параметрами. Формат
+  // «сегодня N из M» — только там, где потолок лежит в params.
+  noteLines(key, sc){
+    const p = (sc.params && typeof sc.params === 'object') ? sc.params : {};
+    const out = [];
+    if(key === 'join_backfill' && sc.queue_standing_auto !== undefined)
+      out.push('в очереди от автоматики: ' + sc.queue_standing_auto);
+    if(key === 'reclassify'){
+      if(sc.waiting_channels !== undefined) out.push('ждут каналов: ' + sc.waiting_channels);
+      if(sc.waiting_messages !== undefined) out.push('сообщений: ' + sc.waiting_messages);
+    }
+    if(key === 'autoscan'){
+      if(sc.donors !== undefined) out.push('доноров: ' + sc.donors);
+      if(sc.scanned_today !== undefined)
+        out.push(sc.scanned_today ? 'сегодня уже искали' : 'сегодня ещё не искали');
+    }
+    if(key === 'autoapprove'){
+      if(sc.approved_waiting !== undefined) out.push('одобренных ждёт: ' + sc.approved_waiting);
+      if(sc.auto_joins_today !== undefined && p.discovery_auto_joins_per_day !== undefined)
+        out.push('сегодня ' + sc.auto_joins_today + ' из ' + p.discovery_auto_joins_per_day);
+    }
+    return out;
+  }
+
+  renderVals(){
+    const api = this.props.api || {};
+    const S = this.state;
+    const owner = this.isOwner();
+
+    // Полный набор дырок до загрузки: отсутствующий ключ здесь не даёт ошибки,
+    // а молча оставляет пустую ячейку — поломка всплыла бы у человека.
+    const base = {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      reload:()=>this.load(),
+      loading:!!S.loading, hasError:!!S.error, errorMsg:S.error || '',
+      hasRows:false, isEmpty:false, cols:this.COLS, rows:[],
+      emptyTitle:'Автоматика ещё не настроена',
+      emptyNote:'Сервер ответил без сценариев — сводке нечего показывать. '
+        + 'Состав сценариев определяет сервер, экран ничего не додумывает.',
+      // Надпись стоит рядом со ссылкой на прогон и проверяется дословно.
+      cancelNote:'Отменить автоматический прогон может только владелец',
+      hasSettings:false, settingsRows:[],
+      isOwner:owner, notOwner:!owner,
+      settingsHint:'Настройки автоматики меняет владелец',
+      canSave:false, save:()=>this.save(),
+    };
+    if(!S.data || S.error) return base;
+
+    const data = S.data;
+    const scs = (data.scenarios && typeof data.scenarios === 'object')
+      ? data.scenarios : {};
+
+    // Порядок строк: известные ключи в порядке экрана, лишние — в конец.
+    const keys = this.ORDER.filter(k=>k in scs)
+      .concat(Object.keys(scs).filter(k=>this.ORDER.indexOf(k) < 0));
+
+    const rows = keys.map(k=>{
+      const sc = scs[k] || {};
+      const lr = sc.last_run || null;
+      const enabled = !!sc.enabled;
+      const params = (sc.params && typeof sc.params === 'object') ? sc.params : {};
+      const paramsLine = Object.keys(params).map(p=>p + ' ' + params[p]).join(' · ') || '—';
+      const note = this.noteLines(k, sc);
+      // Итог прогона: объект показываем как JSON — тем же способом, каким drill
+      // в Runs показывает результат; пусто — честный прочерк.
+      let resultText = '';
+      if(lr && lr.result !== null && lr.result !== undefined){
+        resultText = (typeof lr.result === 'object')
+          ? JSON.stringify(lr.result) : String(lr.result);
+      }
+      // Ошибка: сценарная last_error — про последнего УПАВШЕГО, а не про
+      // последний прогон (ревью п.2); если её нет, показываем ошибку последнего
+      // прогона (§2.2). Без обрезки — правило Backfill: текст отказа нужен
+      // целиком ровно тогда, когда он нужнее всего.
+      const errText = sc.last_error || (lr && lr.error) || '';
+      const st = lr ? (this.RUN_STATUS[lr.status] || lr.status || '—') : '';
+      return {
+        key:k,
+        name:this.NAMES[k] || k,
+        paramsLine,
+        hasNote:note.length > 0, note:note.join(' · '),
+        onLabel:enabled ? 'включён' : 'выключен',
+        onC:enabled ? '#2E7D57' : '#8A8F9E',
+        hasRun:!!lr, noRun:!lr,
+        runName:lr ? (lr.name || ('задача #' + lr.id)) : '',
+        runStatus:st,
+        runC:lr ? (this.RUN_STATUS_C[lr.status] || '#8A8F9E') : '',
+        runWhen:lr ? this.when(lr.finished_at || lr.started_at || lr.created_at) : '',
+        // Клик по ячейке ведёт в раздел Runs — там живёт вся история прогона.
+        openRuns:lr ? ()=>api.go('runs') : null,
+        hasResult:!!resultText, noResult:!resultText, resultText,
+        nextText:this.nextText(k, sc),
+        hasErr:!!errText, noErr:!errText, errText,
+      };
+    });
+
+    // Форма настроек — по settings ответа: известные ключи в порядке экрана,
+    // чужие — в конец. Двух мест списка нет: форма и есть значения ответа.
+    const settings = (data.settings && typeof data.settings === 'object')
+      ? data.settings : {};
+    const order = this.SETTINGS_ORDER.filter(k=>k in settings)
+      .concat(Object.keys(settings).filter(k=>this.SETTINGS_ORDER.indexOf(k) < 0));
+    const settingsRows = order.map(k=>{
+      const meta = this.SETTING_META[k] || null;
+      const cur = (k in S.draft) ? S.draft[k] : settings[k];
+      const isOn = /_enabled$/.test(k);
+      return {
+        key:k,
+        label:meta ? meta.label : k,
+        keyLine:meta ? (k + (meta.unit ? ' · ' + meta.unit : '')) : '',
+        cur:String(cur),
+        isOn, isNum:!isOn,
+        value:String(cur),
+        chipLabel:cur ? 'вкл' : 'выкл',
+        bg:cur ? '#131E5F' : 'transparent',
+        fg:cur ? '#F8F3E0' : '#8A8F9E',
+        cursor:owner ? 'pointer' : 'default',
+        toggle:owner ? ()=>this.toggle(k) : null,
+        onInput:owner ? (e)=>this.setNum(k, e) : null,
+        disabled:!owner,
+      };
+    });
+
+    const loaded = !S.loading;
+    return Object.assign(base, {
+      hasRows:loaded && rows.length > 0,
+      isEmpty:loaded && rows.length === 0,
+      rows,
+      hasSettings:Object.keys(settings).length > 0,
+      settingsRows,
+      canSave:owner && Object.keys(settings).length > 0,
+    });
+  }
+}
+</script>
+</body>
+</html>

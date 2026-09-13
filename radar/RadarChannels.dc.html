@@ -98,7 +98,7 @@
   <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
     <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
       <thead><tr>
-        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="7">
+        <sc-for list="{{ cols }}" as="c" hint-placeholder-count="9">
           <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
         </sc-for>
       </tr></thead>
@@ -122,6 +122,14 @@
                   <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#DA501C;border:1px solid #DA501C;padding:3px 5px;white-space:nowrap">{{ r.flag }}</div>
                 </sc-if>
               </div>
+            </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              <sc-if value="{{ r.srcBadge }}" hint-placeholder-val="{{ false }}">
+                <span style="font:400 10px/1 'JetBrains Mono',monospace;color:#156479;border:1px solid #156479;padding:3px 5px">{{ r.srcBadge }}</span>
+              </sc-if>
+              <sc-if value="{{ r.noSource }}" hint-placeholder-val="{{ true }}">
+                <span style="font:400 12px/1 'JetBrains Mono',monospace;color:#8A8F9E">—</span>
+              </sc-if>
             </td>
           </tr>
         </sc-for>
@@ -155,6 +163,7 @@
         <div style="font:400 13px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.per1000 }}</div>
       </div>
       <div style="margin-top:6px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ r.perDay }} сообщ/сут · {{ r.leads }} лидов · префильтр {{ r.pre }}</div>
+      <div style="margin-top:4px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Откуда: {{ r.srcMobile }}</div>
     </div>
   </sc-for>
 </div>
@@ -182,6 +191,11 @@ class Component extends DCLogic {
     {label:'Префильтр', sort:null},
     {label:'Лидов', sort:'leads_total'},
     {label:'Лид/1000', sort:null},
+    // «Откуда» — происхождение записи, его ставит сервер при заведении канала
+    // (`source`: discovery/manual/join/null). Отдельно видимым делаем только
+    // подбор: ручное подключение и вступление — норма, а не событие. Сортировки
+    // нет: ключа `source` сервер в `sorts` не объявляет.
+    {label:'Откуда', sort:null},
   ];
 
   // Типы чатов, встречавшиеся в загруженных строках. Не в state: это
@@ -387,6 +401,11 @@ class Component extends DCLogic {
 
   // Аккаунты перебираются по кругу: очередь аккаунта в Engage строго FIFO, и запуск
   // всех каналов с одного аккаунта выстроил бы их в затылок друг другу.
+  // Долг №2: список захардкожен намеренно — GET /channels/options отдаёт каналы,
+  // а не аккаунты, настоящий GET /accounts закрыт правом FLEET (только owner).
+  // Решение за владельцем (CONTRACT-autoflow-gui.md §8-1; ревью: константа
+  // остаётся до отдельной задачи) — иначе у customer форма подключения
+  // лишится списка, а у владельца появится третий источник правды.
   ACCOUNTS = [1, 2, 3, 4, 5];
 
   async backfill(username, i){
@@ -502,6 +521,28 @@ class Component extends DCLogic {
     try {
       await patch('/channels/' + id, {ingest_enabled: enabled});
       t(enabled ? 'Отслеживание включено' : 'Отслеживание снято', '#156479');
+      this.load();
+    } catch (e) { t(describe(e), '#DA501C'); }
+  }
+
+  // Переключение донора подбора (CONTRACT-autoflow-gui §4.3): флагом
+  // `discovery_seed` владелец/заказчик решает, станет ли канал «семенем»,
+  // от которого поиск подбора берёт соседей. Ответ ручки несёт ровно три
+  // изменённых флага ({id, ingest_enabled, l1_bypass_enabled, discovery_seed}) —
+  // применяем их к строке на месте, чтобы открытая карточка сразу показывала
+  // новое, а перечит списка подтягивает остальное (тост, затем load()).
+  async setDiscoverySeed(id, value){
+    const { patch, describe } = await import('./radar-api.js');
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      const r = await patch('/channels/' + id, {discovery_seed: value});
+      this.setState({rows:(this.state.rows || []).map(x=>x.id === r.id
+        ? Object.assign({}, x, {discovery_seed:r.discovery_seed,
+                                ingest_enabled:r.ingest_enabled,
+                                l1_bypass_enabled:r.l1_bypass_enabled})
+        : x)});
+      t(value ? 'Канал помечен донором подбора'
+              : 'Канал убран из доноров подбора', '#156479');
       this.load();
     } catch (e) { t(describe(e), '#DA501C'); }
   }
@@ -674,6 +715,9 @@ class Component extends DCLogic {
       }) : [],
 
       rows:rows.map(c=>({
+        // id в строке нужен проверкам (check-channels.js) и сверке карточки с
+        // той строкой, на которой человек кликнул; на разметку он не влияет.
+        id:c.id,
         name:c.title,
         topic:c.username ? '@' + c.username : '—',
         members:this.num(c.members),
@@ -690,6 +734,13 @@ class Component extends DCLogic {
         // комментариях, а комментарии — в отдельной строке группы. Про сам канал
         // честно остаётся только «мусорный».
         flag: c.is_junk ? 'мусорный' : '',
+        // «Откуда»: бейджем отмечаем только канал из подбора — это то, что
+        // отличает его от заведённых вручную или при вступлении. Остальные
+        // значения (`manual`, `join`, null и всё, что сервер придумает позже)
+        // честно показываются прочерком, без выдуманных подписей.
+        srcBadge: c.source === 'discovery' ? 'от подбора' : '',
+        noSource: c.source !== 'discovery',
+        srcMobile: c.source === 'discovery' ? 'от подбора' : '—',
         open:()=>api.drill && api.drill({
           title:c.title, subtitle:'peer_id: ' + c.peer_id,
           rows:[
@@ -703,6 +754,11 @@ class Component extends DCLogic {
             {k:'Комментарии в базе', v:this.num((c.discussion || {}).messages)},
             {k:'Последний комментарий', v:this.when((c.discussion || {}).last_message_at)},
             {k:'Ингест', v:c.ingest_enabled ? 'включён' : 'выключен'},
+            // Донор подбора — из уже загруженной строки (CONTRACT §4.3): второй
+            // запрос на каждое открытие карточки не заводим. Поля нет — строки
+            // тоже нет: молчать честнее, чем отвечать «нет» за сервер.
+            ...(c.discovery_seed === undefined ? [] :
+                [{k:'Донор подбора', v:c.discovery_seed ? 'да' : 'нет'}]),
             // Кем подписан — заполнено только у каналов, подключённых руками
             // через эту форму; заведённые сами при первом сообщении молчат тут
             // «—», и это не пробел в данных, а честный ответ «никто не выбирал».
@@ -722,6 +778,16 @@ class Component extends DCLogic {
                  run:()=>this.setTracking(c.id, false)}
               : {label:'Включить отслеживание', c:'#156479',
                  run:()=>this.setTracking(c.id, true)},
+            // Донор подбора — право CHANNEL_EDIT (owner+customer, access.py:163):
+            // флаг меняет поведение поиска. Reviewer состояние видит (строка
+            // выше), но рычага не имеет — кнопка не рисуется, сервер проверяет
+            // право независимо от неё.
+            (api.role === 'owner' || api.role === 'customer') &&
+              (c.discovery_seed
+                ? {label:'Убрать донора', c:'#C98A1E',
+                   run:()=>this.setDiscoverySeed(c.id, false)}
+                : {label:'Сделать донором', c:'#156479',
+                   run:()=>this.setDiscoverySeed(c.id, true)}),
             {label:'Удалить сообщения канала', c:'#DA501C',
              run:()=>this.purgeMessages(c.id, c.title)},
             {label:'Обновить экран', c:'#156479', run:()=>this.load()}

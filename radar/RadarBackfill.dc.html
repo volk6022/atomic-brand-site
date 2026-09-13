@@ -20,6 +20,11 @@
     <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="6">
       <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
     </sc-for>
+    <div style="width:1px;height:22px;background:rgba(19,30,95,0.24)"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">источник</div>
+    <sc-for list="{{ sourceFilters }}" as="src" hint-placeholder-count="3">
+      <div onClick="{{ src.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ src.bg }};color:{{ src.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ src.label }}</div>
+    </sc-for>
   </div>
 
   <sc-if value="{{ hasByAccount }}" hint-placeholder-val="{{ false }}">
@@ -61,6 +66,11 @@
             </td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.state }}</span></td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.acct }}</td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
+              <sc-if value="{{ r.isAuto }}" hint-placeholder-val="{{ false }}"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:#C98A1E;border:1px solid #C98A1E;padding:3px 6px;white-space:nowrap">автоматика</span></sc-if>
+              <sc-if value="{{ r.hasReq }}" hint-placeholder-val="{{ true }}"><span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#184153">{{ r.reqBy }}</span></sc-if>
+              <sc-if value="{{ r.noReq }}" hint-placeholder-val="{{ false }}">—</sc-if>
+            </td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.progress }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">
               {{ r.depth }}
@@ -118,6 +128,11 @@
     <sc-for list="{{ stateFilters }}" as="f" hint-placeholder-count="6">
       <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 10px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
     </sc-for>
+    <div style="width:1px;height:22px;background:rgba(19,30,95,0.24)"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">источник</div>
+    <sc-for list="{{ sourceFilters }}" as="src" hint-placeholder-count="3">
+      <div onClick="{{ src.pick }}" style="cursor:pointer;padding:6px 10px;border:1px solid rgba(19,30,95,0.24);background:{{ src.bg }};color:{{ src.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ src.label }}</div>
+    </sc-for>
   </div>
 
   <sc-if value="{{ hasByAccount }}" hint-placeholder-val="{{ false }}">
@@ -149,6 +164,11 @@
       </div>
       <div style="margin-top:5px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">
         <sc-if value="{{ r.hasLink }}" hint-placeholder-val="{{ true }}"><a href="{{ r.link }}" target="_blank" rel="noopener">{{ r.uname }}</a></sc-if><sc-if value="{{ r.noLink }}" hint-placeholder-val="{{ false }}">{{ r.uname }}</sc-if> · поз. {{ r.pos }} · {{ r.acct }}
+      </div>
+      <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">
+        поставил:
+        <sc-if value="{{ r.isAuto }}" hint-placeholder-val="{{ false }}"><span style="color:#C98A1E">автоматика</span> · </sc-if>
+        <sc-if value="{{ r.hasReq }}" hint-placeholder-val="{{ true }}">{{ r.reqBy }}</sc-if><sc-if value="{{ r.noReq }}" hint-placeholder-val="{{ false }}">—</sc-if>
       </div>
       <div style="margin-top:5px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ r.progress }}</div>
       <div style="margin-top:3px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.depth }} · {{ r.depthNote }} · попыток: {{ r.attempts }}</div>
@@ -185,6 +205,12 @@ class Component extends DCLogic {
            canceled:{label:'отменено', c:'#8A8F9E'}};
   ORDER = ['queued', 'running', 'done', 'failed', 'canceled'];
 
+  // Источник работы: '' — все, 'auto' — поставила автоматика (requested_by с
+  // префиксом «auto:»), 'manual' — человек (email или пусто). Значения уходят
+  // серверу параметром source=auto|manual, названия — наши, как словарь состояний;
+  // порядок — порядок чипсов на экране.
+  SOURCES = [{k:'', label:'Все'}, {k:'auto', label:'авто'}, {k:'manual', label:'руками'}];
+
   // Родительный падеж для подписи «история с 6 августа».
   MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
             'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
@@ -195,10 +221,13 @@ class Component extends DCLogic {
     // совпадать с очередью воркера, а его порядок — это (position, id) сервера.
     // Своя сортировка сделала бы «следующий канал» на экране и «следующий канал»
     // в работе разными каналами. Table заведён без sorts, чтобы заголовки и не
-    // притворялись кнопками; срез (страница, размер, фильтр состояния) при этом
-    // живёт в адресе, как у соседних экранов.
+    // притворялись кнопками; срез (страница, размер, фильтр состояния и источника)
+    // при этом живёт в адресе, как у соседних экранов.
+    // source — кто поставил работу: '' (все) | 'auto' | 'manual'. Ручка расширена
+    // бэкендом (CONTRACT-autoflow.md §4.3), конверт ответа не менялся; пустые
+    // фильтры query() на сервер не отправляет, поэтому «Все» не шлёт параметра.
     this.table = new Table({
-      key:'backfill', size:50, sorts:[], filters:{state:''},
+      key:'backfill', size:50, sorts:[], filters:{state:'', source:''},
     });
     this.table.attach(()=>this.load());
     this.load();
@@ -267,13 +296,15 @@ class Component extends DCLogic {
     const states = summary ? summary.states : null;
     const byAcc = summary ? summary.by_account : null;
     const filter = this.table ? (this.table.filters.state || '') : '';
+    const srcFilter = this.table ? (this.table.filters.source || '') : '';
 
     // До загрузки отдаём все дырки разметки: отсутствующий ключ в этом
     // фреймворке не даёт ошибки — ячейка молча остаётся пустой, и поломка
     // всплывает у человека, а не здесь.
     if(!this.table){
       return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
-              reload:()=>{}, stateFilters:[], hasByAccount:false, noByAccount:false,
+              reload:()=>{}, stateFilters:[], sourceFilters:[],
+              hasByAccount:false, noByAccount:false,
               byAccounts:[], cols:[], rows:[],
               loading:true, hasError:false, errorMsg:'',
               isEmpty:false, emptyTitle:'', emptyNote:'', hasRows:false,
@@ -295,6 +326,16 @@ class Component extends DCLogic {
                 pick:()=>this.table.setFilter('state', f.k)};
       });
 
+    // Чипсы источника — три, без счётчиков: сервер разбивки по источнику не
+    // присылает, а считать её по текущей странице значило бы показывать ложь
+    // (очередь шире страницы). Подсветка активного — как у состояний.
+    const sourceFilters = this.SOURCES.map(f=>({
+      label:f.label,
+      bg: srcFilter === f.k ? '#131E5F' : 'transparent',
+      fg: srcFilter === f.k ? '#F8F3E0' : '#156479',
+      pick:()=>this.table.setFilter('source', f.k),
+    }));
+
     // Чем занят каждый аккаунт: перечисляем только непустые состояния — строка
     // «отменено 0» про аккаунт ничего не сообщает. Пустой ответ аккаунта —
     // «свободен», а не прочерк.
@@ -315,24 +356,36 @@ class Component extends DCLogic {
     return {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
       reload:()=>this.load(),
-      stateFilters, hasByAccount, noByAccount: !!summary && !hasByAccount, byAccounts,
+      stateFilters, sourceFilters,
+      hasByAccount, noByAccount: !!summary && !hasByAccount, byAccounts,
+
+      // Спред vals() стоит ВЫШЕ литерала cols: vals() приносит собственный
+      // cols (пустой — колонки экрана ему не переданы), и при обратном порядке
+      // он затирал бы шапку целиком — таблица оставалась бы без заголовков.
+      ...this.table.vals(S.total, {loading:S.loading, error:S.error}),
 
       // Колонки без сортировки: кликабельная шапка обещала бы пересортировку,
-      // которой здесь быть не может.
-      cols:['Канал', 'Состояние', 'Аккаунт', 'Ход', 'Глубина', 'Попытки',
-            'Отложенный старт', 'Причина отказа', ''],
-      ...this.table.vals(S.total, {loading:S.loading, error:S.error}),
+      // которой здесь быть не может. «Поставил» — после «Аккаунта»: ответы на
+      // вопрос «где» (аккаунт) и «кто заказал» стоят рядом.
+      cols:['Канал', 'Состояние', 'Аккаунт', 'Поставил', 'Ход', 'Глубина',
+            'Попытки', 'Отложенный старт', 'Причина отказа', ''],
 
       loading:!!S.loading,
       hasError:!!S.error, errorMsg:S.error || '',
       hasRows, isEmpty,
-      emptyTitle: filter ? 'Под фильтр ничего не подошло' : 'Очередь пуста',
+      // «Пусто» и «под фильтр ничего не подошло» — разные новости; фильтр здесь
+      // любой: и по состоянию, и по источнику. Для источника текст свой — у него
+      // нет слова в словаре состояний.
+      emptyTitle: (filter || srcFilter) ? 'Под фильтр ничего не подошло' : 'Очередь пуста',
       emptyNote: filter
         ? ('Работ в состоянии «' + (this.STATE[filter] ? this.STATE[filter].label : filter)
            + '» сейчас нет. Чипсом «Все» фильтр снимается — или просто подождите: очередь живёт сама.')
-        : ('Это норма, а не ошибка: очередь наполняется, когда в разделе Channels '
-           + 'заказывают дочитывание. Как только работа появится, она встанет здесь — '
-           + 'в том же порядке, в каком её возьмёт воркер.'),
+        : (srcFilter
+           ? ('Работ, поставленных ' + (srcFilter === 'auto' ? 'автоматикой' : 'вручную')
+              + ', сейчас нет. Чипсом «Все» фильтр снимается — или просто подождите: очередь живёт сама.')
+           : ('Это норма, а не ошибка: очередь наполняется, когда в разделе Channels '
+              + 'заказывают дочитывание. Как только работа появится, она встанет здесь — '
+              + 'в том же порядке, в каком её возьмёт воркер.')),
 
       rows:items.map(it=>{
         const ch = it.channel || {};
@@ -347,6 +400,15 @@ class Component extends DCLogic {
           pos: it.position === undefined ? '—' : it.position,
           state:st.label, c:st.c,
           acct: it.account_id ? ('acc-' + it.account_id) : '—',
+          // «Поставил»: requested_by показывается как есть — это данные о том,
+          // кто заказал работу, и переписывать их значило бы прятать источник.
+          // Только префикс auto: помечается меткой «автоматика» (#C98A1E),
+          // полный текст рядом: различить auto:join и auto:channel_add —
+          // единственная причина префикса. Пусто — прочерк, а не пустая клетка.
+          isAuto: String(it.requested_by || '').indexOf('auto:') === 0,
+          autoLabel:'автоматика', autoColor:'#C98A1E',
+          reqBy: it.requested_by || '—',
+          hasReq: !!it.requested_by, noReq: !it.requested_by,
           progress:'прочитано ' + (it.read_total || 0) + ' из ' + (it.target || 0),
           depth:this.when(it.min_date),
           depthNote:this.since(it.min_date),

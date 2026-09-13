@@ -36,6 +36,17 @@
     <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ hint }}</div>
   </div>
 
+  <!-- Автор прогонов: ревью §8-2 — ровно два чипса, «все / авто», без «мои»
+       (у экрана нет email текущего пользователя, фильтр «мои» не построить).
+       «авто» просит у сервера author=auto, «все» не шлёт параметра вовсе —
+       пустой фильтр Table в query() на сервер не отправляет. -->
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Автор</div>
+    <sc-for list="{{ authorChips }}" as="a" hint-placeholder-count="2">
+      <div onClick="{{ a.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ a.bg }};color:{{ a.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ a.label }}</div>
+    </sc-for>
+  </div>
+
   <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
     <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
       <thead><tr>
@@ -48,7 +59,7 @@
           <tr style-hover="background:#EDF4F3">
             <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">
               <div style="color:#131E5F">{{ r.name }}</div>
-              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.who }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.who }}<sc-if value="{{ r.auto }}" hint-placeholder-val="{{ false }}"><span style="font:400 10px/1 'JetBrains Mono',monospace;color:{{ r.autoFg }};border:1px solid {{ r.autoFg }};padding:2px 5px;margin-left:6px">{{ r.autoLabel }}</span></sc-if></div>
             </td>
             <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer">{{ r.when }}</td>
             <td onClick="{{ r.open }}" style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);cursor:pointer"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.status }}</span></td>
@@ -123,6 +134,9 @@ class Component extends DCLogic {
     this.table = new Table({
       key:'runs', size:25, sort:'created', order:'desc',
       sorts:[{key:'created'}, {key:'kind'}, {key:'status'}, {key:'progress'}],
+      // Фильтр автора объявлен, чтобы значение жило в адресе рядом со страницей
+      // и сортировкой: срез «что натворила автоматика» можно прислать ссылкой.
+      filters:{author:''},
     });
     this.table.attach(()=>this.load());
 
@@ -275,7 +289,7 @@ class Component extends DCLogic {
 
     if(!this.table){
       return {desktop: !this.props.mobile, isMobile: !!this.props.mobile,
-              rows:[], cols:[], pages:[], kinds:[], scopes:[],
+              rows:[], cols:[], pages:[], kinds:[], scopes:[], authorChips:[],
               range:'загрузка…', pendingLabel:'', hint:'', liveLabel:'',
               liveFg:'#8A8F9E', newKind:'reclassify', newScope:'pending',
               l2Label:'L2', l3Label:'L3', l2Bg:'transparent', l3Bg:'transparent',
@@ -338,10 +352,25 @@ class Component extends DCLogic {
 
       startRun:()=>this.startRun(),
 
+      // Два чипса, ревью §8-2: «все» — фильтр пуст (параметр не уходит),
+      // «авто» — author=auto. Активный подсвечен, смена возвращает на первую
+      // страницу — это делает setFilter.
+      authorChips:[{value:'', label:'все'}, {value:'auto', label:'авто'}].map(a=>({
+        label:a.label,
+        bg:(this.table.filters.author || '') === a.value ? '#131E5F' : 'transparent',
+        fg:(this.table.filters.author || '') === a.value ? '#F8F3E0' : '#156479',
+        pick:()=>this.table.setFilter('author', a.value)
+      })),
+
       rows:rows.map(r=>{
         const active = this.ACTIVE.includes(r.status);
+        // Префикс auto: — задачу поставил сценарий «Автоматики», а не человек.
+        // Метка стоит рядом с автором и автора не заменяет: кто именно запустил
+        // (auto:reclassify, auto:scan…) — данные, а не оформление.
+        const auto = String(r.created_by || '').indexOf('auto:') === 0;
         return {
           name:r.name, who:r.created_by || '—',
+          auto, autoLabel:'авто', autoFg:'#C98A1E',
           when:this.when(r.created_at),
           status:this.STATUS_LABEL[r.status] || r.status,
           c:this.STATUS_COLOR[r.status] || '#8A8F9E',
