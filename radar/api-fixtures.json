@@ -176,339 +176,396 @@
       "admin"
     ]
   },
-    "/backfill/queue": {
-      "total": 12,
-      "limit": 50,
-      "offset": 0,
-      "items": [
-        {
-          "id": 7,
-          "channel": {
-            "id": 42,
-            "username": "buhexpert8",
-            "title": "Бухэксперт"
-          },
-          "state": "queued",
-          "account_id": 3,
-          "position": 1,
-          "target": 2000,
-          "min_date": "2026-08-06T12:00:00+00:00",
-          "read_total": 0,
-          "attempts": 0,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-05T09:00:00+00:00",
-          "started_at": null,
-          "finished_at": null
+  "/automation": {
+    "scenarios": {
+      "autoapprove": {
+        "approved_waiting": 0,
+        "auto_joins_today": 0,
+        "enabled": false,
+        "last_error": null,
+        "last_run": null,
+        "next_at": null,
+        "params": {
+          "discovery_auto_joins_per_day": 3
+        }
+      },
+      "autoscan": {
+        "donors": 0,
+        "enabled": false,
+        "last_error": null,
+        "last_run": null,
+        "next_at": "2026-09-13T03:00:00+00:00",
+        "params": {
+          "discovery_llm_checks_per_day": 100,
+          "discovery_queries_per_scan": 5
         },
-        {
-          "id": 5,
-          "channel": {
-            "id": 1,
-            "username": "vpsclub",
-            "title": "VPS Club"
-          },
-          "state": "running",
-          "account_id": 1,
-          "position": 2,
-          "target": 1500,
-          "min_date": "2026-08-20T08:30:00+00:00",
-          "read_total": 412,
-          "attempts": 1,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-04T15:20:00+00:00",
-          "started_at": "2026-09-05T09:05:00+00:00",
-          "finished_at": null
+        "scanned_today": false
+      },
+      "join_backfill": {
+        "enabled": false,
+        "last_error": null,
+        "last_run": null,
+        "next_at": null,
+        "params": {
+          "autoflow_backfill_depth_days": 30,
+          "autoflow_backfill_target": 2000
         },
-        {
-          "id": 9,
-          "channel": {
-            "id": 2,
-            "username": "devops_chat",
-            "title": "DevOps Chat"
-          },
-          "state": "queued",
-          "account_id": 2,
-          "position": 3,
-          "target": 2000,
-          "min_date": "2026-08-15T00:00:00+00:00",
-          "read_total": 0,
-          "attempts": 0,
+        "queue_standing_auto": 1
+      },
+      "reclassify": {
+        "enabled": false,
+        "last_error": null,
+        "last_run": {
+          "cancel_requested": false,
+          "created_at": "2026-09-13T02:30:39.316632+00:00",
+          "created_by": "auto:reclassify",
+          "duration_seconds": 3600.0,
           "error": null,
-          "scheduled_for": "2026-09-06T08:00:00+00:00",
-          "requested_by": "owner@local",
-          "created_at": "2026-09-04T18:40:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        },
-        {
+          "finished_at": "2026-09-12T22:30:36+00:00",
           "id": 2,
-          "channel": {
-            "id": 3,
-            "username": null,
-            "title": "Мастерская инженера"
+          "kind": "reclassify",
+          "name": "Переклассификация · недосчитанное · авто",
+          "params": {
+            "scope": "pending"
           },
-          "state": "failed",
-          "account_id": 1,
-          "position": 4,
-          "target": 1000,
-          "min_date": "2026-08-10T10:00:00+00:00",
-          "read_total": 260,
-          "attempts": 3,
-          "error": "Telegram: FloodWait 834s — аккаунт 1 временно ограничен за частые запросы истории; повтор возможен после снятия ограничения, примерно через 14 минут",
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-03T11:00:00+00:00",
-          "started_at": "2026-09-03T11:02:00+00:00",
-          "finished_at": "2026-09-03T11:19:00+00:00"
+          "progress": 100.0,
+          "result": {
+            "cancelled": false,
+            "created": 12,
+            "kept": 69,
+            "l2": true,
+            "l3": true,
+            "l3_questions": 27,
+            "messages": 84,
+            "removed": 3,
+            "scope": "pending",
+            "skipped_removals": 0,
+            "skipped_updates": 0,
+            "workflows": {}
+          },
+          "started_at": "2026-09-12T21:30:36+00:00",
+          "status": "done"
         },
-        {
-          "id": 3,
-          "channel": {
-            "id": 4,
-            "username": "infra_startups",
-            "title": "Инфра для стартапов"
-          },
-          "state": "done",
-          "account_id": 2,
-          "position": 5,
-          "target": 2000,
-          "min_date": "2026-07-28T06:00:00+00:00",
-          "read_total": 2000,
-          "attempts": 1,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "owner@local",
-          "created_at": "2026-09-02T09:00:00+00:00",
-          "started_at": "2026-09-02T09:01:00+00:00",
-          "finished_at": "2026-09-02T10:44:00+00:00"
+        "next_at": "2026-09-13T03:30:39.009630+00:00",
+        "params": {
+          "autoflow_reclassify_batch_channels": 10,
+          "autoflow_reclassify_interval_min": 60,
+          "autoflow_reclassify_l3_limit": 200
         },
-        {
-          "id": 12,
-          "channel": {
-            "id": 6,
-            "username": "linux_admins",
-            "title": "Linux Админы"
-          },
-          "state": "running",
-          "account_id": 3,
-          "position": 6,
-          "target": 1000,
-          "min_date": "2026-08-25T21:00:00+00:00",
-          "read_total": 87,
-          "attempts": 0,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-05T08:30:00+00:00",
-          "started_at": "2026-09-05T08:33:00+00:00",
-          "finished_at": null
-        },
-        {
-          "id": 6,
-          "channel": {
-            "id": 7,
-            "username": "andrey_channel",
-            "title": "Канал про закупки"
-          },
-          "state": "queued",
-          "account_id": 1,
-          "position": 7,
-          "target": 2000,
-          "min_date": "2026-08-01T00:00:00+00:00",
-          "read_total": 0,
-          "attempts": 0,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "owner@local",
-          "created_at": "2026-09-04T12:00:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        },
-        {
-          "id": 4,
-          "channel": {
-            "id": 8,
-            "username": "nocode_ru",
-            "title": "NoCode Practice"
-          },
-          "state": "queued",
-          "account_id": 2,
-          "position": 8,
-          "target": 1500,
-          "min_date": "2026-08-18T14:00:00+00:00",
-          "read_total": 0,
-          "attempts": 0,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-04T13:10:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        },
-        {
-          "id": 10,
-          "channel": {
-            "id": 9,
-            "username": "product_digest",
-            "title": "Product Digest"
-          },
-          "state": "queued",
-          "account_id": 1,
-          "position": 9,
-          "target": 2000,
-          "min_date": "2026-08-22T09:30:00+00:00",
-          "read_total": 0,
-          "attempts": 0,
-          "error": null,
-          "scheduled_for": "2026-09-07T10:30:00+00:00",
-          "requested_by": "owner@local",
-          "created_at": "2026-09-05T07:45:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        },
-        {
-          "id": 8,
-          "channel": {
-            "id": 10,
-            "username": "ml_weekly",
-            "title": "ML Weekly"
-          },
-          "state": "queued",
-          "account_id": 2,
-          "position": 10,
-          "target": 2000,
-          "min_date": "2026-08-12T16:45:00+00:00",
-          "read_total": 0,
-          "attempts": 2,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-03T19:25:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        },
-        {
-          "id": 1,
-          "channel": {
-            "id": 11,
-            "username": "growth_hacks",
-            "title": "Growth Hacks"
-          },
-          "state": "queued",
-          "account_id": 3,
-          "position": 11,
-          "target": 2000,
-          "min_date": "2026-08-05T08:00:00+00:00",
-          "read_total": 0,
-          "attempts": 0,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "owner@local",
-          "created_at": "2026-09-02T10:15:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        },
-        {
-          "id": 11,
-          "channel": {
-            "id": 12,
-            "username": "saas_notes",
-            "title": "SaaS Notes"
-          },
-          "state": "queued",
-          "account_id": 1,
-          "position": 12,
-          "target": 2000,
-          "min_date": "2026-08-09T11:20:00+00:00",
-          "read_total": 0,
-          "attempts": 1,
-          "error": null,
-          "scheduled_for": null,
-          "requested_by": "ivan@example.com",
-          "created_at": "2026-09-04T16:05:00+00:00",
-          "started_at": null,
-          "finished_at": null
-        }
-      ],
-      "summary": {
-        "states": {
-          "queued": 8,
-          "running": 2,
-          "done": 1,
-          "failed": 1,
-          "canceled": 0
-        },
-        "by_account": {
-          "1": {
-            "queued": 3,
-            "running": 1,
-            "done": 0,
-            "failed": 1,
-            "canceled": 0
-          },
-          "2": {
-            "queued": 3,
-            "running": 0,
-            "done": 1,
-            "failed": 0,
-            "canceled": 0
-          },
-          "3": {
-            "queued": 2,
-            "running": 1,
-            "done": 0,
-            "failed": 0,
-            "canceled": 0
-          }
-        }
+        "waiting_channels": 0,
+        "waiting_messages": 0
       }
     },
-    "POST /backfill/queue": {
-      "queued": [
-        {
-          "id": 13,
-          "channel": {"id": 7, "username": "buhexpert8", "title": "Бухэксперт"},
-          "state": "queued", "account_id": null, "position": 13,
-          "target": 2000, "min_date": "2026-08-06T09:00:00+00:00",
-          "read_total": 0, "attempts": 0, "error": null,
-          "scheduled_for": null, "requested_by": "ivan@example.com",
-          "created_at": "2026-09-05T09:00:00+00:00",
-          "started_at": null, "finished_at": null
+    "settings": {
+      "autoflow_backfill_depth_days": 30,
+      "autoflow_backfill_target": 2000,
+      "autoflow_join_backfill_enabled": 0,
+      "autoflow_reclassify_batch_channels": 10,
+      "autoflow_reclassify_enabled": 0,
+      "autoflow_reclassify_interval_min": 60,
+      "autoflow_reclassify_l3_limit": 200,
+      "discovery_autoconnect_enabled": 0,
+      "discovery_autoscan_enabled": 0
+    }
+  },
+  "/backfill/queue": {
+    "items": [
+      {
+        "account_id": 3,
+        "attempts": 0,
+        "channel": {
+          "id": 42,
+          "title": "Бухэксперт",
+          "username": "buhexpert8"
         },
-        {
-          "id": 14,
-          "channel": {"id": 9, "username": "klerkonline", "title": "Бухучет и налоги"},
-          "state": "queued", "account_id": null, "position": 14,
-          "target": 2000, "min_date": "2026-08-06T09:00:00+00:00",
-          "read_total": 0, "attempts": 0, "error": null,
-          "scheduled_for": null, "requested_by": "ivan@example.com",
-          "created_at": "2026-09-05T09:00:00+00:00",
-          "started_at": null, "finished_at": null
+        "created_at": "2026-09-05T09:00:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 7,
+        "min_date": "2026-08-06T12:00:00+00:00",
+        "position": 1,
+        "read_total": 0,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": 1,
+        "attempts": 1,
+        "channel": {
+          "id": 1,
+          "title": "VPS Club",
+          "username": "vpsclub"
+        },
+        "created_at": "2026-09-04T15:20:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 5,
+        "min_date": "2026-08-20T08:30:00+00:00",
+        "position": 2,
+        "read_total": 412,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": "2026-09-05T09:05:00+00:00",
+        "state": "running",
+        "target": 1500
+      },
+      {
+        "account_id": 2,
+        "attempts": 0,
+        "channel": {
+          "id": 2,
+          "title": "DevOps Chat",
+          "username": "devops_chat"
+        },
+        "created_at": "2026-09-04T18:40:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 9,
+        "min_date": "2026-08-15T00:00:00+00:00",
+        "position": 3,
+        "read_total": 0,
+        "requested_by": "owner@local",
+        "scheduled_for": "2026-09-06T08:00:00+00:00",
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": 1,
+        "attempts": 3,
+        "channel": {
+          "id": 3,
+          "title": "Мастерская инженера",
+          "username": null
+        },
+        "created_at": "2026-09-03T11:00:00+00:00",
+        "error": "Telegram: FloodWait 834s — аккаунт 1 временно ограничен за частые запросы истории; повтор возможен после снятия ограничения, примерно через 14 минут",
+        "finished_at": "2026-09-03T11:19:00+00:00",
+        "id": 2,
+        "min_date": "2026-08-10T10:00:00+00:00",
+        "position": 4,
+        "read_total": 260,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": "2026-09-03T11:02:00+00:00",
+        "state": "failed",
+        "target": 1000
+      },
+      {
+        "account_id": 2,
+        "attempts": 1,
+        "channel": {
+          "id": 4,
+          "title": "Инфра для стартапов",
+          "username": "infra_startups"
+        },
+        "created_at": "2026-09-02T09:00:00+00:00",
+        "error": null,
+        "finished_at": "2026-09-02T10:44:00+00:00",
+        "id": 3,
+        "min_date": "2026-07-28T06:00:00+00:00",
+        "position": 5,
+        "read_total": 2000,
+        "requested_by": "owner@local",
+        "scheduled_for": null,
+        "started_at": "2026-09-02T09:01:00+00:00",
+        "state": "done",
+        "target": 2000
+      },
+      {
+        "account_id": 3,
+        "attempts": 0,
+        "channel": {
+          "id": 6,
+          "title": "Linux Админы",
+          "username": "linux_admins"
+        },
+        "created_at": "2026-09-05T08:30:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 12,
+        "min_date": "2026-08-25T21:00:00+00:00",
+        "position": 6,
+        "read_total": 87,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": "2026-09-05T08:33:00+00:00",
+        "state": "running",
+        "target": 1000
+      },
+      {
+        "account_id": 1,
+        "attempts": 0,
+        "channel": {
+          "id": 7,
+          "title": "Канал про закупки",
+          "username": "andrey_channel"
+        },
+        "created_at": "2026-09-04T12:00:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 6,
+        "min_date": "2026-08-01T00:00:00+00:00",
+        "position": 7,
+        "read_total": 0,
+        "requested_by": "owner@local",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": 2,
+        "attempts": 0,
+        "channel": {
+          "id": 8,
+          "title": "NoCode Practice",
+          "username": "nocode_ru"
+        },
+        "created_at": "2026-09-04T13:10:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 4,
+        "min_date": "2026-08-18T14:00:00+00:00",
+        "position": 8,
+        "read_total": 0,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 1500
+      },
+      {
+        "account_id": 1,
+        "attempts": 0,
+        "channel": {
+          "id": 9,
+          "title": "Product Digest",
+          "username": "product_digest"
+        },
+        "created_at": "2026-09-05T07:45:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 10,
+        "min_date": "2026-08-22T09:30:00+00:00",
+        "position": 9,
+        "read_total": 0,
+        "requested_by": "owner@local",
+        "scheduled_for": "2026-09-07T10:30:00+00:00",
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": 2,
+        "attempts": 2,
+        "channel": {
+          "id": 10,
+          "title": "ML Weekly",
+          "username": "ml_weekly"
+        },
+        "created_at": "2026-09-03T19:25:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 8,
+        "min_date": "2026-08-12T16:45:00+00:00",
+        "position": 10,
+        "read_total": 0,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": 3,
+        "attempts": 0,
+        "channel": {
+          "id": 11,
+          "title": "Growth Hacks",
+          "username": "growth_hacks"
+        },
+        "created_at": "2026-09-02T10:15:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 1,
+        "min_date": "2026-08-05T08:00:00+00:00",
+        "position": 11,
+        "read_total": 0,
+        "requested_by": "owner@local",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": 1,
+        "attempts": 1,
+        "channel": {
+          "id": 12,
+          "title": "SaaS Notes",
+          "username": "saas_notes"
+        },
+        "created_at": "2026-09-04T16:05:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 11,
+        "min_date": "2026-08-09T11:20:00+00:00",
+        "position": 12,
+        "read_total": 0,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      }
+    ],
+    "limit": 50,
+    "offset": 0,
+    "summary": {
+      "by_account": {
+        "1": {
+          "canceled": 0,
+          "done": 0,
+          "failed": 1,
+          "queued": 3,
+          "running": 1
+        },
+        "2": {
+          "canceled": 0,
+          "done": 1,
+          "failed": 0,
+          "queued": 3,
+          "running": 0
+        },
+        "3": {
+          "canceled": 0,
+          "done": 0,
+          "failed": 0,
+          "queued": 2,
+          "running": 1
         }
-      ],
-      "refused": [
-        {
-          "channel_id": 1,
-          "reason": "канал без username — историю читать нечем"
-        }
-      ]
+      },
+      "states": {
+        "canceled": 0,
+        "done": 1,
+        "failed": 1,
+        "queued": 8,
+        "running": 2
+      }
     },
-    "DELETE /backfill/queue/{id}": {
-      "id": 7,
-      "channel_id": 42,
-      "state": "canceled"
-    },
-
+    "total": 12
+  },
   "/channels": {
     "limit": 50,
     "offset": 0,
     "rows": [
       {
         "chat_type": "channel",
+        "discovery_seed": false,
         "discussion": {
           "channel_id": null,
           "last_message_at": null,
@@ -519,6 +576,7 @@
         "id": 7,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": null,
         "leads_total": 0,
         "linked_chat_username": null,
@@ -526,6 +584,7 @@
         "messages_total": 0,
         "peer_id": -1009001,
         "prefilter_rate": null,
+        "source": null,
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "Канал про закупки",
@@ -534,6 +593,7 @@
       },
       {
         "chat_type": "channel",
+        "discovery_seed": false,
         "discussion": {
           "channel_id": null,
           "last_message_at": null,
@@ -544,6 +604,7 @@
         "id": 6,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": 0.0,
         "leads_total": 0,
         "linked_chat_username": null,
@@ -551,6 +612,7 @@
         "messages_total": 117,
         "peer_id": -1501,
         "prefilter_rate": 0.2051,
+        "source": null,
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "Linux Админы",
@@ -559,6 +621,7 @@
       },
       {
         "chat_type": null,
+        "discovery_seed": false,
         "discussion": {
           "channel_id": null,
           "last_message_at": null,
@@ -569,6 +632,7 @@
         "id": 5,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": 0.0,
         "leads_total": 0,
         "linked_chat_username": null,
@@ -576,6 +640,7 @@
         "messages_total": 101,
         "peer_id": -1401,
         "prefilter_rate": 0.2475,
+        "source": null,
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "VPN и Обход",
@@ -584,6 +649,7 @@
       },
       {
         "chat_type": "channel",
+        "discovery_seed": false,
         "discussion": {
           "channel_id": null,
           "last_message_at": null,
@@ -594,6 +660,7 @@
         "id": 4,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": 0.0,
         "leads_total": 0,
         "linked_chat_username": "infra_startups_chat",
@@ -601,6 +668,7 @@
         "messages_total": 113,
         "peer_id": -1301,
         "prefilter_rate": 0.2389,
+        "source": null,
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "Инфра для стартапов",
@@ -609,6 +677,7 @@
       },
       {
         "chat_type": null,
+        "discovery_seed": false,
         "discussion": {
           "channel_id": null,
           "last_message_at": null,
@@ -619,6 +688,7 @@
         "id": 3,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": 0.0,
         "leads_total": 0,
         "linked_chat_username": null,
@@ -626,6 +696,7 @@
         "messages_total": 92,
         "peer_id": -1201,
         "prefilter_rate": 0.2174,
+        "source": null,
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "Мастерская инженера",
@@ -634,9 +705,10 @@
       },
       {
         "chat_type": "supergroup",
+        "discovery_seed": false,
         "discussion": {
           "channel_id": 1,
-          "last_message_at": "2026-09-03T10:11:08+00:00",
+          "last_message_at": "2026-09-13T01:45:36+00:00",
           "messages": 97,
           "state": "history",
           "username": "vpsclub"
@@ -644,6 +716,7 @@
         "id": 2,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": 0.0,
         "leads_total": 0,
         "linked_chat_username": "vpsclub",
@@ -651,6 +724,7 @@
         "messages_total": 87,
         "peer_id": -1101,
         "prefilter_rate": 0.2299,
+        "source": null,
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "DevOps Chat",
@@ -659,9 +733,10 @@
       },
       {
         "chat_type": "channel",
+        "discovery_seed": true,
         "discussion": {
           "channel_id": 2,
-          "last_message_at": "2026-09-03T06:49:08+00:00",
+          "last_message_at": "2026-09-12T22:23:36+00:00",
           "messages": 87,
           "state": "history",
           "username": "devops_chat"
@@ -669,6 +744,7 @@
         "id": 1,
         "ingest_enabled": false,
         "is_junk": false,
+        "joined_at": null,
         "leads_per_1000": 0.0,
         "leads_total": 0,
         "linked_chat_username": "devops_chat",
@@ -676,6 +752,7 @@
         "messages_total": 97,
         "peer_id": -1001,
         "prefilter_rate": 0.2165,
+        "source": "discovery",
         "subscribed_account_id": null,
         "subscribed_by": null,
         "title": "VPS Club",
@@ -735,6 +812,20 @@
       "username": null
     }
   ],
+  "/channels/{id}": {
+    "chat_type": "channel",
+    "created_at": "2026-09-13T02:30:35.886166+00:00",
+    "discovery_seed": true,
+    "id": 1,
+    "ingest_enabled": false,
+    "l1_bypass_enabled": false,
+    "linked_chat_username": "devops_chat",
+    "members": null,
+    "source": "discovery",
+    "subscribed_by": null,
+    "title": "VPS Club",
+    "username": "vpsclub"
+  },
   "/conversations": {
     "limit": 50,
     "note": null,
@@ -949,6 +1040,69 @@
         "value": 1
       }
     ]
+  },
+  "/discovery/candidates": {
+    "limit": 50,
+    "offset": 0,
+    "rows": [
+      {
+        "chat_type": null,
+        "decided_at": "2026-09-12T02:30:36+00:00",
+        "decided_by": "owner@local",
+        "decision": "connected",
+        "decision_reason": null,
+        "found_at": "2026-09-13T02:30:39.316632+00:00",
+        "found_by_account_id": 12,
+        "id": 1,
+        "linked_chat_username": null,
+        "liveness_checked_at": null,
+        "liveness_comments_7d": null,
+        "liveness_posts_7d": null,
+        "llm_at": null,
+        "llm_reason": null,
+        "llm_score": null,
+        "llm_verdict": null,
+        "members": null,
+        "peer_id": null,
+        "seed_channel_id": null,
+        "source": "manual",
+        "title": "VPS Club",
+        "username": "vpsclub"
+      }
+    ],
+    "sorts": [
+      "created",
+      "members",
+      "title"
+    ],
+    "states": [
+      {
+        "count": 0,
+        "key": "pending"
+      },
+      {
+        "count": 0,
+        "key": "approved"
+      },
+      {
+        "count": 0,
+        "key": "rejected"
+      },
+      {
+        "count": 1,
+        "key": "connected"
+      }
+    ],
+    "total": 1
+  },
+  "/discovery/queries": {
+    "limit": 50,
+    "offset": 0,
+    "per_run": {
+      "queries": 5
+    },
+    "rows": [],
+    "total": 0
   },
   "/drafts/comments": {
     "limit": 5,
@@ -3653,6 +3807,63 @@
     "target_kind": "message",
     "total": 80,
     "workflow": "public_reply"
+  },
+  "DELETE /backfill/queue/{id}": {
+    "channel_id": 42,
+    "id": 7,
+    "state": "canceled"
+  },
+  "POST /backfill/queue": {
+    "queued": [
+      {
+        "account_id": null,
+        "attempts": 0,
+        "channel": {
+          "id": 7,
+          "title": "Бухэксперт",
+          "username": "buhexpert8"
+        },
+        "created_at": "2026-09-05T09:00:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 13,
+        "min_date": "2026-08-06T09:00:00+00:00",
+        "position": 13,
+        "read_total": 0,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      },
+      {
+        "account_id": null,
+        "attempts": 0,
+        "channel": {
+          "id": 9,
+          "title": "Бухучет и налоги",
+          "username": "klerkonline"
+        },
+        "created_at": "2026-09-05T09:00:00+00:00",
+        "error": null,
+        "finished_at": null,
+        "id": 14,
+        "min_date": "2026-08-06T09:00:00+00:00",
+        "position": 14,
+        "read_total": 0,
+        "requested_by": "ivan@example.com",
+        "scheduled_for": null,
+        "started_at": null,
+        "state": "queued",
+        "target": 2000
+      }
+    ],
+    "refused": [
+      {
+        "channel_id": 1,
+        "reason": "канал без username — историю читать нечем"
+      }
+    ]
   },
   "_note": "Снято прогоном настоящего приложения (scripts/dump_gui_fixtures.py). Руками не редактировать — перезапустить скрипт."
 }
