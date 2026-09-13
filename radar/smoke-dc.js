@@ -128,6 +128,9 @@ async function once(file, src, fixtures, props) {
 
   const misses = [];
   const updates = [];
+  // Панели, открытые через api.drill. Сами прогон кнопок не жмёт — их открывает
+  // целевая проверка ниже (checkFleetLimits), остальным экранам пусто не мешает.
+  const drills = [];
   const api = makeApi(fixtures, misses);
   const ctx = {
     console, setTimeout, clearTimeout, URLSearchParams, Date, Math, JSON, RegExp,
@@ -140,6 +143,7 @@ async function once(file, src, fixtures, props) {
     // Оболочка и очередь вешают горячие клавиши на window.
     window: {addEventListener() {}, removeEventListener() {}, open() {}},
     __imp: async (p) => p.includes('radar-table') ? {Table: ctx.__Table} : api,
+    __drills: drills,
   };
   vm.createContext(ctx);
   vm.runInContext(tableSrc + '\n;this.__Table = Table;', ctx);
@@ -148,7 +152,7 @@ async function once(file, src, fixtures, props) {
   const base = `
     class DCLogic {
       constructor(){ this.props = Object.assign(
-        {api:{toast(){}, drill(){}, trace(){}, go(){}, modal(){}}, mobile:false},
+        {api:{toast(){}, drill(p){ __drills.push(p); }, trace(){}, go(){}, modal(){}}, mobile:false},
         __props); }
       setState(patch, cb){
         const next = typeof patch === 'function' ? patch(this.state) : patch;
@@ -193,7 +197,8 @@ async function once(file, src, fixtures, props) {
   }
 
   return {problems, keys: Object.keys(vals).length,
-          rows: Array.isArray(vals.rows) ? vals.rows.length : null};
+          rows: Array.isArray(vals.rows) ? vals.rows.length : null,
+          drills, vals};
 }
 
 // Экран-шаблон проверяется дважды. Первый вид — общий раздел, второй — раздел
@@ -205,6 +210,64 @@ const MODES = [
                                   workflowTitle: 'Публичные ответы'}},
 ];
 
+// Целевая проверка остатков Engage на Fleet (PLAN 12.2): у одного аккаунта
+// фикстуры все поля лимитов null — панель обязана показать «—», у остальных
+// числа обязаны отрендериться числами, а не прочерками или пустотой.
+// Ожидания выводятся из фикстур /accounts, не зашиваются: дампер при следующем
+// прогоне снимет живые значения, и проверка не должна разъехаться с ними.
+function checkFleetLimits(fixtures, drills, vals, problems) {
+  const K_ACCT = 'Вступлений осталось (аккаунт)';
+  const K_FLEET = 'Вступлений осталось (флот)';
+  const K_MSG = 'Сообщений осталось';
+  const val = (d, k) => {
+    const r = (d.rows || []).find(x => x.k === k);
+    return r ? r.v : undefined;
+  };
+  const panels = (drills || []).filter(d =>
+    val(d, K_ACCT) !== undefined && val(d, K_FLEET) !== undefined
+    && val(d, K_MSG) !== undefined);
+  const accs = Array.isArray(fixtures['/accounts']) ? fixtures['/accounts'] : [];
+  if (!panels.length || panels.length !== accs.length) {
+    problems.push('fleet: панелей с тремя строками остатков ' + panels.length +
+                  ', аккаунтов в фикстуре ' + accs.length);
+    return;
+  }
+  // Прочерки: сколько в фикстуре аккаунтов с null во всех остатках —
+  // столько панелей, где все три строки показывают «—».
+  const dashAccs = accs.filter(a => a.joins_remaining == null
+    && a.joins_aggregate_remaining == null && a.messages_remaining == null).length;
+  const dashPanels = panels.filter(d =>
+    val(d, K_ACCT) === '—' && val(d, K_FLEET) === '—' && val(d, K_MSG) === '—');
+  if (dashPanels.length !== dashAccs)
+    problems.push('fleet: аккаунтов со сплошным null в фикстуре ' + dashAccs +
+                  ', а панелей со «—» во всех трёх остатках — ' + dashPanels.length);
+  // Числа: каждый аккаунт с joins_remaining обязан показать своё значение
+  // и приписку про сброс, если окно конечное.
+  for (const a of accs) {
+    if (a.joins_remaining == null) continue;
+    const h = Math.floor(a.joins_resets_in_seconds / 3600);
+    const m = Math.floor((a.joins_resets_in_seconds % 3600) / 60);
+    const reset = [h > 0 ? h + 'ч' : '', m > 0 ? m + 'м' : ''].filter(Boolean).join(' ');
+    const want = String(a.joins_remaining) + (reset ? ' · сброс через ' + reset : '');
+    const panel = panels.find(d => val(d, K_ACCT) === want);
+    if (!panel) {
+      problems.push('fleet: не найдена панель с «' + want + '» (число отрендерилось не числом?)');
+      continue;
+    }
+    if (val(panel, K_FLEET) !== String(a.joins_aggregate_remaining))
+      problems.push('fleet: флотский остаток «' + val(panel, K_FLEET) +
+                    '» ≠ фикстурного ' + a.joins_aggregate_remaining);
+    if (val(panel, K_MSG) !== String(a.messages_remaining))
+      problems.push('fleet: остаток сообщений «' + val(panel, K_MSG) +
+                    '» ≠ фикстурного ' + a.messages_remaining);
+  }
+  // Сводка флота в заголовке: совокупный остаток из любой строки.
+  const agg = accs.map(a => a.joins_aggregate_remaining).find(v => v != null);
+  if (agg != null
+      && String((vals || {}).fleetLabel || '').indexOf('флоту осталось вступлений: ' + agg) === -1)
+    problems.push('fleet: в сводке флота нет «флоту осталось вступлений: ' + agg + '»');
+}
+
 async function run(file, fixtures) {
   const src = fs.readFileSync(file, 'utf8');
   if (!logicOf(src)) return {file: path.basename(file), skipped: 'нет блока логики'};
@@ -215,6 +278,14 @@ async function run(file, fixtures) {
   const runs = [];
   for (const m of modes) {
     const r = await once(file, src, fixtures, m.props);
+    // Fleet: открываем панель каждой строки и сверяем рендер остатков с фикстурой.
+    if (path.basename(file) === 'RadarFleet.dc.html') {
+      for (const row of ((r.vals && r.vals.rows) || [])) {
+        try { if (row.open) row.open(); }
+        catch (e) { r.problems.push('fleet: открытие панели падает: ' + e.message); }
+      }
+      checkFleetLimits(fixtures, r.drills, r.vals, r.problems);
+    }
     runs.push({...r, label: path.basename(file) + m.suffix});
   }
   return {file: path.basename(file), runs};

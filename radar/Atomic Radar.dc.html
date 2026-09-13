@@ -60,7 +60,7 @@ table{border-collapse:collapse;width:100%}
         <div style="margin-top:14px;text-align:center"><a href="#" onClick="{{ noop }}" style="font:400 12px/1 'JetBrains Mono',monospace">Использовать резервный код</a></div>
       </div>
       </sc-if>
-      <div style="margin-top:28px;border-top:1px solid rgba(19,30,95,0.16);padding-top:12px;font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;letter-spacing:.06em">v1.0 · radar.atomic-automation.net</div>
+      <div id="shellStamp" style="margin-top:28px;border-top:1px solid rgba(19,30,95,0.16);padding-top:12px;font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;letter-spacing:.06em">v1.0 · radar.atomic-automation.net</div>
     </div>
   </div>
 </div>
@@ -372,6 +372,15 @@ class Component extends DCLogic {
   };
 
   async componentDidMount(){
+    // Штамп версии: в консоль — один раз при монтировании оболочки. В строке внизу
+    // формы входа разметка статическая, поэтому дату вписывает этот код. В песочницах
+    // скретч-проверок документа нет либо это огрызок без getElementById — там штамп живёт только в консоли.
+    console.info('radar shell', this.SHELL_VERSION);
+    if(typeof document !== 'undefined' && typeof document.getElementById === 'function'){
+      const el = document.getElementById('shellStamp');
+      if(el) el.textContent = 'v1.0 · ' + this.SHELL_VERSION + ' · radar.atomic-automation.net';
+    }
+
     // Адрес — часть состояния, и применяется он до всех запросов: какой раздел
     // ни открывай, первым рисуется тот, что стоит в строке браузера. Слушатель
     // вешается сразу же: «назад» работает и на форме входа — маршрут просто
@@ -414,6 +423,10 @@ class Component extends DCLogic {
     window.removeEventListener('pagehide', this._leave);
     this.closeStream();
   }
+
+  // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
+  // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
+  SHELL_VERSION = '2026-09-13';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],

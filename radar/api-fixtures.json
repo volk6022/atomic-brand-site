@@ -3,7 +3,11 @@
     {
       "geo_match": false,
       "id": 12,
+      "joins_aggregate_remaining": 9,
+      "joins_remaining": 3,
+      "joins_resets_in_seconds": 43200,
       "label": "acc-12",
+      "messages_remaining": 10,
       "phone_country": "RU",
       "phone_masked": "+7900•••4455",
       "proxy_country": "DE",
@@ -18,7 +22,11 @@
     {
       "geo_match": true,
       "id": 13,
+      "joins_aggregate_remaining": null,
+      "joins_remaining": null,
+      "joins_resets_in_seconds": null,
       "label": "acc-13",
+      "messages_remaining": null,
       "phone_country": "RU",
       "phone_masked": "+7900•••4433",
       "proxy_country": "RU",

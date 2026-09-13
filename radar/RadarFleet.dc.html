@@ -114,6 +114,29 @@ class Component extends DCLogic {
   STATUS_COLOR = {active:'#2E7D57', warmup:'#C98A1E', sleeping:'#DA501C',
                   banned:'#8A8F9E', new:'#156479'};
 
+  // Остатки суточных окон, которые Engage отдаёт с 11.09 по каждому аккаунту.
+  // null — «Engage не ответил / лимит не читается»: это не ноль, поэтому прочерк.
+  fmtRemaining(v){
+    return v == null ? '—' : String(v);
+  }
+
+  // Приписка к аккаунтному остатку: «· сброс через 12ч» из секунд.
+  fmtReset(s){
+    if (s == null) return '';
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    const parts = [];
+    if (h > 0) parts.push(h + 'ч');
+    if (m > 0) parts.push(m + 'м');
+    return parts.length ? ' · сброс через ' + parts.join(' ') : '';
+  }
+
+  // Совокупный лимит один на весь флот (по api_id), берём первый ненулевой из строк.
+  fleetLimitsNote(rows){
+    if (!rows.length) return '';
+    const agg = rows.map(f=>f.joins_aggregate_remaining).find(v=>v != null);
+    return ' · флоту осталось вступлений: ' + (agg == null ? '—' : agg);
+  }
+
   renderVals(){
     const api = this.props.api || {};
     const t = api.toast || (()=>{});
@@ -122,7 +145,7 @@ class Component extends DCLogic {
     const suffix = this.state.status ? (' из ' + all.length) : '';
     const title = this.state.loading ? 'загрузка…'
                 : (this.state.error ? this.state.error
-                : rows.length + ' аккаунтов' + suffix);
+                : rows.length + ' аккаунтов' + suffix + this.fleetLimitsNote(all));
 
     return {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
@@ -164,9 +187,11 @@ class Component extends DCLogic {
                 : 'рассинхрон: номер ' + f.phone_country + ', прокси ' + f.proxy_country},
             {k:'Прогрев', v:row.warmup},
             {k:'Сценарий', v:f.use_case || '—'},
-            // Прямо называем, чего мы не знаем. Прочерк без объяснения читается
-            // как «ноль», а это разные вещи.
-            {k:'Лимиты за сутки', v:'— Engage не отдаёт израсходованное по аккаунту'},
+            // Остатки суточных окон (с 11.09 Engage их отдаёт). Прочерк — «Engage
+            // не ответил», не «ноль»: это разные вещи.
+            {k:'Вступлений осталось (аккаунт)', v:this.fmtRemaining(f.joins_remaining) + this.fmtReset(f.joins_resets_in_seconds)},
+            {k:'Вступлений осталось (флот)', v:this.fmtRemaining(f.joins_aggregate_remaining)},
+            {k:'Сообщений осталось', v:this.fmtRemaining(f.messages_remaining)},
             {k:'Последнее действие', v:'— появится после ингеста'},
             {k:'Аптайм вотчера', v:'— появится после ингеста'}
           ],
