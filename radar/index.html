@@ -1099,6 +1099,11 @@ class Component extends DCLogic {
           this.setState({authed:true, me, serverRole:me.role, sections:me.sections,
                          loginError:false});
           this.refreshMode();
+          // Реестр сценариев строит блоки «Личные сообщения» / «Публичные ответы»
+          // в панели. Путь «уже залогинен» (componentDidMount) его грузит, а этот
+          // путь не грузил: после ввода TOTP блоков не было до F5 — заказчик неделями
+          // попадал в очередь публичных ответов только по прямой ссылке (13.09).
+          this.loadWorkflows();
           // Подписываться раньше нечем: до входа куки нет и ручка отвечает 401.
           this.openStream();
         } catch(err){ this.setState({loginError:true, totp:''}); }
