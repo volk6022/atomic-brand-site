@@ -467,6 +467,10 @@ class Component extends DCLogic {
     {title:'Эксплуатация', items:[{key:'observability', label:'Observability', code:'OB'},{key:'safety', label:'Safety', code:'SF'},{key:'admin', label:'Admin', code:'AD'}]}
   ];
 
+  // Пункты NAV, спрятанные из панели: «Drafts» убран — заказчик путал контуры,
+  // разбирая в общей очереди черновики сценариев (13.09). Маршрут `#drafts` жив — архив.
+  HIDDEN_NAV = ['drafts'];
+
   USERS = {
     owner:{name:'Иван', initials:'ИВ', email:'owner@atomic-automation.net', role:'owner'},
     customer:{name:'Андрей', initials:'АВ', email:'customer@atomic-automation.net', role:'customer'},
@@ -900,6 +904,12 @@ class Component extends DCLogic {
   // Второй аргумент — параметры перехода. Нужен, чтобы клик по строке в таблице
   // черновиков открывал в очереди именно тот черновик, а не «следующий по счёту».
   go(route, params){
+    // Общий переход «drafts» без сценария ведёт в очередь черновиков cold_dm:
+    // общий «Drafts» из панели спрятан (HIDDEN_NAV), а сюда приходят дашбордовые
+    // плитки и очереди, кнопка «Открыть очередь черновиков» в Leads и goQueue
+    // общей таблицы. Прямой хеш `#drafts` это не задевает: applyHash() идёт мимо
+    // go(), и старый экран по-прежнему открывается из адресной строки (архив).
+    if(route === 'drafts') route = 'wf:cold_dm:drafts';
     this.setState({route, routeParams:params || null, drill:null, notifOpen:false,
                    userOpen:false, cmdk:false, drawer:false});
     // Адрес обязан поспеть за состоянием: иначе F5 или «скопировать ссылку»
@@ -975,7 +985,8 @@ class Component extends DCLogic {
       : (this.navOwnKey(route) ? route : (this.SECTION_OF[route] || route));
     const nav = this.NAV.map(g=>({
       title:g.title,
-      items:g.items.filter(i=>this.allows(i.key)).map(i=>({
+      // Спрятанные пункты (HIDDEN_NAV) не удаляются из NAV — их не рисуем.
+      items:g.items.filter(i=>this.HIDDEN_NAV.indexOf(i.key) === -1 && this.allows(i.key)).map(i=>({
         ...i,
         // Бейдж — счётчик с сервера, а не число из вёрстки. Раньше здесь стояли
         // «12» и «3», и они не менялись, сколько бы черновиков ни разобрали.
@@ -1157,7 +1168,9 @@ class Component extends DCLogic {
       cmdItems:[
         {label:'→ Перейти в Safety', go:()=>this.go('safety')},
         {label:'→ Журнал аудита', go:()=>this.go('admin')},
-        {label:'→ Драфты на ревью', go:()=>this.go('drafts')},
+        // Сценарный маршрут, тот же вызов go(), что и у пунктов блоков панели:
+        // общий «Drafts» из панели спрятан (HIDDEN_NAV).
+        {label:'→ Драфты на ревью', go:()=>this.go('wf:cold_dm:drafts')},
         {label:'→ Канал VPS & Hosting Talk', go:()=>this.go('channels')},
         {label:'→ Экспорт текущей таблицы', go:()=>{ this.setState({cmdk:false}); this.toast('Экспорт запущен, придёт уведомление', this.C.sea); }}
       ],
@@ -1183,7 +1196,10 @@ class Component extends DCLogic {
            + (this.TITLES[w.screen] || w.section))
         : (this.TITLES[route] || 'Atomic Radar'),
       drawer:S.drawer, toggleDrawer:()=>this.setState({drawer:!S.drawer}),
-      tabs:[{key:'dashboard', label:'Dash'},{key:'leads', label:'Leads'},{key:'drafts', label:'Drafts'},{key:'conversations', label:'Диалоги'}].map(t=>({label:t.label, fg: route === t.key ? '#F8F3E0' : '#8E97C6', mark: route === t.key ? '#DA501C' : 'transparent', go:()=>this.go(t.key)}))
+      // Таб «Drafts» ведёт в сценарную очередь cold_dm — туда же, куда пункты
+      // блоков панели; подсветка сравнивается с полным маршрутом, поэтому ключ —
+      // маршрут целиком.
+      tabs:[{key:'dashboard', label:'Dash'},{key:'leads', label:'Leads'},{key:'wf:cold_dm:drafts', label:'Drafts'},{key:'conversations', label:'Диалоги'}].map(t=>({label:t.label, fg: route === t.key ? '#F8F3E0' : '#8E97C6', mark: route === t.key ? '#DA501C' : 'transparent', go:()=>this.go(t.key)}))
     };
   }
 }
