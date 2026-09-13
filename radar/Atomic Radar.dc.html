@@ -161,6 +161,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.dashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="RadarDashboard" api="{{ api }}" mobile="{{ false }}" hint-size="100%,600px"></dc-import></sc-if>
       <sc-if value="{{ v.fleet }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarFleet" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.discovery }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDiscovery" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.backfill }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarBackfill" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
@@ -171,6 +172,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
       <sc-if value="{{ v.profile }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarProfile" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.runs }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarRuns" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.automation }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAutomation" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ v.evals }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarEvaluations" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.attribution }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAttribution" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.observability }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarObservability" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
@@ -206,6 +208,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.dashboard }}" hint-placeholder-val="{{ true }}"><dc-import name="RadarDashboard" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.fleet }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarFleet" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.discovery }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDiscovery" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.backfill }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarBackfill" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
@@ -216,6 +219,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
       <sc-if value="{{ m.profile }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarProfile" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.runs }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarRuns" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.automation }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAutomation" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ m.evals }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarEvaluations" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.attribution }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarAttribution" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.observability }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarObservability" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
@@ -414,6 +418,9 @@ class Component extends DCLogic {
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
     channels:['owner','customer','reviewer'],
+    // Подбор каналов — права канальные: дословно те же роли, что у `channels`,
+    // потому что раздел тот же (Section.CHANNELS). Настоящая проверка там.
+    discovery:['owner','customer','reviewer'],
     // Очередь дочитывания — работа с каналами, и права у неё канальные:
     // совпадает с Section.CHANNELS на сервере. Настоящая проверка там.
     backfill:['owner','customer','reviewer'],
@@ -431,15 +438,18 @@ class Component extends DCLogic {
     // Разборщик должен видеть, что идёт пересчёт: замершая очередь иначе
     // выглядит поломкой. Запускать задачи он не может — это отдельное право.
     runs:['owner','customer','reviewer'], evals:['owner','customer','reviewer'],
+    // Автоматика — права прогоночные: дословно те же роли, что у `runs`, потому
+    // что раздел тот же (Section.RUNS). Настоящая проверка там.
+    automation:['owner','customer','reviewer'],
     attribution:['owner','customer','viewer'], observability:['owner'],
     safety:['owner','customer'], admin:['owner']
   };
 
   NAV = [
     {title:'Dashboard', items:[{key:'dashboard', label:'Dashboard', code:'DS'}]},
-    {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'backfill', label:'Дочитывание', code:'BF'},{key:'stream', label:'Stream', code:'ST'}]},
+    {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'discovery', label:'Подбор каналов', code:'DI'},{key:'backfill', label:'Дочитывание', code:'BF'},{key:'stream', label:'Stream', code:'ST'}]},
     {title:'Конвейер лидов', items:[{key:'leads', label:'Leads', code:'LD'},{key:'drafts', label:'Drafts', code:'DR', badgeKey:'drafts'},{key:'conversations', label:'Conversations', code:'CV', badgeKey:'conversations'},{key:'manual_sends', label:'Ручные отправки', code:'MS'}]},
-    {title:'Настройка', items:[{key:'profile', label:'Profile & Prompts', code:'PP'},{key:'runs', label:'Runs', code:'RN'},{key:'evals', label:'Evaluations', code:'EV'}]},
+    {title:'Настройка', items:[{key:'profile', label:'Profile & Prompts', code:'PP'},{key:'runs', label:'Runs', code:'RN'},{key:'automation', label:'Автоматика', code:'AU'},{key:'evals', label:'Evaluations', code:'EV'}]},
     {title:'Бизнес', items:[{key:'attribution', label:'Attribution', code:'AT'}]},
     {title:'Эксплуатация', items:[{key:'observability', label:'Observability', code:'OB'},{key:'safety', label:'Safety', code:'SF'},{key:'admin', label:'Admin', code:'AD'}]}
   ];
@@ -454,7 +464,7 @@ class Component extends DCLogic {
   // Ключ здесь — имя экрана, а не маршрута: у раздела сценария общего маршрута нет
   // вовсе, и подпись мобильной шапки берётся по `w.screen`. Поэтому `activity`
   // лежит в этой же карте, хотя перейти на него по имени раздела нельзя.
-  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin'};
+  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', discovery:'Подбор каналов', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', automation:'Автоматика', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin'};
 
   // Здесь лежали три выдуманные тревоги с выдуманными датами — «vertsanov-03 ушёл
   // в паузу», «run_20260805_regen упал», «новый ответ от Игоря С.». Они показывались
@@ -465,7 +475,10 @@ class Component extends DCLogic {
   // Маршруты оболочки, у которых нет собственного раздела на сервере: это второй
   // вид уже существующего раздела, а не отдельное право. Без этой карты переход в
   // таблицу черновиков упёрся бы в отказ, которого сервер не выносил.
-  SECTION_OF = {draftsTable:'drafts'};
+  // `automation`/`discovery` — новые экраны при правах `runs`/`channels`: сервер
+  // этих имён в `/auth/me.sections` не пришлёт никогда. `backfill` — давний долг:
+  // сервер о разделе тоже не знает, и без алиаса пункт «Дочитывание» скрыт у всех.
+  SECTION_OF = {draftsTable:'drafts', automation:'runs', discovery:'channels', backfill:'channels'};
 
   // Ключи таблиц из radar-table.js, не совпавшие с именами маршрутов: таблица
   // пишет в адрес свой ключ, и такой адрес обязан открываться разделом, а не
@@ -540,6 +553,14 @@ class Component extends DCLogic {
   screenOf(route){
     const w = this.wf(route);
     return w ? w.screen : route;
+  }
+
+  // Есть ли у маршрута собственный пункт меню. Такие маршруты («Автоматика»,
+  // «Подбор каналов», «Дочитывание») подсвечивают себя сами, даже если право
+  // проходит через алиас `SECTION_OF`; виды-близнецы без своего пункта
+  // (draftsTable) остаются при пункте своего раздела.
+  navOwnKey(route){
+    return this.NAV.some(g=>g.items.some(i=>i.key === route));
   }
 
   async loadWorkflows(){
@@ -930,12 +951,15 @@ class Component extends DCLogic {
     const current = w ? workflows.filter(x=>x.key === w.key)[0] : null;
 
     // Очередь и таблица — два вида одной сущности, а не два раздела: пункт меню
-    // один, и он остаётся подсвеченным, в каком бы виде человек сейчас ни был.
+    // один, и он остаётся подсвеченным, в каком бы виде человек ни был.
     // У сценария подсвечивается его собственный пункт, а не общий «Leads»: блоки
     // на то и заведены, чтобы было видно, в каком конвейере человек находится.
+    // У маршрута со своим пунктом меню подсветка — его собственная: `SECTION_OF`
+    // тут про права, а не про меню, и без проверки ниже «Автоматика» подсвечивала
+    // бы чужой пункт «Runs».
     const navKey = w
       ? ('wf:' + w.key + ':' + (this.WF_NAV_ALIAS[w.section] || w.section))
-      : (this.SECTION_OF[route] || route);
+      : (this.navOwnKey(route) ? route : (this.SECTION_OF[route] || route));
     const nav = this.NAV.map(g=>({
       title:g.title,
       items:g.items.filter(i=>this.allows(i.key)).map(i=>({
@@ -1013,21 +1037,21 @@ class Component extends DCLogic {
       v:{
         login: !authed, stepLogin: S.step === 'login', stepTotp: S.step === 'totp',
         appDesktop: authed && !isMobile, mobile: authed && isMobile,
-        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), backfill:on('backfill'), stream:on('stream'),
+        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), discovery:on('discovery'), backfill:on('backfill'), stream:on('stream'),
         leads:on('leads'), drafts:on('drafts'), draftsTable:on('draftsTable'),
         conversations:on('conversations'), manual_sends:on('manual_sends'),
         activity:on('activity'),
         profile:on('profile'),
-        runs:on('runs'), evals:on('evals'), attribution:on('attribution'),
+        runs:on('runs'), automation:on('automation'), evals:on('evals'), attribution:on('attribution'),
         observability:on('observability'), safety:on('safety'), admin:on('admin')
       },
       m:{
-        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), backfill:onM('backfill'), stream:onM('stream'),
+        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), discovery:onM('discovery'), backfill:onM('backfill'), stream:onM('stream'),
         leads:onM('leads'), drafts:onM('drafts'), draftsTable:onM('draftsTable'),
         conversations:onM('conversations'), manual_sends:onM('manual_sends'),
         activity:onM('activity'),
         profile:onM('profile'),
-        runs:onM('runs'), evals:onM('evals'), attribution:onM('attribution'),
+        runs:onM('runs'), automation:onM('automation'), evals:onM('evals'), attribution:onM('attribution'),
         observability:onM('observability'), safety:onM('safety'), admin:onM('admin')
       },
       // Кому раздел открыт — берётся из `ACCESS`: это текст экрана отказа, а не

@@ -57,6 +57,15 @@ async function mountShell(hash, me, workflows){
   return {c, ...env};
 }
 
+// То же с мобильным viewport: флаги m.* в renderVals читают this.props.viewport.
+async function mountShellM(hash, me, workflows){
+  const env = makeShell(hash, me, workflows);
+  env.ctx.__props = {viewport:'mobile'};
+  const c = new env.C();
+  await c.componentDidMount();
+  return {c, ...env};
+}
+
 (async () => {
   // Список разделов — ДОСЛОВНО тот, что отдаёт `/auth/me` (проверено на проде 03.09).
   // Здесь стоял лишний `draftsTable`, и это ровно та ошибка, из-за которой харнесс
@@ -272,6 +281,102 @@ async function mountShell(hash, me, workflows){
     check('draftsTable пишет свой срез в адрес',
           writes.some(w=>w === '#draftsTable?filter=approved&channel=VPS+Talk&min_score=40&q=%D0%B1%D0%BE%D0%BB%D1%8C'));
   }
+
+  // ── Волна Ж: маршруты «Автоматики» и «Подбора каналов» (G-50…G-55) ──────────
+  // Экраны automation/discovery серверных разделов не имеют: /auth/me отдаёт
+  // runs и channels, право проходит через SECTION_OF. Имена automation,
+  // discovery, backfill в стаб `/auth/me` попадать не должны — G-53 ниже читает
+  // литерал стоба и держит прецедент draftsTable (сценарий 4b) на замке.
+
+  // 16. G-50: #automation у владельца монтируется, пункт меню подсвечен сам.
+  {
+    const {c} = await mountShell('#automation', owner);
+    const v = c.renderVals();
+    check('G-50 #automation -> route automation, экран смонтирован',
+          c.state.route === 'automation' && v.v.automation === true && v.denied === false);
+    const navItems = [].concat(...(v.nav || []).map(g=>g.items || []));
+    const item = navItems.find(i=>i.key === 'automation');
+    check('G-50 пункт меню «Автоматика» подсвечен',
+          !!item && item.mark === '#DA501C' && item.bg !== 'transparent',
+          JSON.stringify(navItems.map(i=>[i.key, i.mark])));
+    const {c: cm} = await mountShellM('#automation', owner);
+    check('G-50 мобильный viewport: m.automation === true',
+          cm.renderVals().m.automation === true);
+  }
+
+  // 17. G-51: #discovery — то же, что G-50.
+  {
+    const {c} = await mountShell('#discovery', owner);
+    const v = c.renderVals();
+    check('G-51 #discovery -> route discovery, экран смонтирован',
+          c.state.route === 'discovery' && v.v.discovery === true && v.denied === false);
+    const navItems = [].concat(...(v.nav || []).map(g=>g.items || []));
+    const item = navItems.find(i=>i.key === 'discovery');
+    check('G-51 пункт меню «Подбор каналов» подсвечен',
+          !!item && item.mark === '#DA501C' && item.bg !== 'transparent',
+          JSON.stringify(navItems.map(i=>[i.key, i.mark])));
+    const {c: cm} = await mountShellM('#discovery', owner);
+    check('G-51 мобильный viewport: m.discovery === true',
+          cm.renderVals().m.discovery === true);
+  }
+
+  // 18. G-52: долг №3 закрыт — «Дочитывание» открывается у владельца, хотя
+  //     имени backfill в /auth/me.sections нет: право идёт через алиас channels.
+  {
+    const {c} = await mountShell('#backfill', owner);
+    const v = c.renderVals();
+    check('G-52 #backfill -> v.backfill === true (без SECTION_OF раздел скрыт у всех)',
+          c.state.route === 'backfill' && v.v.backfill === true && v.denied === false);
+  }
+
+  // 19. G-53: стаб /auth/me не выдумывает разделы. Читается литерал стоба выше:
+  //     серверных имён automation/discovery/backfill там нет, как и имени экрана
+  //     draftsTable (прецедент: заглушка описывала мир, которого нет, и пропустила
+  //     реальный отказ прав).
+  {
+    check('G-53 в стабе /auth/me нет automation/discovery/backfill/draftsTable',
+          ['automation', 'discovery', 'backfill', 'draftsTable']
+            .every(k=>owner.sections.indexOf(k) === -1),
+          JSON.stringify(owner.sections));
+  }
+
+  // 20. G-54: отказ без права и право через алиас, не через собственное имя.
+  {
+    const viewer = {role:'viewer', sections:['dashboard','attribution']};
+    const {c} = await mountShell('#automation', viewer);
+    let v = c.renderVals();
+    check('G-54 viewer + #automation -> отказ, экран не смонтирован',
+          v.denied === true && v.v.automation === false);
+    const {c: c2} = await mountShell('#discovery', viewer);
+    v = c2.renderVals();
+    check('G-54 viewer + #discovery -> отказ',
+          v.denied === true && v.v.discovery === false);
+    const customer = {role:'customer', sections:['dashboard','channels','stream','leads','drafts','conversations','manual_sends','activity','profile','runs','evals','attribution','safety']};
+    const {c: c3} = await mountShell('#automation', customer);
+    v = c3.renderVals();
+    check('G-54 customer (есть runs) + #automation -> смонтирован через алиас',
+          v.denied === false && v.v.automation === true);
+    const {c: c4} = await mountShell('#discovery', customer);
+    v = c4.renderVals();
+    check('G-54 customer (есть channels) + #discovery -> смонтирован через алиас',
+          v.denied === false && v.v.discovery === true);
+  }
+
+  // 21. G-55: маршруты пишутся в адрес, «назад» отрабатывает (как в 8–9).
+  {
+    const {c, ctx} = await mountShell('#dashboard', owner);
+    c.go('automation');
+    check("G-55 go('automation') пишет '#automation'", ctx.location.hash === '#automation');
+    c.go('discovery');
+    check("G-55 go('discovery') пишет '#discovery'", ctx.location.hash === '#discovery');
+    ctx.location.hash = '#channels';       // браузер вернулся назад
+    c.applyHash();
+    check('G-55 назад на #channels применился', c.state.route === 'channels');
+  }
+
+  // G-56 — мутация, в файл не кодируется: убрать `automation:'runs'` из
+  // SECTION_OF в обеих копиях оболочки -> краснеют G-50 и G-54 (customer);
+  // вернуть. G-57 — существующие сценарии 1–15 зелёные без правки.
 
   let bad = 0;
   for(const [st, name] of results){ console.log(st + ' ' + name); if(st === 'FAIL') bad++; }
