@@ -450,9 +450,42 @@ async function mountShellM(hash, me, workflows){
           'workflowKey=' + v.workflowKey);
   }
 
+  // 26. Блоки сценариев стоят сразу после «Флот и данные» (Иван, 14.09: очереди
+  //     личных и публичных сообщений — самые нужные экраны, а были в хвосте панели).
+  //     У заказчика группы «Флот и данные» нет вовсе (fleet закрыт, channels/stream
+  //     есть) — тогда блоки идут после неё же; у роли без обеих — после Dashboard.
+  {
+    const wfs = [{key:'cold_dm', title:'Cold DM', sections:[{key:'drafts', title:'Черновики'}]},
+                 {key:'public_reply', title:'Public reply', sections:[{key:'drafts', title:'Черновики'}]}];
+    const {c} = await mountShell('#dashboard', owner, wfs);
+    await new Promise(r=>setTimeout(r, 10));
+    const titles = (c.renderVals().nav || []).map(g=>g.title);
+    const i = titles.indexOf('Флот и данные');
+    check('owner: блоки сценариев сразу после «Флот и данные»',
+          i !== -1 && titles[i + 1] === 'Cold DM' && titles[i + 2] === 'Public reply',
+          JSON.stringify(titles));
+    check('owner: «Конвейер лидов» идёт после блоков сценариев',
+          titles.indexOf('Конвейер лидов') > titles.indexOf('Public reply'), JSON.stringify(titles));
+
+    const customer = {role:'customer', sections:['dashboard','channels','stream','leads','drafts','conversations','manual_sends','activity','profile','runs','evals','attribution','safety']};
+    const m = await mountShell('#dashboard', customer, wfs);
+    await new Promise(r=>setTimeout(r, 10));
+    const t2 = (m.c.renderVals().nav || []).map(g=>g.title);
+    const j = t2.indexOf('Флот и данные');
+    check('customer: блоки сценариев сразу после «Флот и данные»',
+          j !== -1 && t2[j + 1] === 'Cold DM' && t2[j + 2] === 'Public reply', JSON.stringify(t2));
+
+    const bare = {role:'viewer', sections:['dashboard','leads','drafts']};
+    const b = await mountShell('#dashboard', bare, wfs);
+    await new Promise(r=>setTimeout(r, 10));
+    const t3 = (b.c.renderVals().nav || []).map(g=>g.title);
+    check('роль без «Флот и данные»: блоки сценариев после Dashboard',
+          t3[0] === 'Dashboard' && t3[1] === 'Cold DM', JSON.stringify(t3));
+  }
+
   // Мутации, в файл не кодируемые: убрать 'drafts' из HIDDEN_NAV в обеих копиях
   // оболочки -> краснеет 23; убрать переадресацию в go() -> краснеют 8, 24, 25
-  // и первая половина 9.
+  // и первая половина 9; вернуть `nav.push` вместо `splice` по якорю -> краснеет 26.
 
   let bad = 0;
   for(const [st, name] of results){ console.log(st + ' ' + name); if(st === 'FAIL') bad++; }

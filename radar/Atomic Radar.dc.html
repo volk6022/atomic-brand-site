@@ -426,7 +426,7 @@ class Component extends DCLogic {
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
-  SHELL_VERSION = '2026-09-14';
+  SHELL_VERSION = '2026-09-14b';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
@@ -1006,6 +1006,7 @@ class Component extends DCLogic {
     // сценария; оболочка лишь отбрасывает разделы, которые пока некому нарисовать,
     // и разделы, закрытые роли. Пустой блок не рисуется вовсе — заголовок без
     // единого пункта выглядит как поломка.
+    const wfNav = [];
     for(const wf of workflows){
       const items = (wf.sections || [])
         .filter(s=>this.WF_SECTION[s.key])
@@ -1019,8 +1020,15 @@ class Component extends DCLogic {
                   fg: navKey === key ? '#F8F3E0' : '#C7CEE8',
                   go:()=>this.go(key)};
         });
-      if(items.length) nav.push({title:wf.title, items});
+      if(items.length) wfNav.push({title:wf.title, items});
     }
+    // Блоки сценариев стоят сразу после «Флот и данные», а не в хвосте панели:
+    // очереди личных и публичных сообщений — самые нужные экраны ревью, и в конце
+    // они оказывались ниже настроек и эксплуатации (Иван, 14.09). Роли без группы
+    // «Флот и данные» получают их после Dashboard; без обеих — первыми.
+    const wfAnchor = ['Флот и данные', 'Dashboard']
+      .map(t=>nav.findIndex(g=>g.title === t)).filter(i=>i !== -1)[0];
+    nav.splice(wfAnchor === undefined ? 0 : wfAnchor + 1, 0, ...wfNav);
 
     const api = {
       role, mode,
