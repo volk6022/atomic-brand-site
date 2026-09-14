@@ -426,7 +426,7 @@ class Component extends DCLogic {
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
-  SHELL_VERSION = '2026-09-14b';
+  SHELL_VERSION = '2026-09-15';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
@@ -468,8 +468,11 @@ class Component extends DCLogic {
   ];
 
   // Пункты NAV, спрятанные из панели: «Drafts» убран — заказчик путал контуры,
-  // разбирая в общей очереди черновики сценариев (13.09). Маршрут `#drafts` жив — архив.
-  HIDDEN_NAV = ['drafts'];
+  // разбирая в общей очереди черновики сценариев (13.09). «Leads» убран 14.09:
+  // статусы старого контура разошлись со сценарными (14.8.16), и панель не
+  // должна предлагать решение по устаревшим данным вторым «правильным на вид»
+  // путём. Маршруты `#drafts` и `#leads` живы по прямому хешу — архив.
+  HIDDEN_NAV = ['drafts', 'leads'];
 
   USERS = {
     owner:{name:'Иван', initials:'ИВ', email:'owner@atomic-automation.net', role:'owner'},
@@ -909,7 +912,19 @@ class Component extends DCLogic {
     // плитки и очереди, кнопка «Открыть очередь черновиков» в Leads и goQueue
     // общей таблицы. Прямой хеш `#drafts` это не задевает: applyHash() идёт мимо
     // go(), и старый экран по-прежнему открывается из адресной строки (архив).
-    if(route === 'drafts') route = 'wf:cold_dm:drafts';
+    //
+    // Подмена только для ГОЛОГО перехода. С focusDraft приходит id из старого
+    // пространства (`/drafts/list`, RadarDraftsTable без сценария) — в очереди
+    // cold_dm тот же номер значит другой черновик (14.8.14, стенд 14.09:
+    // #452 → чужая цель 579). Такой переход остаётся в старой очереди: она
+    // архивная, но по прямому маршруту жива.
+    if(route === 'drafts' && !(params && params.focusDraft)) route = 'wf:cold_dm:drafts';
+    // Общий переход «leads» без сценария ведёт в цели cold_dm тем же приёмом:
+    // статусы старого контура (`/api/v1/leads`) разошлись со сценарными
+    // (14.8.16, 14.09), и плитка/очередь/воронка дашборда не должны открывать
+    // второй «правильный на вид» путь решения по устаревшим данным. Прямой хеш
+    // `#leads` это не задевает: старый экран остаётся по прямой ссылке (архив).
+    if(route === 'leads') route = 'wf:cold_dm:targets';
     this.setState({route, routeParams:params || null, drill:null, notifOpen:false,
                    userOpen:false, cmdk:false, drawer:false});
     // Адрес обязан поспеть за состоянием: иначе F5 или «скопировать ссылку»
@@ -1204,10 +1219,11 @@ class Component extends DCLogic {
            + (this.TITLES[w.screen] || w.section))
         : (this.TITLES[route] || 'Atomic Radar'),
       drawer:S.drawer, toggleDrawer:()=>this.setState({drawer:!S.drawer}),
-      // Таб «Drafts» ведёт в сценарную очередь cold_dm — туда же, куда пункты
-      // блоков панели; подсветка сравнивается с полным маршрутом, поэтому ключ —
-      // маршрут целиком.
-      tabs:[{key:'dashboard', label:'Dash'},{key:'leads', label:'Leads'},{key:'wf:cold_dm:drafts', label:'Drafts'},{key:'conversations', label:'Диалоги'}].map(t=>({label:t.label, fg: route === t.key ? '#F8F3E0' : '#8E97C6', mark: route === t.key ? '#DA501C' : 'transparent', go:()=>this.go(t.key)}))
+      // Табы «Цели» и «Drafts» ведут в сценарные очереди cold_dm — туда же, куда
+      // пункты блоков панели; общий «Leads» из табов убран вместе с панельным
+      // пунктом (HIDDEN_NAV, 14.8.16). Подсветка сравнивается с полным маршрутом,
+      // поэтому ключ — маршрут целиком.
+      tabs:[{key:'dashboard', label:'Dash'},{key:'wf:cold_dm:targets', label:'Цели'},{key:'wf:cold_dm:drafts', label:'Drafts'},{key:'conversations', label:'Диалоги'}].map(t=>({label:t.label, fg: route === t.key ? '#F8F3E0' : '#8E97C6', mark: route === t.key ? '#DA501C' : 'transparent', go:()=>this.go(t.key)}))
     };
   }
 }

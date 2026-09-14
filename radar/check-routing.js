@@ -163,28 +163,36 @@ async function mountShellM(hash, me, workflows){
   }
 
   // 8. go() пишет хеш; эхо hashchange не применяется повторно.
-  //    С 14.09 общий «Drafts» из панели спрятан (HIDDEN_NAV), и программный
-  //    go('drafts') без сценария переадресуется в очередь черновиков cold_dm.
+  //    С 14.09 программный go('drafts') без сценария переадресуется в очередь
+  //    черновиков cold_dm, НО переход С focusDraft остаётся в СТАРОЙ очереди:
+  //    id в нём из старого пространства (`/drafts/list`, клик по строке
+  //    #draftsTable), и в cold_dm тот же номер значит другой черновик
+  //    (14.8.14, стенд 14.09: #452 → чужая цель 579).
   {
     const {c, ctx} = await mountShell('#dashboard', owner);
     c.go('drafts', {focusDraft:41});
-    check("go('drafts',{focusDraft:41}) без сценария пишет '#wf:cold_dm:drafts?focusDraft=41'",
-          ctx.location.hash === '#wf:cold_dm:drafts?focusDraft=41' &&
-          c.state.route === 'wf:cold_dm:drafts',
+    check("go('drafts',{focusDraft:41}) без сценария остаётся в старой очереди: '#drafts?focusDraft=41'",
+          ctx.location.hash === '#drafts?focusDraft=41' &&
+          c.state.route === 'drafts',
           ctx.location.hash);
     check('routeParams сохранены как переданы (число)', c.state.routeParams.focusDraft === 41);
+    const v = c.renderVals();
+    check('смонтирован СТАРЫЙ экран очереди (v.drafts, workflowKey пуст)',
+          v.v.drafts === true && v.workflowKey === '' && v.denied === false,
+          'workflowKey=' + v.workflowKey);
     c.applyHash();  // эхо собственного присваивания
     check('эхо hashchange пропущено', c.state.routeParams.focusDraft === 41);
   }
 
-  // 9. Кнопка «назад»: адрес изменился извне — применился. Вперёд — на прямой
+  // 9. Кнопка «назад»: адрес изменился извне — применился. Переход с focusDraft
+  //    из старого пространства остаётся в старой очереди; вперёд — на прямой
   //    хеш #drafts: тот по-прежнему открывает СТАРЫЙ экран (архив), программа
-  //    переадресуется, адресная строка — нет.
+  //    с фокусом уходит туда же, голая — переадресуется (см. 25).
   {
     const {c, ctx} = await mountShell('#leads', owner);
     c.go('drafts', {focusDraft:7});
-    check("go('drafts',{focusDraft:7}) уводит в сценарную очередь",
-          ctx.location.hash === '#wf:cold_dm:drafts?focusDraft=7', ctx.location.hash);
+    check("go('drafts',{focusDraft:7}) остаётся в старой очереди",
+          ctx.location.hash === '#drafts?focusDraft=7', ctx.location.hash);
     ctx.location.hash = '#channels';       // браузер вернулся назад
     c.applyHash();
     check('назад на #channels применился', c.state.route === 'channels');
@@ -435,15 +443,19 @@ async function mountShellM(hash, me, workflows){
           tab2.fg === '#F8F3E0' && tab2.mark === '#DA501C');
   }
 
-  // 25. Переадресованный переход из экрана монтирует очередь сценария: те же
-  //     v.drafts и workflowKey, что у прямого клика по пункту блока cold_dm.
-  //     Сюда попадают дашборд (плитка и очередь с go:'drafts' из payload),
-  //     кнопка «Открыть очередь черновиков» в Leads и goQueue общей таблицы —
-  //     все они зовут api.go('drafts') оболочки.
+  // 25. ГОЛЫЙ переход из экрана монтирует очередь сценария: те же v.drafts и
+  //     workflowKey, что у прямого клика по пункту блока cold_dm. Сюда попадают
+  //     дашборд (плитка и очередь с go:'drafts' из payload), кнопка «Открыть
+  //     очередь черновиков» в Leads и goQueue общей таблицы — все зовут
+  //     api.go('drafts') оболочки. Переход С focusDraft сюда больше не попадает:
+  //     он остаётся в старой очереди (см. 8–9, 14.8.14).
   {
-    const {c} = await mountShell('#dashboard', owner,
+    const {c, ctx} = await mountShell('#dashboard', owner,
       [{key:'cold_dm', title:'Личные сообщения', sections:[{key:'drafts', title:'Черновики'}]}]);
-    c.go('drafts', {focusDraft:9});
+    c.go('drafts');
+    check("голый go('drafts') без сценария пишет '#wf:cold_dm:drafts'",
+          ctx.location.hash === '#wf:cold_dm:drafts' && c.state.route === 'wf:cold_dm:drafts',
+          ctx.location.hash);
     const v = c.renderVals();
     check("go('drafts') монтирует экран очереди с ключом сценария cold_dm",
           v.v.drafts === true && v.workflowKey === 'cold_dm' && v.denied === false,
@@ -483,9 +495,84 @@ async function mountShellM(hash, me, workflows){
           t3[0] === 'Dashboard' && t3[1] === 'Cold DM', JSON.stringify(t3));
   }
 
+  // ── Старый контур «Leads» спрятан, общий go('leads') ведёт в цели cold_dm ───
+  // План 14.9 п.2 (14.8.16): статусы `/api/v1/leads` разошлись со сценарными
+  // (`/workflows/cold_dm/targets`), и второй «правильный на вид» путь решения
+  // по устаревшим данным закрыт — так же, как «Drafts» 13.09.
+
+  // 27. Пункта leads в отрендеренной панели нет (drafts — тоже), сценарные
+  //     пункты «Цели» на месте; go('leads') переадресуется в цели cold_dm и
+  //     монтирует экран целей; мобильный таб заменён; прямой хеш #leads
+  //     открывает СТАРЫЙ экран Leads (applyHash() идёт мимо go()).
+  {
+    const {c, ctx} = await mountShell('#dashboard', owner,
+      [{key:'cold_dm', title:'Личные сообщения',
+        sections:[{key:'targets', title:'Цели'}, {key:'drafts', title:'Черновики'}]}]);
+    await new Promise(r=>setTimeout(r, 10));
+    const v = c.renderVals();
+    const items = [].concat(...(v.nav || []).map(g=>g.items || []));
+    check('пункта «Leads» (общего) в панели нет',
+          items.every(i=>i.key !== 'leads'), JSON.stringify(items.map(i=>i.key)));
+    check('пункта «Drafts» (общего) в панели по-прежнему нет',
+          items.every(i=>i.key !== 'drafts'));
+    check('сценарный пункт «Цели» cold_dm в панели есть (скрытие leads его не задевает)',
+          items.some(i=>i.key === 'wf:cold_dm:targets' && i.label === 'Цели'));
+    c.go('leads');
+    check("go('leads') без сценария пишет '#wf:cold_dm:targets'",
+          c.state.route === 'wf:cold_dm:targets' && ctx.location.hash === '#wf:cold_dm:targets',
+          ctx.location.hash);
+    const v2 = c.renderVals();
+    check('смонтирован экран целей с ключом сценария cold_dm',
+          v2.v.leads === true && v2.workflowKey === 'cold_dm' && v2.denied === false,
+          'workflowKey=' + v2.workflowKey);
+    ctx.location.hash = '#dashboard';      // чтобы клик по табу был честным
+    c.applyHash();
+    const tab = (c.renderVals().tabs || []).find(t=>t.label === 'Цели');
+    tab.go();
+    check('мобильный таб «Цели» открывает wf:cold_dm:targets',
+          c.state.route === 'wf:cold_dm:targets' && ctx.location.hash === '#wf:cold_dm:targets',
+          ctx.location.hash);
+    const tabHot = c.renderVals().tabs.find(t=>t.label === 'Цели');
+    check('таб «Цели» подсвечен на сценарном маршруте',
+          tabHot.fg === '#F8F3E0' && tabHot.mark === '#DA501C');
+    const {c: c3} = await mountShell('#leads', owner);
+    const v3 = c3.renderVals();
+    check('прямой хеш #leads монтирует старый экран Leads (без переадресации)',
+          c3.state.route === 'leads' && v3.v.leads === true &&
+          v3.workflowKey === '' && v3.denied === false,
+          'route=' + c3.state.route);
+  }
+
+  // 28. Сценарный переход с focusDraft не изменился: там id из пространства
+  //     сценария, и он обязан попадать в сценарную очередь. Правка 14.8.14 —
+  //     только про ГОЛЫЙ переход общего контура.
+  {
+    const {c, ctx} = await mountShell('#dashboard', owner,
+      [{key:'cold_dm', title:'Личные сообщения', sections:[{key:'drafts', title:'Черновики'}]}]);
+    c.go('wf:cold_dm:drafts', {focusDraft:452});
+    check("go('wf:cold_dm:drafts',{focusDraft:452}) пишет '#wf:cold_dm:drafts?focusDraft=452'",
+          ctx.location.hash === '#wf:cold_dm:drafts?focusDraft=452' &&
+          c.state.routeParams.focusDraft === 452,
+          ctx.location.hash);
+  }
+
+  // 29. Прямой хеш #draftsTable по-прежнему открывает СТАРУЮ таблицу
+  //     (applyHash() идёт мимо go(), подмены маршрутов её не задевают).
+  {
+    const {c} = await mountShell('#draftsTable?filter=approved', owner);
+    const v = c.renderVals();
+    check('прямой #draftsTable -> старая таблица смонтирована',
+          c.state.route === 'draftsTable' && v.v.draftsTable === true &&
+          v.workflowKey === '' && v.denied === false,
+          'route=' + c.state.route);
+  }
+
   // Мутации, в файл не кодируемые: убрать 'drafts' из HIDDEN_NAV в обеих копиях
-  // оболочки -> краснеет 23; убрать переадресацию в go() -> краснеют 8, 24, 25
-  // и первая половина 9; вернуть `nav.push` вместо `splice` по якорю -> краснеет 26.
+  // оболочки -> краснеет 23; убрать 'leads' из HIDDEN_NAV -> краснеет 27 (первая
+  // проверка); вернуть безусловную подмену drafts в go() (`if(route === 'drafts')`)
+  // -> краснеют 8 и 9 (первая проверка каждого; 22 по прямому хешу остаётся
+  // зелёным — applyHash() идёт мимо go()); убрать переадресацию leads в go()
+  // -> краснеет 27; вернуть `nav.push` вместо `splice` по якорю -> краснеет 26.
 
   let bad = 0;
   for(const [st, name] of results){ console.log(st + ' ' + name); if(st === 'FAIL') bad++; }
