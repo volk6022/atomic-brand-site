@@ -718,15 +718,98 @@ async function mountShellM(hash, me, workflows){
           JSON.stringify({posts:posts.length, authed:c.state.authed}));
   }
 
+  // ── Модалки режима/остановки: shell сам шлёт post и снабжает экран after ────
+  // План 14.9 шаг 4 (14.8.21 + 14.8.8). confirmModal() для live/dry/kill делает
+  // post и refreshMode сама; экрану, который попросил модалку, остаётся ждать
+  // F5 — если after не вызвать. Порядок «post → /system/mode → after» сверяется
+  // по журналу вызовов, а не по финальному состоянию.
+
+  // 35. 14.8.21: kind=kill — ровно один post /system/kill, refreshMode дёрнул
+  //     /system/mode, after вызван после него.
+  {
+    const {c, api} = await mountShell('#dashboard', owner);
+    const log = [];
+    api.post = async (p, body)=>{ log.push('post ' + p + ' ' + JSON.stringify(body)); return {ok:true}; };
+    const origGet = api.get;
+    api.get = async (p)=>{ log.push('get ' + p); return origGet(p); };
+    c.setState({modal:{kind:'kill', after:()=>log.push('after')}});
+    await c.confirmModal();
+    check('14.8.21 confirmModal kill: post /system/kill ровно один раз',
+          log.filter(x=>x.indexOf('post /system/kill') === 0).length === 1, JSON.stringify(log));
+    check('14.8.21 confirmModal kill: refreshMode дёрнул /system/mode',
+          log.indexOf('get /system/mode') !== -1, JSON.stringify(log));
+    check('14.8.21 confirmModal kill: after вызван после refreshMode (порядок по журналу)',
+          log.indexOf('after') !== -1 &&
+          log.indexOf('after') > log.indexOf('get /system/mode'), JSON.stringify(log));
+    check('14.8.21 confirmModal kill: модалка закрыта', c.state.modal === null);
+  }
+
+  // 36. 14.8.21: post бросает — after не вызывается (состояние не изменилось,
+  //     перечитывать нечего), тост с текстом ошибки показан.
+  {
+    const {c, api} = await mountShell('#dashboard', owner);
+    let afters = 0;
+    api.post = async ()=>{ throw new Error('сеть недоступна'); };
+    c.setState({modal:{kind:'kill', after:()=>afters++}});
+    await c.confirmModal();
+    check('14.8.21 отказ post: after не вызван', afters === 0);
+    const t = c.state.toasts[c.state.toasts.length - 1];
+    check('14.8.21 отказ post: тост с текстом describe цветом отказа',
+          !!t && /сеть недоступна/.test(t.text) && t.c === '#DA501C',
+          JSON.stringify(c.state.toasts));
+  }
+
+  // 37. 14.8.8: kind=live с вводом слова — post /system/mode {mode:LIVE},
+  //     after вызван; при неверном слове не уходит ничего.
+  {
+    const {c, api} = await mountShell('#dashboard', owner);
+    const posts = [];
+    api.post = async (p, body)=>{ posts.push([p, body]); return {ok:true}; };
+    let afters = 0;
+    c.setState({modal:{kind:'live', word:'LIVE', after:()=>afters++}, modalInput:'LIVE'});
+    await c.confirmModal();
+    check('14.8.8 kind=live: post /system/mode с mode=LIVE',
+          posts.length === 1 && posts[0][0] === '/system/mode' && posts[0][1].mode === 'LIVE',
+          JSON.stringify(posts));
+    check('14.8.8 kind=live: after вызван', afters === 1);
+
+    const {c: c2, api: api2} = await mountShell('#dashboard', owner);
+    const posts2 = [];
+    api2.post = async (p, body)=>{ posts2.push([p, body]); return {ok:true}; };
+    let afters2 = 0;
+    c2.setState({modal:{kind:'live', word:'LIVE', after:()=>afters2++}, modalInput:'ПОКА'});
+    await c2.confirmModal();
+    check('14.8.8 слово не совпало: ни post, ни after, модалка осталась открытой',
+          posts2.length === 0 && afters2 === 0 && c2.state.modal !== null,
+          JSON.stringify({posts:posts2.length, afters:afters2}));
+  }
+
+  // 38. 14.8.21: api.killed в renderVals().api отражает S.killed — экраны,
+  //     которым важно «остановлено», не гадают по mode.
+  {
+    const {c} = await mountShell('#dashboard', owner);
+    check('14.8.21 api.killed=false, пока killed не задан',
+          c.renderVals().api.killed === false);
+    c.setState({killed:true});
+    check('14.8.21 api.killed=true при S.killed=true',
+          c.renderVals().api.killed === true);
+    c.setState({killed:false});
+    check('14.8.21 api.killed=false при S.killed=false',
+          c.renderVals().api.killed === false);
+  }
+
   // Мутации, в файл не кодируемые: убрать 'drafts' из HIDDEN_NAV в обеих копиях
   // оболочки -> краснеет 23; убрать 'leads' из HIDDEN_NAV -> краснеет 27 (первая
-  // проверка); вернуть безусловную подмену drafts в go() (`if(route === 'drafts')`)
+  // проверка); убрать безусловную подмену drafts в go() (`if(route === 'drafts')`)
   // -> краснеют 8 и 9 (первая проверка каждого; 22 по прямому хешу остаётся
   // зелёным — applyHash() идёт мимо go()); убрать переадресацию leads в go()
   // -> краснеет 27; вернуть `nav.push` вместо `splice` по якорю -> краснеет 26;
   // вернуть заглушку `doTotp:()=>{}` в renderVals обеих копий -> краснеют
   // 31 (не-401), 32 (все три) и 33 — они зовут кнопку; в submitTotp на 401
-  // писать loginError вместо totpError -> краснеет 30 (первая и третья проверки).
+  // писать loginError вместо totpError -> краснеет 30 (первая и третья проверки);
+  // убрать вызов m.after из confirmModal обеих копий -> краснеют 35 (третья),
+  // 36 (вторая половина) и 37 (вторая); убрать `killed: !!S.killed` из api ->
+  // краснеет 38.
 
   let bad = 0;
   for(const [st, name] of results){ console.log(st + ' ' + name); if(st === 'FAIL') bad++; }

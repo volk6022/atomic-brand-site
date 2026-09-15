@@ -9,6 +9,9 @@
 <x-dc>
 <div style="display:flex;flex-direction:column;gap:18px;padding:{{ pad }}">
   <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Safety</div>
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Состояние не обновилось: {{ errorMsg }}.</div>
+  </sc-if>
   <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
     <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Режим системы</div>
     <div style="margin-top:12px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -73,14 +76,34 @@ class Component extends DCLogic {
 
   async componentDidMount(){ this.load(); }
 
+  // Страховка от рассинхрона с шапкой (14.8.8): режим могли сменить с другого
+  // экрана или устройства, и оболочка узнала об этом через refreshMode по
+  // событию потока. Оболочка пересобирает api на каждом рендере, поэтому
+  // сравнивать можно только ЗНАЧЕНИЯ полей — сравнение объектов давало бы
+  // перечитку на каждый чих и бесконечный цикл.
+  componentDidUpdate(prev){
+    const was = (prev && prev.api) || {}, now = this.props.api || {};
+    if(was.mode !== now.mode || !!was.killed !== !!now.killed) this.load();
+  }
+
   async load(){
+    // Повторный вход (m.after и componentDidUpdate приходят почти одновременно),
+    // пока запросы ещё идут, не нужен: отвечает последний завершённый вызов.
+    if(this._loading) return;
+    this._loading = true;
     try {
       const { get } = await import('./radar-api.js');
       const [d, mode] = await Promise.all([get('/limits'), get('/system/mode')]);
       this.setState({d, mode, loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
+      // Отказ перечитки не роняет уже показанные данные: на экране аварийной
+      // остановки пустая заглушка вместо состояния системы хуже, чем немного
+      // устаревшие числа. Причина отказа — строкой, loading:true здесь не
+      // возвращается: перечитка не должна мигать заглушкой (14.8.21).
       this.setState({error:describe(e), loading:false});
+    } finally {
+      this._loading = false;
     }
   }
 
@@ -106,6 +129,11 @@ class Component extends DCLogic {
       pad: this.props.mobile ? '12px' : '0',
       cols2: this.props.mobile ? '1fr' : '1fr 1fr',
 
+      // Причина последнего неудавшегося обновления. Уже показанные данные при
+      // этом остаются на месте — баннер лежит поверх, а не вместо них.
+      hasError: !!S.error,
+      errorMsg: String(S.error || ''),
+
       pill: killed ? {text:'ОСТАНОВЛЕНО', bg:'#DA501C', fg:'#FFFFFF', anim:'none'}
           : live ? {text:'LIVE', bg:'#DA501C', fg:'#FFFFFF',
                     anim:'livepulse 1.6s ease-in-out infinite'}
@@ -123,10 +151,13 @@ class Component extends DCLogic {
       toggleMode:()=>{
         if(!api.modal) return;
         if(live){
+          // after дёргает оболочка после успешного post и refreshMode (14.8.21):
+          // без него экран узнал бы о переключении только по F5.
           api.modal({kind:'dry', title:'Вернуть систему в сухой прогон',
             lines:[{text:'Отправка личных сообщений будет заблокирована'},
                    {text:'Очередь черновиков сохранится'}],
-            confirm:'Вернуть в DRY RUN', btnBg:'#131E5F'});
+            confirm:'Вернуть в DRY RUN', btnBg:'#131E5F',
+            after:()=>this.load()});
         } else if(killed){
           api.modal({kind:'resume', title:'Снять аварийную остановку',
             lines:[{text:'Причина остановки: ' + (m.killed_reason || '—')},
@@ -139,7 +170,8 @@ class Component extends DCLogic {
             confirm:'Переключить в LIVE', btnBg:'#DA501C',
             lines:[{text:'Аккаунты начнут физически отправлять личные сообщения'},
                    {text:'Условие заказчика: сначала сухой прогон по истории'},
-                   {text:'Переключение записывается в журнал аудита'}]});
+                   {text:'Переключение записывается в журнал аудита'}],
+            after:()=>this.load()});
         }
       },
 
@@ -148,7 +180,8 @@ class Component extends DCLogic {
         confirm:'Остановить', btnBg:'#DA501C',
         lines:[{text:'Эффективный режим немедленно станет DRY RUN'},
                {text:'Гейт спросит режим на следующей же попытке — рестарт не нужен'},
-               {text:'Снятие остановки — отдельное действие'}]}),
+               {text:'Снятие остановки — отдельное действие'}],
+        after:()=>this.load()}),
 
       limits:(d.limits || []).map(l=>({
         p:l.label || l.key,

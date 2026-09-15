@@ -1008,6 +1008,13 @@ class Component extends DCLogic {
                  : m.kind === 'kill' ? 'Аварийная остановка выполнена'
                  : 'Система возвращена в сухой прогон',
                    m.kind === 'dry' ? this.C.amber : this.C.red);
+        // Экран, чья модалка сменила режим или остановку, сам запрос не шлёт —
+        // m.run для этих трёх видов не вызывается, и без after он узнал бы об
+        // успехе только по F5 (14.8.21, 14.8.8). При отказе post сюда не доходим:
+        // состояние не изменилось — перечитывать нечего, тост ошибки уже показан.
+        if(typeof m.after === 'function'){
+          try { await m.after(); } catch (e) { this.toast(String(e && e.message || e), this.C.red); }
+        }
       } catch (e) { this.toast(describe(e), this.C.red); }
       return;
     }
@@ -1094,6 +1101,9 @@ class Component extends DCLogic {
 
     const api = {
       role, mode,
+      // «Остановлено» из mode не видно: при kill effective_mode остаётся
+      // DRY_RUN, и экран, которому важен именно стоп, читает этот флаг (14.8.21).
+      killed: !!S.killed,
       go:(r, p)=>this.go(r, p),
       toast:(t,c)=>this.toast(t,c),
       drill:(p)=>this.setState({drill:p, drillTab:'details'}),
