@@ -196,7 +196,7 @@ class Component extends DCLogic {
              {key:'status'}],
       filters:{status:'', channel_id:'', pain:'', min_score:''},
     });
-    this.table.attach(()=>this.load());
+    this.table.attach(()=>this.load(), ()=>this.setState({}));
     this.loadRefs();
     this.load();
   }

@@ -210,7 +210,7 @@ class Component extends DCLogic {
       // предполагает, и она только замусорила бы запрос.
       filters:{state:'', unread_only:''},
     });
-    this.table.attach(()=>this.load());
+    this.table.attach(()=>this.load(), ()=>this.setState({}));
     this.load();
   }
 

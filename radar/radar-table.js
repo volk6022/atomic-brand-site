@@ -14,9 +14,13 @@
 //     import { Table } from './radar-table.js';
 //     table = new Table({ key:'stream', sort:'date', sorts:[...] });
 //     // в componentDidMount:
-//     this.table.attach(() => this.load());
+//     this.table.attach(() => this.load(), () => this.setState({}));
 //     // в load(): get('/messages', this.table.query())
 //     // в renderVals(): ...this.table.vals(this.state.total)
+//
+// Второй аргумент `attach` — «перерисуй экран сейчас». Он обязателен на экранах
+// с полем поиска: без него быстрый набор теряет символы (см. комментарий у
+// `setQ` в `vals()`).
 
 const SIZES = [25, 50, 100, 250];
 
@@ -90,10 +94,21 @@ export class Table {
       this.filters[name] = url[name] !== undefined ? url[name] : opts.filters[name];
     }
     this.reload = () => {};
+    // «Перерисуй экран» — ставится вторым аргументом `attach`. До attach нет
+    // экрана, которому можно перерисоваться, поэтому no-op.
+    this.redraw = () => {};
     this.timer = null;
   }
 
-  attach(reload) { this.reload = reload; this.sync(); }
+  // `redraw` — синхронная перерисовка экрана (`() => this.setState({})`).
+  // Старая сигнатура `attach(reload)` остаётся рабочей: тогда перерисовки при
+  // наборе не будет, и поле поиска на экране начнёт терять символы при быстром
+  // вводе (14.8.9/14.8.22).
+  attach(reload, redraw) {
+    this.reload = reload;
+    if (redraw) this.redraw = redraw;
+    this.sync();
+  }
 
   sync() {
     writeUrl(this.key, {
@@ -219,7 +234,18 @@ export class Table {
            : (this.total ? `Показано ${from}–${to} из ${this.total}`
                          : 'Ничего не найдено')),
       q: this.q,
-      setQ: (e) => this.setQuery(e.target.value),
+      // `setQ` обязан СИНХРОННО перерисовать экран (вызвать `this.redraw`), а не ждать
+      // паузы и `reload()`. Причина — контролируемое поле React: разметка
+      // `<input value="{{ q }}" onInput="{{ setQ }}">` превращается в
+      // `value={q}`, и после каждого события `input` React возвращает значение
+      // DOM-поля к пропу `value` из последнего рендера. `setQuery` кладёт текст
+      // в `this.q`, но рендера не запускает — проп `value` остаётся старым, и
+      // React откатывает только что введённую букву. Пока набор быстрее паузы
+      // (350 мс), «Радар» в поле превращается в «р». Синхронный `redraw()`
+      // перерисовывает экран в том же событии, проп `value` догоняет поле, и
+      // откатывать нечего. Это выглядит как лишний рендер на каждую букву, но
+      // «оптимизация» обратно — способ вернуть дефект 14.8.9/14.8.22.
+      setQ: (e) => { this.setQuery(e.target.value); this.redraw(); },
       hasFilters: !!(this.q || Object.values(this.filters).some(v => v)),
       resetAll: () => this.reset(),
       prev: () => this.page > 1 && this.set({page: this.page - 1}, {resetPage: false}),

@@ -108,7 +108,7 @@ class Component extends DCLogic {
       key:'traces', size:50, sort:'created', order:'desc',
       sorts:[{key:'created'}, {key:'latency'}, {key:'tokens'}, {key:'stage'}],
     });
-    this.table.attach(()=>this.load());
+    this.table.attach(()=>this.load(), ()=>this.setState({}));
 
     // Загружаем статусы моделей отдельно (не пагинируются).
     try {

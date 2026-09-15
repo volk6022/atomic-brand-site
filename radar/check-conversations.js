@@ -204,6 +204,27 @@ async function main() {
     check('о сбое нитки сказано отдельно (threadError)', !!v.threadError);
   }
 
+  // 14.8.9/14.8.22. Поле поиска не теряет символы: setQ обязан синхронно
+  // перерисовать экран (setState в том же событии input), чтобы renderVals().q
+  // равнялся набранному ещё до истечения паузы 350 мс; запрос при этом не
+  // уходит. Без синхронной перерисовки React — поле контролируемое
+  // (value={{q}}) — откатывает введённую букву к пропу с прошлого рендера.
+  {
+    const {c, calls} = build();
+    await c.componentDidMount();
+    await new Promise((r) => setTimeout(r, 30));
+    let redraws = 0;
+    const origSet = c.setState.bind(c);
+    c.setState = (p, cb) => { redraws++; return origSet(p, cb); };
+    const before = calls.get.length;
+    vals(c).setQ({target: {value: 'Радар'}});
+    // Всё ниже — синхронно, до всякой паузы: порядок событий и есть проверка.
+    check('поиск: setQ перерисовывает экран синхронно (14.8.9/14.8.22)', redraws > 0);
+    check('поиск: renderVals().q равен набранному до истечения паузы',
+          vals(c).q === 'Радар');
+    check('поиск: во время набора запрос не уходит', calls.get.length === before);
+  }
+
   // ── итог ────────────────────────────────────────────────────────────────────
   for (const [mark, name] of results) console.log(mark + ' ' + name);
   const bad = results.filter((r) => r[0] === 'FAIL').length;

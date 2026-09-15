@@ -237,7 +237,7 @@ class Component extends DCLogic {
     // его не отдаём — она сортировку не принимает, а query() шлёт sort/order
     // только при непустом sort.
     if(!wf) this.table.sort = null;
-    this.table.attach(()=>this.load());
+    this.table.attach(()=>this.load(), ()=>this.setState({}));
     this.loadRefs();
     this.load();
   }

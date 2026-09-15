@@ -174,7 +174,7 @@ class Component extends DCLogic {
       sorts:[{key:'date'}, {key:'channel'}, {key:'author'}, {key:'level'}],
       filters:{channel_id:'', passed:''},
     });
-    this.table.attach(()=>this.load());
+    this.table.attach(()=>this.load(), ()=>this.setState({}));
     this.load();
   }
 

@@ -415,7 +415,7 @@ class Component extends DCLogic {
       key:'discovery', size:50, sort:'created', order:'desc', sorts:[],
       filters:{state:'', source:'', verdict:''},
     });
-    this.table.attach(()=>this.load());
+    this.table.attach(()=>this.load(), ()=>this.setState({}));
     this.load();
     this.loadQueries();
     this.loadOptions();

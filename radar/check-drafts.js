@@ -865,6 +865,29 @@ async function table() {
           JSON.stringify(after.map((a) => a.q)));
   }
 
+  // 28а. 14.8.9/14.8.22. Поле поиска не теряет символы: setQ обязан синхронно
+  //      перерисовать экран (setState в том же событии input), чтобы
+  //      renderVals().q равнялся набранному ещё до истечения паузы; запрос при
+  //      этом не уходит. Без синхронной перерисовки React — поле
+  //      контролируемое (value={{q}}) — откатывает букву к пропу с прошлого
+  //      рендера: «Радар» в поле превращается в «р».
+  {
+    const {c, calls} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    let redraws = 0;
+    const origSet = c.setState.bind(c);
+    c.setState = (p, cb) => { redraws++; return origSet(p, cb); };
+    const before = q(calls, wfRe).length;
+    vals(c).setQ({target: {value: 'Радар'}});
+    // Всё ниже — синхронно, до всякой паузы: порядок событий и есть проверка.
+    check('таблица: setQ перерисовывает экран синхронно (14.8.9/14.8.22)', redraws > 0);
+    check('таблица: renderVals().q равен набранному до истечения паузы',
+          vals(c).q === 'Радар');
+    check('таблица: во время набора запросов нет',
+          q(calls, wfRe).length === before);
+  }
+
   // 29. (д) Мутация: вернуть жёсткий потолок страниц — красный.
   {
     const src = fs.readFileSync(DIR + '/' + F, 'utf8');
