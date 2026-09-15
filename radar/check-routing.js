@@ -47,7 +47,9 @@ function makeShell(hash, me, workflows){
   ctx.__props = {};
   const prepared = shellLogic.replace(/await import\(/g, 'await __imp(');
   vm.runInContext(base + '\n' + prepared + '\n;this.__C = Component;', ctx);
-  return {ctx, listeners, C: ctx.__C};
+  // api возвращается наружу: сценариям входа нужно подменять post/isUnauthorized
+  // под шаг TOTP (оболочка импортирует модуль через __imp, то есть этот же объект).
+  return {ctx, listeners, C: ctx.__C, api};
 }
 
 async function mountShell(hash, me, workflows){
@@ -267,20 +269,31 @@ async function mountShellM(hash, me, workflows){
           writes[0] === '#channels?size=50&sort=title&order=desc');
   }
 
-  // 15. DraftsTable: чтение фильтров из хеша и обратная запись.
+  // 15. DraftsTable: чтение фильтров из хеша и обратная запись. С 14.9 (правка
+  //     таблицы черновиков, параллельная задача) срез живёт в radar-table.js:
+  //     экран строит this.table, имена фильтров в адресе — имена параметров
+  //     сервера (`state`, не старый `filter`), min_score — строка.
   {
     const dtSrc = fs.readFileSync(DIR + '/RadarDraftsTable.dc.html', 'utf8')
       .match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
     const writes = [];
     const got = [];
+    const dtApi = {get: async (p, params)=>{got.push({p, params});
+                        if(p === '/channels/options') return [];
+                        return {rows:[], total:0, states:{}};}};
     const ctx = {console, setTimeout:(f)=>0, clearTimeout(){}, URLSearchParams, Date, Math, JSON,
-                 location:{hash:'#draftsTable?filter=approved&channel=VPS%20Talk&min_score=40&q=%D0%B1%D0%BE%D0%BB%D1%8C'},
+                 localStorage:{getItem:()=>null, setItem(){}},
+                 location:{hash:'#draftsTable?state=approved&channel=VPS%20Talk&min_score=40&q=%D0%B1%D0%BE%D0%BB%D1%8C'},
                  history:{replaceState:(a,b,url)=>writes.push(url)},
                  window:{addEventListener(){}, removeEventListener(){}},
-                 __imp: async ()=>({get: async (p, params)=>{got.push({p, params});
-                       if(p === '/channels/options') return [];
-                       return {rows:[], total:0, states:{}};}})};
+                 __imp: async ()=>dtApi};
     vm.createContext(ctx);
+    // RadarDraftsTable с 14.9 держит срез в radar-table.js: `const { Table } =
+    // await import('./radar-table.js')`. Голый стенд динамические модули не
+    // исполняет — кладём в контекст настоящий Table под теми же стабами
+    // (как в 12–14), иначе `this.Table` в экране undefined.
+    vm.runInContext(tableSrc + '\n;this.__Table = Table;', ctx);
+    dtApi.Table = ctx.__Table;
     const base = `class DCLogic { constructor(){ this.props = {}; }
       setState(p, cb){ const n = typeof p === 'function' ? p(this.state) : p;
         this.state = Object.assign({}, this.state, n); if(cb) cb(); } }`;
@@ -288,14 +301,19 @@ async function mountShellM(hash, me, workflows){
     vm.runInContext(base + '\n' + dtSrc.replace(/await import\(/g, 'await __imp(') + '\n;this.__D = Component;', ctx);
     const d = new ctx.__D();
     await d.componentDidMount();
-    check('draftsTable читает фильтры из хеша',
-          d.state.filter === 'approved' && d.state.channel === 'VPS Talk'
-          && d.state.minScore === 40 && d.state.query === 'боль');
+    // Экран перед списком тянет /channels/options: без паузы проверка ниже
+    // меряла бы скорость стенда, а не поведение.
+    await new Promise(r=>setTimeout(r, 5));
+    check('draftsTable читает фильтры из хеша (в this.table)',
+          !!d.table && d.table.q === 'боль' && d.table.filters.state === 'approved'
+          && d.table.filters.channel === 'VPS Talk' && d.table.filters.min_score === '40');
     check('draftsTable шлёт фильтры на сервер', got.some(x=>x.p === '/drafts/list' && x.params
           && x.params.state === 'approved' && x.params.channel === 'VPS Talk'
-          && x.params.min_score === 40 && x.params.q === 'боль'));
+          && x.params.min_score === '40' && x.params.q === 'боль'));
     check('draftsTable пишет свой срез в адрес',
-          writes.some(w=>w === '#draftsTable?filter=approved&channel=VPS+Talk&min_score=40&q=%D0%B1%D0%BE%D0%BB%D1%8C'));
+          writes.some(w=>w.indexOf('#draftsTable?') === 0 &&
+            w.indexOf('state=approved') !== -1 &&
+            w.indexOf('q=%D0%B1%D0%BE%D0%BB%D1%8C') !== -1));
   }
 
   // ── Волна Ж: маршруты «Автоматики» и «Подбора каналов» (G-50…G-55) ──────────
@@ -567,12 +585,148 @@ async function mountShellM(hash, me, workflows){
           'route=' + c.state.route);
   }
 
+  // ── Вход: шаг TOTP — сообщение при неверном коде и кнопка «Подтвердить» ──────
+  // План 14.9 шаг 3 (14.8.1 + 14.8.2). Оболочка исполняется под стабами api из
+  // makeShell: в каждом сценарии подменяются post/isUnauthorized — так же, как
+  // их ведёт себя radar-api.js в браузере (401 = неверный код, остальное —
+  // describe(e)). На шаг TOTP через хеш не попасть: state ставится руками,
+  // ровно так, как его оставляет успешный /auth/login.
+  const flush = ()=>new Promise(r=>setTimeout(r, 5));
+  async function mountTotp(totp){
+    const env = await mountShell('#dashboard', null);   // /auth/me бросит — на форме входа
+    env.c.setState({step:'totp', totp: totp || '', authed:false});
+    return env;
+  }
+
+  // 30. 14.8.1: 401 от /auth/totp -> сообщение на шаге TOTP, поле очищено,
+  //     authed:false, шаг остаётся totp; loginError не тронут — он про шаг логина.
+  {
+    const {c, api} = await mountTotp('000000');
+    api.post = async (p)=>{
+      if(p === '/auth/totp'){ const e = new Error('/auth/totp → 401'); e.status = 401; throw e; }
+      return {ok:true};
+    };
+    api.isUnauthorized = (e)=>!!e && e.status === 401;
+    const v = c.renderVals();
+    await v.setTotp({target:{value:'000000'}});
+    await flush();
+    check('14.8.1 неверный код: totpError непустой, шаг остаётся totp',
+          !!c.state.totpError && c.state.step === 'totp', c.state.totpError);
+    check('14.8.1 неверный код: поле очищено, authed:false, loginError не тронут',
+          c.state.totp === '' && c.state.authed === false && c.state.loginError === false,
+          JSON.stringify({totp:c.state.totp, authed:c.state.authed, loginError:c.state.loginError}));
+    const v2 = c.renderVals();
+    check('14.8.1 сообщение рисуется именно на шаге TOTP (v.stepTotp + точный текст)',
+          v2.v.stepTotp === true &&
+          v2.totpError === 'Неверный код. Код обновляется каждые 30 секунд',
+          v2.totpError);
+  }
+
+  // 31. 14.8.1: не-401 (сеть/5xx/мёртвая сессия логина) -> текст от describe(e),
+  //     ссылка «Вернуться ко входу» (totpBack), поле не очищено; возврат
+  //     возвращает на шаг логина и чистит ошибку.
+  {
+    const {c, api} = await mountTotp('123456');
+    api.post = async (p)=>{
+      if(p === '/auth/totp') throw new Error('сеть недоступна');
+      return {ok:true};
+    };  // isUnauthorized стаба по умолчанию false; describe — штатный стаб
+    const v = c.renderVals();
+    await v.doTotp();
+    await flush();
+    check('14.8.1 не-401: totpError из describe(e), ссылка возврата включена',
+          c.state.totpError === 'ошибка: сеть недоступна' && c.state.totpBack === true,
+          c.state.totpError);
+    check('14.8.1 не-401: поле не очищено (код можно поправить), authed:false',
+          c.state.totp === '123456' && c.state.authed === false,
+          JSON.stringify({totp:c.state.totp}));
+    const v2 = c.renderVals();
+    v2.backToLogin({preventDefault(){}});
+    check('«Вернуться ко входу»: шаг login, ошибка и код сброшены',
+          c.state.step === 'login' && c.state.totpError === '' &&
+          c.state.totp === '' && c.state.totpBack === false,
+          JSON.stringify({step:c.state.step, err:c.state.totpError}));
+  }
+
+  // 32. 14.8.2: кнопка «Подтвердить» с шестью цифрами в state — /auth/totp
+  //     уходит ровно один раз с этим кодом; на успехе authed:true, me из ответа,
+  //     реестр сценариев перечитан (/workflows дёрнут), поток открыт (openStream).
+  {
+    const {c, api} = await mountTotp('654321');
+    const me = {role:'owner', sections:['dashboard'], name:'Сервер', initials:'С'};
+    const posts = [];
+    api.post = async (p, body)=>{
+      posts.push([p, body]);
+      if(p === '/auth/totp') return me;
+      return {ok:true};
+    };
+    const wfHits = [];
+    const origGet = api.get;
+    api.get = async (p, params)=>{ if(p === '/workflows') wfHits.push(p); return origGet(p, params); };
+    let streams = 0;
+    const origStream = c.openStream;
+    c.openStream = function(){ streams++; return origStream.apply(this, arguments); };
+    const v = c.renderVals();
+    await v.doTotp();
+    await flush();
+    check('14.8.2 «Подтвердить»: /auth/totp отправлен ровно один раз с кодом из поля',
+          posts.length === 1 && posts[0][0] === '/auth/totp' && posts[0][1].code === '654321',
+          JSON.stringify(posts));
+    check('14.8.2 успех: authed:true, me/serverRole/sections из ответа сервера',
+          c.state.authed === true && c.state.me === me &&
+          c.state.serverRole === 'owner' && c.state.sections === me.sections,
+          JSON.stringify({authed:c.state.authed, role:c.state.serverRole}));
+    check('14.8.2 успех: реестр сценариев перечитан (/workflows) и поток открыт',
+          wfHits.length === 1 && streams === 1,
+          JSON.stringify({workflows:wfHits.length, streams}));
+  }
+
+  // 33. 14.8.2: кнопка с тремя цифрами запрос не шлёт — вместо него подсказка.
+  {
+    const {c, api} = await mountTotp('123');
+    const posts = [];
+    api.post = async (p, body)=>{ posts.push([p, body]); return {ok:true}; };
+    const v = c.renderVals();
+    await v.doTotp();
+    await flush();
+    check('14.8.2 три цифры: запрос не отправлен, подсказка «Введите 6 цифр»',
+          posts.length === 0 && c.state.totpError === 'Введите 6 цифр' &&
+          c.state.authed === false && c.state.step === 'totp',
+          JSON.stringify({posts:posts.length, err:c.state.totpError}));
+  }
+
+  // 34. Автоотправка при вводе шестой цифры сохранилась: setTotp фильтрует ввод
+  //     и сам зовёт общий submitTotp, когда стало шесть.
+  {
+    const {c, api} = await mountTotp('');
+    const me = {role:'viewer', sections:['dashboard'], name:'Авто', initials:'А'};
+    const posts = [];
+    api.post = async (p, body)=>{
+      posts.push([p, body]);
+      if(p === '/auth/totp') return me;
+      return {ok:true};
+    };
+    const v = c.renderVals();
+    await v.setTotp({target:{value:'12аб34'}});
+    check('фильтрация ввода не изменилась: не-цифры отброшены, отправки ещё нет',
+          c.state.totp === '1234' && posts.length === 0,
+          JSON.stringify({totp:c.state.totp, posts:posts.length}));
+    await v.setTotp({target:{value:'123456'}});
+    await flush();
+    check('14.8.2 шестая цифра через setTotp отправляет код сама',
+          posts.length === 1 && posts[0][1].code === '123456' && c.state.authed === true,
+          JSON.stringify({posts:posts.length, authed:c.state.authed}));
+  }
+
   // Мутации, в файл не кодируемые: убрать 'drafts' из HIDDEN_NAV в обеих копиях
   // оболочки -> краснеет 23; убрать 'leads' из HIDDEN_NAV -> краснеет 27 (первая
   // проверка); вернуть безусловную подмену drafts в go() (`if(route === 'drafts')`)
   // -> краснеют 8 и 9 (первая проверка каждого; 22 по прямому хешу остаётся
   // зелёным — applyHash() идёт мимо go()); убрать переадресацию leads в go()
-  // -> краснеет 27; вернуть `nav.push` вместо `splice` по якорю -> краснеет 26.
+  // -> краснеет 27; вернуть `nav.push` вместо `splice` по якорю -> краснеет 26;
+  // вернуть заглушку `doTotp:()=>{}` в renderVals обеих копий -> краснеют
+  // 31 (не-401), 32 (все три) и 33 — они зовут кнопку; в submitTotp на 401
+  // писать loginError вместо totpError -> краснеет 30 (первая и третья проверки).
 
   let bad = 0;
   for(const [st, name] of results){ console.log(st + ' ' + name); if(st === 'FAIL') bad++; }

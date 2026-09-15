@@ -54,6 +54,9 @@ table{border-collapse:collapse;width:100%}
       <div>
         <div style="font:400 20px/1.1 'Architexture',sans-serif;color:#131E5F">Второй фактор</div>
         <div style="margin-top:10px;font:400 12px/1.5 'Architexture',sans-serif;color:#184153">Код обновляется каждые 30 секунд в приложении-аутентификаторе.</div>
+        <sc-if value="{{ totpError }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:16px;border-left:3px solid #DA501C;background:#FBEEE8;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#8F2F0C">{{ totpError }}<sc-if value="{{ totpBack }}" hint-placeholder-val="{{ false }}"><div style="margin-top:8px"><a href="#" onClick="{{ backToLogin }}" style="color:#8F2F0C;text-decoration:underline">Вернуться ко входу</a></div></sc-if></div>
+        </sc-if>
         <input value="{{ totp }}" onChange="{{ setTotp }}" placeholder="000000" maxlength="6" style="margin-top:20px;width:100%;padding:14px 12px;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;font:400 24px/1 'JetBrains Mono',monospace;letter-spacing:.4em;text-align:center;color:#131E5F;outline:none">
         <div style="margin-top:12px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Отправка автоматически при вводе 6-й цифры</div>
         <button onClick="{{ doTotp }}" style="margin-top:18px;width:100%;padding:13px;border:0;background:#131E5F;color:#F8F3E0;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#DA501C">Подтвердить</button>
@@ -362,6 +365,11 @@ class Component extends DCLogic {
 
   state = {
     authed:false, step:'login', loginError:false, showPw:false, login:{u:'',p:''}, totp:'',
+    // Ошибка шага TOTP — отдельное поле, не loginError: тот про шаг логина, и
+    // после неудачного TOTP «Неверный логин или пароль» висел бы на форме входа.
+    // totpBack — ошибка, после которой код повторять бессмысленно (сессия логина
+    // истекла, сеть, 5xx): показываем «Вернуться ко входу».
+    totpError:'', totpBack:false,
     route:'dashboard', roleOverride:null, modeOverride:null,
     wide:true, drawer:false, notifOpen:false, userOpen:false, cmdk:false,
     drill:null, drillTab:'details', modal:null, modalInput:'',
@@ -426,7 +434,7 @@ class Component extends DCLogic {
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
-  SHELL_VERSION = '2026-09-15';
+  SHELL_VERSION = '2026-09-15b';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
@@ -805,6 +813,7 @@ class Component extends DCLogic {
       // на вход: так же поступает любой экран, получив 401.
       this.closeStream();
       this.setState({authed:false, step:'login', login:{u:'',p:''}, totp:'',
+                     totpError:'', totpBack:false,
                      notifOpen:false, userOpen:false,
                      me:null, serverRole:null, sections:null});
       this.toast('Сессия истекла, войдите заново', this.C.red);
@@ -817,6 +826,44 @@ class Component extends DCLogic {
       await post('/alerts/ack-all', {});
       this.refreshMode();
     } catch (e) { /* не отметилось — лента останется как есть */ }
+  }
+
+  // Отправка кода TOTP — один путь для двух входов: автоотправки при вводе
+  // шестой цифры (setTotp) и кнопки «Подтвердить» (doTotp). Раньше кнопка была
+  // заглушкой, и код, вставленный из буфера разом, не отправлялся вовсе —
+  // вход работал только через набор по цифре (14.8.2).
+  async submitTotp(code){
+    code = String(code == null ? '' : code);
+    // Меньше шести цифр — это ещё не код: подсказка вместо запроса.
+    if(code.length !== 6){ this.setState({totpError:'Введите 6 цифр', totpBack:false}); return; }
+    const { post, isUnauthorized, describe } = await import('./radar-api.js');
+    try {
+      const me = await post('/auth/totp', {code});
+      // Роль и список разделов приходят с сервера: держать их копию на клиенте
+      // значит однажды разойтись с настоящей матрицей прав.
+      this.setState({authed:true, me, serverRole:me.role, sections:me.sections,
+                     loginError:false, totpError:'', totpBack:false});
+      this.refreshMode();
+      // Реестр сценариев строит блоки «Личные сообщения» / «Публичные ответы»
+      // в панели. Путь «уже залогинен» (componentDidMount) его грузит, а этот
+      // путь не грузил: после ввода TOTP блоков не было до F5 — заказчик неделями
+      // попадал в очередь публичных ответов только по прямой ссылке (13.09).
+      this.loadWorkflows();
+      // Подписываться раньше нечем: до входа куки нет и ручка отвечает 401.
+      this.openStream();
+    } catch(err){
+      if(isUnauthorized(err)){
+        // 401 здесь — ещё не «сессия истекла» (её не было), а неверный код:
+        // сообщение ставится на шаге TOTP и в loginError не пишется, иначе
+        // «Неверный логин или пароль» дожило бы до формы входа (14.8.1).
+        this.setState({totpError:'Неверный код. Код обновляется каждые 30 секунд',
+                       totp:'', totpBack:false});
+      } else {
+        // Сеть, 5xx, истёкшая сессия логина — текст от модуля API и выход на
+        // шаг логина: повторять код при мёртвой сессии бессмысленно.
+        this.setState({totpError:describe(err), totpBack:true});
+      }
+    }
   }
 
   // ── маршрут в адресной строке ───────────────────────────────────────────────
@@ -1108,6 +1155,7 @@ class Component extends DCLogic {
       deniedRoles:(this.ACCESS[this.sectionOf(route)]||[]).join(', '),
 
       login:S.login, totp:S.totp, loginError:S.loginError, pwType:S.showPw ? 'text' : 'password',
+      totpError:S.totpError, totpBack:S.totpBack,
       setLoginU:(e)=>this.setState({login:{...S.login, u:e.target.value}}),
       setLoginP:(e)=>this.setState({login:{...S.login, p:e.target.value}}),
       togglePw:()=>this.setState({showPw:!S.showPw}),
@@ -1119,30 +1167,25 @@ class Component extends DCLogic {
           this.setState({step:'totp', loginError:false});
         } catch(e){ this.setState({loginError:true}); }
       },
-      // Код проверяет сервер. Раньше здесь стоял setTimeout на 250 мс, который
-      // просто ставил authed:true, — то есть вход открывался кому угодно.
-      setTotp:async (e)=>{
+      // Ввод фильтруется до цифр и шести знаков; отправка — общим submitTotp,
+      // когда стало шесть (код проверяет сервер: раньше здесь стоял setTimeout
+      // на 250 мс, который просто ставил authed:true, — то есть вход открывался
+      // кому угодно). Новый ввод стирает прошлую ошибку: сообщение не должно
+      // висеть, пока пользователь набирает следующий код.
+      setTotp:(e)=>{
         const val = e.target.value.replace(/[^0-9]/g,'').slice(0,6);
-        this.setState({totp:val});
+        this.setState({totp:val, totpError:'', totpBack:false});
         if(val.length !== 6) return;
-        try {
-          const { post } = await import('./radar-api.js');
-          const me = await post('/auth/totp', {code: val});
-          // Роль и список разделов приходят с сервера: держать их копию на клиенте
-          // значит однажды разойтись с настоящей матрицей прав.
-          this.setState({authed:true, me, serverRole:me.role, sections:me.sections,
-                         loginError:false});
-          this.refreshMode();
-          // Реестр сценариев строит блоки «Личные сообщения» / «Публичные ответы»
-          // в панели. Путь «уже залогинен» (componentDidMount) его грузит, а этот
-          // путь не грузил: после ввода TOTP блоков не было до F5 — заказчик неделями
-          // попадал в очередь публичных ответов только по прямой ссылке (13.09).
-          this.loadWorkflows();
-          // Подписываться раньше нечем: до входа куки нет и ручка отвечает 401.
-          this.openStream();
-        } catch(err){ this.setState({loginError:true, totp:''}); }
+        this.submitTotp(val);
       },
-      doTotp:()=>{},
+      // Кнопка «Подтвердить» — второй вход в тот же submitTotp: вставленный
+      // из буфера код автоотправки не касается (14.8.2).
+      doTotp:()=>this.submitTotp(S.totp),
+      // Для отказа, после которого код повторять бессмысленно (см. totpBack).
+      backToLogin:(e)=>{
+        if(e && e.preventDefault) e.preventDefault();
+        this.setState({step:'login', totp:'', totpError:'', totpBack:false});
+      },
       logout:async ()=>{
         // Поток закрываем первым: сессии уже нет, а EventSource, узнав об этом
         // сам, начал бы переподключаться к ручке, которая теперь отвечает 401.
@@ -1150,6 +1193,7 @@ class Component extends DCLogic {
         try { const { post } = await import('./radar-api.js'); await post('/auth/logout'); }
         catch(e){ /* сессию всё равно роняем локально */ }
         this.setState({authed:false, step:'login', login:{u:'',p:''}, totp:'',
+                       totpError:'', totpBack:false,
                        userOpen:false, me:null, serverRole:null, sections:null});
       },
       noop:(e)=>{ if(e && e.preventDefault) e.preventDefault(); },
