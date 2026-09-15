@@ -2139,6 +2139,7 @@
   "/profile": {
     "business_description": "Настройка VPS, VPN и прокси.",
     "cascade": {
+      "l1_bypass_pos_min": 0.57,
       "l2_enabled": false,
       "l2_min_margin": 0.01,
       "l2_model": null,

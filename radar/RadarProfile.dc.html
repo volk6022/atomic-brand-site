@@ -642,6 +642,7 @@ class Component extends DCLogic {
       cfgCols:['Параметр','Значение'],
       cfg:[
         {k:'L1 · слова', v:'всегда включён, ' + (d.pains || []).length + ' групп болей'},
+        {k:'L1 · порог обхода словаря', v: c.l1_bypass_pos_min == null ? '—' : String(c.l1_bypass_pos_min)},
         {k:'L2 · эмбеддинги', v:onOff(c.l2_enabled, c.l2_model)},
         {k:'L2 · минимальный отрыв', v: c.l2_min_margin == null ? '—' : String(c.l2_min_margin)},
         {k:'L3 · LLM', v:onOff(c.l3_enabled, c.l3_model)},
