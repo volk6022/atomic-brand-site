@@ -22,6 +22,9 @@ const vm = require('vm');
 const DIR = __dirname;
 const fixtures = JSON.parse(fs.readFileSync(DIR + '/api-fixtures.json', 'utf8'));
 const clone = (x) => JSON.parse(JSON.stringify(x));
+// Модуль таблицы исполняется по-настоящему: страницы, сортировка и срез адреса —
+// это его код, проверять их через заглушку значило бы проверять выдумку.
+const TABLE_SRC = fs.readFileSync(DIR + '/radar-table.js', 'utf8').replace(/^export /gm, '');
 
 const NEXT = fixtures['/workflows/{key}/drafts/next'];
 const ONE = fixtures['/workflows/{key}/drafts/{id}'];
@@ -99,8 +102,12 @@ function build(file, props, opts) {
     },
     window: {addEventListener() {}, removeEventListener() {}, open() {}},
   };
-  ctx.__imp = async () => api;
+  // `import('./radar-table.js')` — настоящий модуль, `import('./radar-api.js')` —
+  // записывающая заглушка.
+  ctx.__imp = async (p) => (String(p).indexOf('radar-table') >= 0
+    ? {Table: ctx.__Table} : api);
   vm.createContext(ctx);
+  vm.runInContext(TABLE_SRC + '\n;this.__Table = Table;', ctx);
 
   const base = `
     class DCLogic {
@@ -473,29 +480,39 @@ async function comments() {
 async function table() {
   const F = 'RadarDraftsTable.dc.html';
   const q = (calls, re) => calls.get.filter((g) => re.test(g.p));
+  const wfRe = /^\/workflows\/public_reply\/drafts$/;
 
-  // 8. Ключи контракта есть до загрузки.
+  // 8. Ключи контракта есть до загрузки — включая дырки пагинации из модуля:
+  //    дырка, которой нет в renderVals, молча оставляет ячейку пустой.
   {
     const {c} = build(F, {workflow: WF});
     const v = vals(c);
     check('таблица: renderVals() до загрузки не падает', !v.__err);
-    for (const k of ['accounts', 'account', 'setAccount', 'hasAccounts']) {
+    for (const k of ['accounts', 'account', 'setAccount', 'hasAccounts',
+                     'range', 'pages', 'sizes', 'q', 'setQ', 'cols', 'resetAll']) {
       check('таблица: ключ ' + k + ' есть до загрузки', k in v);
     }
   }
 
-  // 9-13. В разрезе сценария: своя ручка, свой список аккаунтов, свой фильтр.
+  // 9-13. В разрезе сценария: своя ручка, свой список аккаунтов, свой фильтр,
+  //       страницы и сортировка по умолчанию — от модуля.
   {
     const {c, calls, ctx} = build(F, {workflow: WF});
     await c.componentDidMount();
     await settle();
 
+    const reqs = () => q(calls, wfRe);
     check('таблица: в разрезе сценария спрошена его очередь',
-          q(calls, /^\/workflows\/public_reply\/drafts$/).length === 1);
+          reqs().length === 1);
     check('таблица: общая очередь при этом НЕ спрашивалась',
           q(calls, /^\/drafts\/list$/).length === 0);
     check('таблица: список аккаунтов спрошен у сценария',
           q(calls, /\/drafts\/accounts$/).length === 1);
+    check('таблица: страница по умолчанию — первая по 50 строк',
+          reqs()[0].q.limit === 50 && reqs()[0].q.offset === 0,
+          JSON.stringify(reqs()[0].q));
+    check('таблица: сортировка по умолчанию created desc',
+          reqs()[0].q.sort === 'created' && reqs()[0].q.order === 'desc');
 
     const v = vals(c);
     check('таблица: выпадающий список аккаунтов показан', v.hasAccounts === true);
@@ -514,13 +531,16 @@ async function table() {
       v.setAccount({target: {value: '12'}});
       await settle();
     }
-    const last = q(calls, /^\/workflows\/public_reply\/drafts$/).pop();
+    const last = reqs().pop();
     check('таблица: выбранный аккаунт ушёл на сервер параметром account_id',
           !!last && String(last.q.account_id) === '12');
+    check('таблица: смена фильтра вернула на первую страницу',
+          !!last && last.q.offset === 0);
     check('таблица: список аккаунтов не перезапрашивается на каждый фильтр',
           q(calls, /\/drafts\/accounts$/).length === 1);
     check('таблица: срез по аккаунту попал в адрес строки браузера',
-          /account=12/.test(String(ctx.location.hash || '')));
+          /account_id=12/.test(String(ctx.location.hash || '')),
+          String(ctx.location.hash || ''));
   }
 
   // 14-15. Без сценария поведение прежнее — дословно. Иначе общий раздел
@@ -533,8 +553,16 @@ async function table() {
           q(calls, /^\/drafts\/list$/).length === 1);
     check('таблица: без сценария список аккаунтов не спрашивается',
           q(calls, /\/drafts\/accounts$/).length === 0);
+    const req = q(calls, /^\/drafts\/list$/)[0];
+    check('таблица: общей ручке sort/order не уходят, страница по 50',
+          !!req && !('sort' in req.q) && !('order' in req.q)
+          && req.q.limit === 50 && req.q.offset === 0, JSON.stringify(req.q));
     const v = vals(c);
     check('таблица: без сценария фильтра по аккаунту нет', v.hasAccounts === false);
+    check('таблица: без сценария заголовки не кликабельны и без стрелок',
+          (v.cols || []).length > 0
+          && v.cols.every((h) => h.cursor === 'default' && !h.arrow
+                                && typeof h.pick === 'function'));
   }
 
   // 16-20. Строка: аккаунт, кнопки, комментарий.
@@ -594,18 +622,26 @@ async function table() {
 
   // 21. Ссылка на срез открывает срез: адрес читается ДО первой загрузки.
   //
-  // Хеш взят в том виде, в каком его пишет оболочка, — с приставкой сценария.
-  // Раньше здесь стоял голый «#draftsTable», и проверка описывала мир, которого
-  // нет: внутри сценария оболочка такого адреса не ставит никогда, а экран под
-  // этот выдуманный адрес и подгонялся.
+  // Хеш взят в том виде, в каком его пишет модуль, — с приставкой сценария.
+  // Имена срез-параметров = имена параметров сервера (state, account_id,
+  // min_score): readUrl модуля кладёт их прямо в filters, query() отдаёт как есть.
   {
     const {c, calls} = build(F, {workflow: WF},
-                             {hash: '#wf:public_reply:draftsTable?account=13&filter=pending'});
+        {hash: '#wf:public_reply:draftsTable?account_id=13&state=pending&min_score=50'});
     await c.componentDidMount();
     await settle();
-    const first = q(calls, /^\/workflows\/public_reply\/drafts$/)[0];
+    const first = q(calls, wfRe)[0];
     check('таблица: срез из адреса применён к ПЕРВОМУ запросу',
-          !!first && String(first.q.account_id) === '13');
+          !!first && String(first.q.account_id) === '13'
+                  && first.q.state === 'pending'
+                  && String(first.q.min_score) === '50',
+          first && JSON.stringify(first.q));
+    const v = vals(c);
+    check('таблица: срез из адреса виден в элементах экрана (аккаунт, скор)',
+          v.account === '13' && v.minScore === '50',
+          JSON.stringify([v.account, v.minScore]));
+    check('таблица: чипс состояния из среза подсвечен',
+          (v.filters.find((f) => f.label === 'На ревью') || {}).bg === '#131E5F');
   }
 
   // 21a. Обратная запись обязана сохранить сценарий. Адрес — это то, что человек
@@ -624,7 +660,7 @@ async function table() {
     if (typeof v.setAccount === 'function') { v.setAccount({target: {value: '12'}}); await settle(); }
     const h2 = String(ctx.location.hash || '');
     check('таблица: срез по аккаунту записан внутри маршрута сценария',
-          h2.indexOf('#wf:public_reply:draftsTable?') === 0 && /account=12/.test(h2), h2);
+          h2.indexOf('#wf:public_reply:draftsTable?') === 0 && /account_id=12/.test(h2), h2);
   }
 
   // 21b. Вне сценария адрес прежний, дословно: у общего раздела приставки нет.
@@ -650,25 +686,30 @@ async function table() {
   }
 
   // 23. Колонка 💬: сразу после состояния, число у строки с комментариями,
-  //     прочерк у строки без них.
+  //     прочерк у строки без них. Заголовки модуля — объекты с label/arrow.
   {
     const {c} = build(F, {workflow: WF});
     await c.componentDidMount();
     await settle();
     const v = vals(c);
+    const labels = (v.cols || []).map((h) => h.label);
     check('таблица: колонка комментариев объявлена сразу после состояния',
-          Array.isArray(v.cols) && v.cols.indexOf('💬') === v.cols.indexOf('Статус') + 1,
-          JSON.stringify(v.cols));
+          labels.indexOf('💬') === labels.indexOf('Статус') + 1,
+          JSON.stringify(labels));
+    check('таблица: кликабельны только 4 заголовка — id, Боль, Скор, Статус',
+          v.cols.filter((h) => h.cursor === 'pointer').map((h) => h.label).join(',')
+          === '#,Боль,Скор,Статус',
+          JSON.stringify(v.cols.map((h) => [h.label, h.cursor])));
     const r0 = (v.rows || [])[0] || {};
     const r1 = (v.rows || [])[1] || {};
-    check('таблица: у строки с комментариями показано их число',
+    check('таблица: у строки с комментариями показано число',
           String(r0.commentsLabel) === '2', String(r0.commentsLabel));
     check('таблица: ноль комментариев показан прочерком',
           String(r1.commentsLabel) === '—', String(r1.commentsLabel));
   }
 
-  // 24. Переключатель «С комментариями»: параметр has_comments в запросе
-  //     сценария и адрес в форме comments=1; при выключении — ни того, ни другого.
+  // 24. Переключатель «С комментариями»: параметр has_comments=1 в запросе
+  //     сценария и в адресе; при выключении — ни того, ни другого.
   {
     const {c, calls, ctx} = build(F, {workflow: WF});
     await c.componentDidMount();
@@ -679,19 +720,20 @@ async function table() {
           listReq().q && !('has_comments' in listReq().q));
     v.commentsChip.pick();
     await settle();
-    check('таблица: включённый переключатель шлёт has_comments: true',
-          listReq().q && listReq().q.has_comments === true);
-    check('таблица: включённый переключатель записан в адрес как comments=1',
-          /comments=1/.test(String(ctx.location.hash || '')),
+    check('таблица: включённый переключатель шлёт has_comments=1',
+          listReq().q && String(listReq().q.has_comments) === '1',
+          listReq().q && JSON.stringify(listReq().q));
+    check('таблица: включённый переключатель записан в адрес как has_comments=1',
+          /has_comments=1/.test(String(ctx.location.hash || '')),
           String(ctx.location.hash || ''));
-    // pick замыкается на состояние момента рендера: выключать нужно свежим
+    // pick замыкается на фильтры момента рендера: выключать нужно свежим
     // снимком, каким в живом экране был бы клик после перерисовки.
     vals(c).commentsChip.pick();
     await settle();
     check('таблица: выключенный переключатель убирает параметр из запроса',
           listReq().q && !('has_comments' in listReq().q));
-    check('таблица: выключенный переключатель убирает comments из адреса',
-          !/comments=1/.test(String(ctx.location.hash || '')),
+    check('таблица: выключенный переключатель убирает has_comments из адреса',
+          !/has_comments=1/.test(String(ctx.location.hash || '')),
           String(ctx.location.hash || ''));
   }
 
@@ -704,10 +746,133 @@ async function table() {
     v.commentsChip.pick();
     await settle();
     const req = calls.get.filter((g) => g.p === '/drafts/list').pop();
-    check('таблица: общий список тоже получает has_comments',
-          !!req && req.q.has_comments === true);
+    check('таблица: общий список тоже получает has_comments=1',
+          !!req && String(req.q.has_comments) === '1');
     check('таблица: в общем контуре метка строки берётся из comments_count',
           String(((vals(c).rows || [])[0] || {}).commentsLabel) === '2');
+  }
+
+  // 25. (а) 14.8.18 — холодная загрузка wf-ссылки: пропс сценария приходит
+  //     ПОСЛЕ монтирования (оболочка тянет /auth/me → /workflows). Экран
+  //     обязан дождаться пропса и открыть адрес СО срезом: итоговый запрос —
+  //     к ручке сценария с min_score, дропдаун и адрес показывают срез.
+  {
+    const {c, calls, ctx} = build(F, {workflow: ''},
+        {hash: '#wf:cold_dm:draftsTable?min_score=50'});
+    await c.componentDidMount();
+    await settle();
+    check('таблица: холодная wf-ссылка — до приезда пропса ни одного запроса',
+          calls.get.length === 0, JSON.stringify(calls.get.map((g) => g.p)));
+    check('таблица: холодная wf-ссылка — экран ждёт, а не показывает общий список',
+          vals(c).range === 'загрузка…', vals(c).range);
+
+    c.props.workflow = 'cold_dm';
+    await c.componentDidUpdate({workflow: ''});
+    await settle();
+    const cold = q(calls, /^\/workflows\/cold_dm\/drafts$/);
+    check('таблица: холодная wf-ссылка — итоговый запрос к ручке сценария, ровно один',
+          cold.length === 1, JSON.stringify(cold.map((g) => g.q)));
+    check('таблица: холодная wf-ссылка — срез min_score применён к запросу',
+          !!cold[0] && String(cold[0].q.min_score) === '50',
+          cold[0] && JSON.stringify(cold[0].q));
+    check('таблица: холодная wf-ссылка — общая очередь не запрашивалась',
+          q(calls, /^\/drafts\/list$/).length === 0);
+    const v = vals(c);
+    check('таблица: холодная wf-ссылка — дропдаун показывает скор 50',
+          v.minScore === '50', v.minScore);
+    check('таблица: холодная wf-ссылка — адрес остался маршрутом сценария со срезом',
+          String(ctx.location.hash || '').indexOf('#wf:cold_dm:draftsTable?') === 0
+          && /min_score=50/.test(String(ctx.location.hash || '')),
+          String(ctx.location.hash || ''));
+  }
+
+  // 26. (б) Пагинация: страница 2 уходит offset=50, диапазон в подписи едет,
+  //     адрес несёт page=2; размер страницы выбирается и уходит в limit.
+  {
+    const {c, calls, ctx} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    check('таблица: подпись диапазона первой страницы',
+          v.range === 'Показано 1–50 из 65', v.range);
+    const page2 = v.pages.find((p) => p.label === '2');
+    check('таблица: кнопка второй страницы доступна',
+          !!page2 && typeof page2.pick === 'function');
+    page2.pick();
+    await settle();
+    const p2 = q(calls, wfRe).pop();
+    check('таблица: страница 2 уходит с offset=50 и тем же размером',
+          !!p2 && p2.q.offset === 50 && p2.q.limit === 50, p2 && JSON.stringify(p2.q));
+    check('таблица: страница 2 записана в адрес',
+          /page=2/.test(String(ctx.location.hash || '')), String(ctx.location.hash || ''));
+    check('таблица: подпись диапазона второй страницы',
+          vals(c).range === 'Показано 51–65 из 65', vals(c).range);
+
+    const size100 = vals(c).sizes.find((s) => s.label === '100');
+    check('таблица: выбор размера страницы доступен', !!size100);
+    size100.pick();
+    await settle();
+    const sized = q(calls, wfRe).pop();
+    check('таблица: новый размер уходит limit=100 со сбросом на первую страницу',
+          !!sized && sized.q.limit === 100 && sized.q.offset === 0,
+          sized && JSON.stringify(sized.q));
+  }
+
+  // 27. (в) Сортировка: клик по «Скор» — desc, второй клик — asc; по умолчанию
+  //     таблица отсортирована по created, и это видно стрелкой в заголовке.
+  {
+    const {c, calls, ctx} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    check('таблица: по умолчанию стрелка стоит у id (created)',
+          vals(c).cols.find((h) => h.label === '#').arrow === '↓');
+    let head = vals(c).cols.find((h) => h.label === 'Скор');
+    check('таблица: заголовок «Скор» кликабелен', !!head && head.cursor === 'pointer');
+    head.pick();
+    await settle();
+    let req = q(calls, wfRe).pop();
+    check('таблица: клик по «Скор» шлёт sort=score&order=desc',
+          !!req && req.q.sort === 'score' && req.q.order === 'desc',
+          req && JSON.stringify(req.q));
+    check('таблица: сортировка записана в адрес',
+          /sort=score(&|$)/.test(String(ctx.location.hash || '')),
+          String(ctx.location.hash || ''));
+    check('таблица: стрелка переехала в «Скор»',
+          vals(c).cols.find((h) => h.label === 'Скор').arrow === '↓');
+    vals(c).cols.find((h) => h.label === 'Скор').pick();
+    await settle();
+    req = q(calls, wfRe).pop();
+    check('таблица: второй клик по «Скор» переворачивает порядок',
+          !!req && req.q.sort === 'score' && req.q.order === 'asc');
+  }
+
+  // 28. Поиск через модуль: во время набора запросов нет (пауза 350 мс),
+  //     после паузы уходит ровно один запрос со строкой. Так поле перестаёт
+  //     терять символы: значение живёт в поле, а не перерисовывается из state.
+  {
+    const {c, calls} = build(F, {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const before = q(calls, wfRe).length;
+    vals(c).setQ({target: {value: 'иван'}});
+    await settle();
+    check('таблица: во время набора запросов нет',
+          q(calls, wfRe).length === before);
+    await new Promise((r) => setTimeout(r, 420));
+    const after = q(calls, wfRe).slice(before);
+    check('таблица: после паузы ушёл ровно один запрос со строкой поиска',
+          after.length === 1 && after[0].q.q === 'иван',
+          JSON.stringify(after.map((a) => a.q)));
+  }
+
+  // 29. (д) Мутация: вернуть жёсткий потолок страниц — красный.
+  {
+    const src = fs.readFileSync(DIR + '/' + F, 'utf8');
+    check('мутация: жёсткий предел страниц в load() — красный (в источнике его нет)',
+          !/limit:\s*200/.test(src));
+    const logic = src.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
+    check('таблица: параметры запроса берутся из table.query()',
+          /this\.table\.query\(\)/.test(logic));
   }
 }
 

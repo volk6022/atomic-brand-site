@@ -24,7 +24,7 @@
       <div onClick="{{ f.pick }}" style="cursor:pointer;padding:6px 11px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
     </sc-for>
     <div style="width:12px"></div>
-    <input value="{{ query }}" onChange="{{ setQuery }}" placeholder="поиск по автору или тексту" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по автору или тексту" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:260px">
     <select value="{{ channel }}" onChange="{{ setChannel }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
       <sc-for list="{{ channels }}" as="c" hint-placeholder-count="5">
         <option value="{{ c.value }}">{{ c.label }}</option>
@@ -45,14 +45,14 @@
       </sc-for>
     </select>
     </sc-if>
-    <div onClick="{{ resetFilters }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
   </div>
 
   <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
     <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
       <thead><tr>
         <sc-for list="{{ cols }}" as="c" hint-placeholder-count="8">
-          <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+          <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};cursor:{{ c.cursor }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c.label }} {{ c.arrow }}</th>
         </sc-for>
       </tr></thead>
       <tbody>
@@ -97,7 +97,20 @@
       </tbody>
     </table>
   </div>
-  <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ shown }} · клик по строке открывает черновик в разделе Drafts</div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }} · клик по строке открывает черновик в разделе Drafts</div>
+    <div style="flex:1"></div>
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+      <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+    </sc-for>
+    <div style="width:12px"></div>
+    <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+    <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+      <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+    </sc-for>
+    <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+  </div>
 </div>
 </sc-if>
 
@@ -105,7 +118,7 @@
 <div style="padding:12px;display:flex;flex-direction:column;gap:8px">
   <div style="display:flex;gap:6px;flex-wrap:wrap">
     <sc-for list="{{ filters }}" as="f" hint-placeholder-count="4">
-      <div onClick="{{ f.pick }}" style="padding:8px 12px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
+      <div onClick="{{ f.pick }}" style="cursor:pointer;padding:8px 12px;border:1px solid rgba(19,30,95,0.24);background:{{ f.bg }};color:{{ f.fg }};font:400 12px/1 'JetBrains Mono',monospace">{{ f.label }} {{ f.count }}</div>
     </sc-for>
   </div>
   <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
@@ -129,6 +142,11 @@
       </div>
     </div>
   </sc-for>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 2px">
+    <div onClick="{{ prev }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">← назад</div>
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+    <div onClick="{{ next }}" style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">вперёд →</div>
+  </div>
 </div>
 </sc-if>
 
@@ -137,8 +155,10 @@
 class Component extends DCLogic {
   // Фильтр «с комментариями» ортогонален состоянию разбора: отзыв пишут и на
   // одобренный, и на отклонённый черновик, поэтому он не чипс состояния.
-  state = { d:null, loading:true, error:null,
-            filter:'all', query:'', channel:'', account:'', minScore:0, comments:false };
+  // Страница, размер страницы, сортировка, поиск и сам срез живут в this.table
+  // (radar-table.js) — как на «Целях»; экран задаёт колонки, фильтры и хранит
+  // ответ последней загрузки.
+  state = { d:null, loading:true, error:null, channelList:null, accountList:null };
 
   // Очередь личных сообщений и очередь публичных ответов — один экран. Пустой
   // `workflow` оставляет прежнее поведение дословно: та же ручка `/drafts/list`,
@@ -148,143 +168,115 @@ class Component extends DCLogic {
 
   base(){ return this.wf() ? '/workflows/' + this.wf() : ''; }
 
-  // Собственный маршрут в адресе. Внутри сценария у него есть приставка
-  // `wf:<ключ>:` — та же грамматика, по которой оболочка и открыла этот экран.
-  // Держать её обязаны обе стороны: чтение (иначе ссылка со срезом не
-  // применяется) и запись (иначе адрес в строке браузера ведёт на СТАРУЮ общую
-  // очередь — другой список, без колонки аккаунта и без фильтра по нему).
-  route(){ return (this.wf() ? 'wf:' + this.wf() + ':' : '') + 'draftsTable'; }
+  // Ручка списка — по сценарию. Пустой `workflow` ведёт в старую общую очередь
+  // `/drafts/list` дословно; заданный — в `/workflows/{key}/drafts`, чьи строки
+  // несут аккаунт приёма и Telegram, которых в общей очереди нет.
+  listPath(){ return this.wf() ? this.base() + '/drafts' : '/drafts/list'; }
 
-  componentDidMount(){
-    // Срез читается из адреса до первой загрузки: ссылка вида
-    // #draftsTable?filter=pending&channel=… обязана открыть тот же вид, а не
-    // общий список. Экран не сидит на radar-table.js, поэтому правило адреса
-    // то же, а механика своя.
-    //
-    // Загрузка идёт продолжением setState, а не следующей строкой: состояние
-    // применяется не мгновенно (потому и `set()` ниже написан с продолжением),
-    // и load(), позванный сразу, прочитал бы срез ДО разбора адреса — ссылка
-    // открывала бы общий список, то есть ровно то, что она должна чинить.
-    //
-    // Промис возвращается наружу: фреймворку он не нужен, а проверке нужен —
-    // иначе «смонтировали» и «загрузили» неотличимы, и тест утверждает про
-    // запрос, которого ещё не было.
-    const patch = this.hashPatch();
-    return patch ? new Promise(done=>this.setState(patch, ()=>done(this.load())))
-                 : this.load();
+  // Ключ таблицы — он же ключ адреса и «запомненного размера». `routeOf()` модуля
+  // превращает `draftsTable:cold_dm` ровно в текущий маршрут `wf:cold_dm:draftsTable`,
+  // поэтому срез из адреса модуль читает сам (readUrl в конструкторе) и сам же
+  // пишет его обратно (sync на attach и на every смене). Собственные чтение и
+  // запись адреса удалены: два читателя одного адреса расходились при холодной
+  // загрузке, когда ключ сценария ещё не приехал пропсом (14.8.18).
+  tableKey(){ return this.wf() ? 'draftsTable:' + this.wf() : 'draftsTable'; }
+
+  // Сервер сценария сортирует по created | score | state | pain; id сортируется
+  // по created. Автор, канал, 💬 и текст без sort — заголовок рисуется без клика.
+  // У старой общей ручки сортировки нет вовсе, поэтому в старом контуре sorts
+  // пуст: ни кликабельных заголовков, ни sort/order в запросе.
+  SORTS = [{key:'created'}, {key:'pain'}, {key:'score'}, {key:'state'}];
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.Table = Table;
+    // Холодная загрузка wf-ссылки: оболочка монтирует экран с пустым `workflow`
+    // и доставляет ключ сценария следующим кадром (после /auth/me → /workflows).
+    // Строить таблицу до того — значит строить с чужим ключом `draftsTable`:
+    // маршрут из адреса не совпадёт со срезом и срез пропадёт, а первый sync
+    // затёр бы wf-адрес голым маршрутом старого контура. По одному пропсу
+    // «ещё не приехал» от «старый контур» не отличить, но по адресу можно:
+    // экран открыт, а в адресе wf-маршрут этой таблицы — пропс в пути.
+    // Ждём componentDidUpdate, не делая ни одного запроса.
+    if(this.wfPending()) return;
+    this.build();
   }
 
-  // Свой маршрут в адресе — «draftsTable». Чужой хеш не трогаем: часть до «?»
-  // уже разобрала оболочка и открыла этот экран именно поэтому.
-  // Срез из адреса как объект для setState, либо null, если брать нечего.
-  // Отдельно от применения: так «что прочитали» проверяется без монтирования.
-  hashPatch(){
-    const raw = String(location.hash || '').replace(/^#/, '');
-    const q = raw.indexOf('?');
-    if((q === -1 ? raw : raw.slice(0, q)) !== this.route()) return null;
-    const p = new URLSearchParams(q === -1 ? '' : raw.slice(q + 1));
-    const patch = {};
-    if(p.has('filter')) patch.filter = p.get('filter') || 'all';
-    if(p.has('q')) patch.query = p.get('q') || '';
-    if(p.has('channel')) patch.channel = p.get('channel') || '';
-    // Аккаунт читается из адреса только у сценария: общая ручка такого фильтра не
-    // понимает, и набранный руками `#draftsTable?account=12` слал бы ей параметр,
-    // на который она не смотрит, — срез выглядел бы применённым, не будучи им.
-    if(p.has('account') && this.wf()) patch.account = p.get('account') || '';
-    if(p.has('min_score')) patch.minScore = +p.get('min_score') || 0;
-    // В адресе признак пишется только как «comments=1»: выключенного фильтра
-    // в адресе не бывает, как и пустого канала.
-    if(p.has('comments')) patch.comments = p.get('comments') === '1';
-    return Object.keys(patch).length ? patch : null;
+  // Смена блока в сайдбаре не пересоздаёт экран — место в разметке одно и то же,
+  // меняется только пропс. Перестраиваем таблицу с ключом нового контура. Это же
+  // доводит холодную загрузку wf-ссылки до конца: второй build идёт уже с ключом
+  // сценария, readUrl видит свой маршрут вместе со срезом (приём экрана «Цели»).
+  componentDidUpdate(prev){
+    if(!this.Table) return;
+    if((prev.workflow || '') === this.wf()) return;
+    // Справочник аккаунтов приёма у каждого сценария свой — сбрасываем.
+    this.setState({d:null, loading:true, error:null, accountList:null});
+    this.build();
   }
 
-  // Обратная запись — на каждой загрузке, то есть после любого изменения среза.
-  // replaceState, как у radar-table.js: смена фильтра — уточнение текущего
-  // экрана, а не переход, и «назад» возвращает к предыдущему разделу, а не
-  // перебирает клики по фильтрам.
-  writeHash(){
-    const S = this.state;
-    // Порядок фиксирован от общего к частному — состояние, канал, аккаунт
-    // приёма, порог, строка поиска, признак комментариев. Он ни на что не
-    // влияет при чтении (разбирает URLSearchParams), но делает адрес
-    // одинаковым для одного и того же среза: иначе две ссылки на один вид
-    // выглядят разными, и их невозможно ни сравнить, ни узнать.
-    const p = new URLSearchParams();
-    if(S.filter && S.filter !== 'all') p.set('filter', S.filter);
-    if(S.channel) p.set('channel', S.channel);
-    if(S.account && this.wf()) p.set('account', S.account);
-    if(S.minScore) p.set('min_score', String(S.minScore));
-    if(S.query) p.set('q', S.query);
-    if(S.comments) p.set('comments', '1');
-    const q = p.toString();
-    history.replaceState(null, '', '#' + this.route() + (q ? '?' + q : ''));
+  // Экран смонтирован, пропс пуст, а адрес — wf-маршрут этой таблицы: ключ
+  // сценария ещё в пути, строить рано.
+  wfPending(){
+    if(this.wf()) return false;
+    const route = String(location.hash || '').replace(/^#/, '').split('?')[0];
+    return /^wf:[^:]+:draftsTable$/.test(route);
+  }
+
+  build(){
+    const wf = this.wf();
+    this.table = new this.Table({
+      key:this.tableKey(), size:50,
+      sort: wf ? 'created' : null, order:'desc',
+      sorts: wf ? this.SORTS : [],
+      // Имена фильтров = имена параметров сервера: query() отдаёт их как есть.
+      // account_id понимает только ручка сценария, старая общего фильтра не имеет.
+      filters: wf ? {state:'', channel:'', min_score:'', has_comments:'', account_id:''}
+                  : {state:'', channel:'', min_score:'', has_comments:''},
+    });
+    // Из адреса мог приехать sort, оставшийся от другого контура: старой ручке
+    // его не отдаём — она сортировку не принимает, а query() шлёт sort/order
+    // только при непустом sort.
+    if(!wf) this.table.sort = null;
+    this.table.attach(()=>this.load());
+    this.loadRefs();
+    this.load();
+  }
+
+  // Справочники фильтров — отдельно от списка: недоступный справочник не обязан
+  // ронять очередь черновиков. Каналы общие для обоих контуров, кэшируются;
+  // аккаунты приёма есть только у сценария и запрашиваются на каждый build —
+  // у другого сценария список другой. Отказ ловится на месте: фильтр — удобство,
+  // черновики — работа; без списка выпадающий фильтр просто не рисуется.
+  async loadRefs(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const [channels, accounts] = await Promise.all([
+        this.state.channelList ? Promise.resolve(this.state.channelList)
+                               : get('/channels/options'),
+        this.wf() ? get(this.base() + '/drafts/accounts').catch(()=>null)
+                  : Promise.resolve(null),
+      ]);
+      this.setState({channelList:channels, accountList:accounts || null});
+    } catch (e) { /* без справочников экран работает, фильтры просто пустые */ }
   }
 
   async load(){
-    // Адрес — надпись поверх данных, а не условие их получения. Стояло до `try`,
-    // и любой сбой записи (окружение без `history`) уносил с собой всю загрузку
-    // списка: человек оставался без черновиков из-за строки браузера.
-    try { this.writeHash(); } catch (e) { /* адрес не обновился, список важнее */ }
+    // «загрузка…» горит на время запроса (14.8.23): иначе на медленной сети
+    // обновление выглядит как ответ — числа стоят на месте без объяснения.
+    this.setState({loading:true});
     try {
       const { get } = await import('./radar-api.js');
-      const S = this.state;
-      // Фильтры считает сервер: очередь черновиков растёт вместе с ингестом, и
-      // отбирать по уже загруженной странице значило бы фильтровать не то.
-      const params = {limit:200};
-      if(S.filter !== 'all') params.state = S.filter;
-      if(S.query) params.q = S.query;
-      if(S.channel) params.channel = S.channel;
-      if(S.account && this.wf()) params.account_id = S.account;
-      if(S.minScore) params.min_score = S.minScore;
-      // Фильтр по отзывам считает сервер тем же параметром, что и остальные:
-      // отбирать по уже загруженной странице значило бы фильтровать не то.
-      if(S.comments) params.has_comments = true;
-
-      // Ручка списка — по сценарию. Пустой `workflow` ведёт в старую общую
-      // очередь `/drafts/list` дословно; заданный — в `/workflows/{key}/drafts`,
-      // чьи строки несут аккаунт приёма и Telegram, которых в общей очереди нет.
-      const listPath = this.wf() ? this.base() + '/drafts' : '/drafts/list';
-
-      // `/channels/options` вместо `/channels`: нужен только список названий для
-      // выпадающего фильтра, а тяжёлая ручка считает по каждому каналу количество
-      // сообщений и долю прошедших. К тому же она теперь отдаёт конверт со
-      // страницей, а не массив, — и этот экран об этом не знал и падал на `.filter`.
-      //
-      // Справочник аккаунтов приёма существует только у сценария: общая ручка
-      // фильтр по аккаунту не понимает, поэтому и запроса за списком при пустом
-      // `workflow` нет. Как и каналы, запрашивается один раз и живёт в состоянии.
-      const [d, channels, accounts] = await Promise.all([
-        get(listPath, params),
-        this.state.channelList ? Promise.resolve(this.state.channelList)
-                               : get('/channels/options'),
-        // Отказ ловится здесь, а не общим `catch` ниже: `Promise.all` падает целиком
-        // от одной отклонённой ветки, и недоступный справочник аккаунтов унёс бы с
-        // собой всю очередь черновиков. Фильтр — удобство, черновики — работа;
-        // менять их местами нельзя. Без списка выпадающий фильтр просто не рисуется.
-        this.wf() ? (this.state.accountList
-                       ? Promise.resolve(this.state.accountList)
-                       : get(this.base() + '/drafts/accounts').catch(()=>null))
-                  : Promise.resolve(null)
-      ]);
-      this.setState({d, channelList:channels,
-                     accountList:accounts || this.state.accountList || null,
-                     loading:false, error:null});
+      // Пределы страницы, срез и сортировку считает модуль: предел = размеру
+      // страницы, отступ = (страница-1)·размер; пустые фильтры не уходят.
+      // Фильтры считает сервер: очередь растёт вместе с ингестом, и отбирать
+      // по уже загруженной странице значило бы фильтровать не то.
+      const d = await get(this.listPath(), this.table.query());
+      this.setState({d, loading:false, error:null});
     } catch (e) {
       const { describe } = await import('./radar-api.js');
       this.setState({error:describe(e), loading:false});
     }
   }
-
-  set(patch){ this.setState({...patch, loading:true}, ()=>this.load()); }
-
-  // Четвёртое состояние есть только у очереди сценария. Без него строка
-  // подписывалась английским словом из базы, а чипса, который её считает, не было
-  // вовсе: черновик находился только под «Все», и это выглядело как расхождение
-  // счётчиков.
-  STATE_LABEL = {pending:'на ревью', approved:'одобрен', rejected:'отклонён',
-                 edited:'правлен'};
-  STATE_COLOR = {pending:'#C98A1E', approved:'#2E7D57', rejected:'#DA501C',
-                 edited:'#156479'};
 
   // ── поля строки в форме сценария ───────────────────────────────────────────
 
@@ -342,6 +334,12 @@ class Component extends DCLogic {
   }
 
   renderVals(){
+    // До монтирования таблицы (импорт модуля асинхронный, а при холодной
+    // wf-ссылке первый build ещё и отложен до пропса) разметке нужен полный
+    // набор дырок — отсутствие ключа оставляет ячейку молча пустой.
+    if(!this.table){
+      return this.emptyVals();
+    }
     const api = this.props.api || {};
     const S = this.state, d = S.d || {};
     const rows = d.rows || [];
@@ -354,6 +352,7 @@ class Component extends DCLogic {
                                    return m; }, {})
       : (rawStates || {});
     const total = d.total || 0;
+    const f = this.table.filters;
 
     const headline = S.loading ? 'загрузка…'
                    : (S.error || (total + ' черновиков'));
@@ -361,7 +360,7 @@ class Component extends DCLogic {
     // Показываем все каналы, а не только давшие лидов: справочник `options` про
     // лиды не знает, а второй тяжёлый запрос ради того, чтобы спрятать из списка
     // пару строк, того не стоит. Фильтр уходит по названию — так его понимает
-    // `/drafts/list`.
+    // и общая ручка, и ручка сценария.
     const channels = [{value:'', label:'все каналы'}].concat(
       (S.channelList || []).map(c=>({value:c.title, label:c.title})));
 
@@ -377,19 +376,36 @@ class Component extends DCLogic {
           label:a.label + ' · ' + (a.drafts === undefined ? '—' : a.drafts)})))
       : [];
 
+    // Чипс состояния: имя фильтра = параметр сервера `state`, сброс — пустое
+    // значение, которое query() вообще не отправляет.
+    const chip = (k, label)=>({
+      label,
+      count: k === 'all' ? '' : '· ' + (counts[k] === undefined ? '—' : counts[k]),
+      bg: (f.state || '') === k ? '#131E5F' : 'transparent',
+      fg: (f.state || '') === k ? '#F8F3E0' : '#156479',
+      pick:()=>this.table.setFilter('state', k),
+    });
+
+    // Колонки с сортировкой — только те, что понимает ручка этого контура:
+    // заголовок без sort рисуется некликабельным (vals() модуля).
+    const columns = hasAccounts
+      ? [{label:'#', sort:'created'}, {label:'Автор'}, {label:'Канал'},
+         {label:'Аккаунт'}, {label:'Боль', sort:'pain'}, {label:'Скор', sort:'score'},
+         {label:'Статус', sort:'state'}, {label:'💬'}, {label:'Текст'}]
+      : [{label:'#'}, {label:'Автор'}, {label:'Канал'}, {label:'Боль'},
+         {label:'Скор'}, {label:'Статус'}, {label:'💬'}, {label:'Текст'}];
+
     return {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
       headline,
-      shown: rows.length ? ('Показано ' + rows.length + ' из ' + total)
-                         : (S.error || 'Под фильтр ничего не подошло'),
-      reload:()=>this.set({}),
-      // Колонка аккаунта — только у сценария: в общей очереди поля `readers` нет
-      // вовсе, и столбец стоял бы с прочерком во всех строках до единой. Пустой
-      // столбец читается как «данных нет», хотя их и не бывает. 💬 стоит сразу
-      // после состояния в обоих контурах.
-      cols: hasAccounts
-        ? ['#','Автор','Канал','Аккаунт','Боль','Скор','Статус','💬','Текст']
-        : ['#','Автор','Канал','Боль','Скор','Статус','💬','Текст'],
+      // Страницы, размеры, стрелки сортировки, подпись диапазона («Показано
+      // 1–50 из 852» / «загрузка…» / «Ничего не найдено»), поиск с паузой
+      // набора и общий сброс — всё из модуля.
+      ...this.table.vals(total, {columns, loading:S.loading, error:S.error}),
+      reload:()=>this.load(),
+      // Очередь и таблица — один раздел в двух видах, поэтому переход между ними
+      // не выход из раздела: пункт меню остаётся тем же и остаётся подсвеченным.
+      goQueue:()=>api.go && api.go('drafts'),
 
       // Состав чипсов — по тому, что вернул сервер, а не по зашитому списку: у
       // общей очереди состояний три, у очереди сценария четыре. Зашитый список
@@ -397,37 +413,29 @@ class Component extends DCLogic {
       filters:[{k:'all', label:'Все'}, {k:'pending', label:'На ревью'},
                {k:'approved', label:'Одобренные'}, {k:'rejected', label:'Отклонённые'},
                {k:'edited', label:'Правленые'}]
-        .filter(f=>f.k === 'all' || counts[f.k] !== undefined)
-        .map(f=>({label:f.label,
-                  count: f.k === 'all'
-                    ? '' : '· ' + (counts[f.k] === undefined ? '—' : counts[f.k]),
-                  bg: S.filter === f.k ? '#131E5F' : 'transparent',
-                  fg: S.filter === f.k ? '#F8F3E0' : '#156479',
-                  pick:()=>this.set({filter:f.k})})),
+        .filter(c=>c.k === 'all' || counts[c.k] !== undefined)
+        .map(c=>chip(c.k, c.label)),
 
-      // Очередь и таблица — один раздел в двух видах, поэтому переход между ними
-      // не выход из раздела: пункт меню остаётся тем же и остаётся подсвеченным.
-      goQueue:()=>api.go && api.go('drafts'),
-
-      query:S.query, setQuery:(e)=>this.set({query:e.target.value}),
-      channel:S.channel, setChannel:(e)=>this.set({channel:e.target.value}),
+      channel:String(f.channel || ''),
+      setChannel:(e)=>this.table.setFilter('channel', e.target.value),
       channels,
-      account:String(S.account || ''),
-      setAccount:(e)=>this.set({account:e.target.value}),
+      account:String(f.account_id || ''),
+      setAccount:(e)=>this.table.setFilter('account_id', e.target.value),
       accounts, hasAccounts,
-      minScore:String(S.minScore),
-      scores:[{value:'0', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
+      minScore:String(f.min_score || ''),
+      scores:[{value:'', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
               {value:'40', label:'скор ≥ 40'}, {value:'50', label:'скор ≥ 50'}],
-      setMinScore:(e)=>this.set({minScore:+e.target.value}),
+      setMinScore:(e)=>this.table.setFilter('min_score', e.target.value),
       // Отдельный переключатель рядом с выбором скора, а не чипс в ряду
       // состояний: комментарии бывают у разобранных черновиков любого состояния.
+      // В адресе признак пишется только как has_comments=1: выключенного фильтра
+      // в адресе не бывает, как и пустого канала.
       commentsChip:{
-        bg: S.comments ? '#131E5F' : 'transparent',
-        fg: S.comments ? '#F8F3E0' : '#156479',
-        pick:()=>this.set({comments: !S.comments})
+        bg: f.has_comments === '1' ? '#131E5F' : 'transparent',
+        fg: f.has_comments === '1' ? '#F8F3E0' : '#156479',
+        pick:()=>this.table.setFilter('has_comments',
+                this.table.filters.has_comments === '1' ? '' : '1'),
       },
-      resetFilters:()=>this.set({filter:'all', query:'', channel:'', account:'',
-                                 minScore:0, comments:false}),
 
       rows:rows.map(r=>{
         const username = r.author_username || '';
@@ -478,6 +486,33 @@ class Component extends DCLogic {
       })
     };
   }
+
+  // Заглушка контракта до таблицы: все корни разметки, безопасные значения.
+  emptyVals(){
+    return {
+      desktop: !this.props.mobile, isMobile: !!this.props.mobile,
+      headline:'загрузка…', range:'загрузка…',
+      cols:[], rows:[], filters:[], pages:[], sizes:[],
+      channels:[], accounts:[], hasAccounts:!!this.wf(),
+      scores:[{value:'', label:'любой скор'}, {value:'30', label:'скор ≥ 30'},
+              {value:'40', label:'скор ≥ 40'}, {value:'50', label:'скор ≥ 50'}],
+      q:'', setQ:()=>{}, channel:'', setChannel:()=>{},
+      minScore:'', setMinScore:()=>{},
+      account:'', setAccount:()=>{},
+      commentsChip:{bg:'transparent', fg:'#156479', pick:()=>{}},
+      resetAll:()=>{}, reload:()=>{}, goQueue:()=>{},
+      prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+    };
+  }
+
+  // Четвёртое состояние есть только у очереди сценария. Без него строка
+  // подписывалась английским словом из базы, а чипса, который её считает, не было
+  // вовсе: черновик находился только под «Все», и это выглядело как расхождение
+  // счётчиков.
+  STATE_LABEL = {pending:'на ревью', approved:'одобрен', rejected:'отклонён',
+                 edited:'правлен'};
+  STATE_COLOR = {pending:'#C98A1E', approved:'#2E7D57', rejected:'#DA501C',
+                 edited:'#156479'};
 }
 </script>
 </body>
