@@ -80,6 +80,9 @@
               <sc-if value="{{ r.edited }}" hint-placeholder-val="{{ false }}">
                 <div style="margin-top:4px;font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E">правлено вручную</div>
               </sc-if>
+              <sc-if value="{{ r.sendBadge.show }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top:4px;font:400 10px/1.4 'JetBrains Mono',monospace;color:{{ r.sendBadge.color }}">{{ r.sendBadge.text }}<sc-if value="{{ r.sendBadge.hasLink }}" hint-placeholder-val="{{ false }}"> · <span onClick="{{ r.sendBadge.linkGo }}" style="cursor:pointer;text-decoration:underline">{{ r.sendBadge.linkLabel }}</span></sc-if></div>
+              </sc-if>
             </td>
             <td style="padding:9px 6px;border-bottom:1px solid rgba(19,30,95,0.08);text-align:center;color:#156479;white-space:nowrap;width:44px">{{ r.commentsLabel }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
@@ -127,6 +130,9 @@
         <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ r.author }}</div>
         <div style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:3px 6px">{{ r.state }}</div>
       </div>
+      <sc-if value="{{ r.sendBadge.show }}" hint-placeholder-val="{{ false }}">
+        <div style="margin-top:4px;font:400 11px/1.4 'JetBrains Mono',monospace;color:{{ r.sendBadge.color }}">{{ r.sendBadge.text }}<sc-if value="{{ r.sendBadge.hasLink }}" hint-placeholder-val="{{ false }}"> · <span onClick="{{ r.sendBadge.linkGo }}" style="cursor:pointer;text-decoration:underline">{{ r.sendBadge.linkLabel }}</span></sc-if></div>
+      </sc-if>
       <div style="margin-top:4px;font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">аккаунт: {{ r.accounts }}</div>
       <sc-if value="{{ r.isComment }}" hint-placeholder-val="{{ false }}">
         <div style="margin-top:4px;font:400 11px/1 'JetBrains Mono',monospace;color:#C98A1E">комментарий<sc-if value="{{ r.postLink }}" hint-placeholder-val="{{ false }}"> · <a href="{{ r.postLink }}" target="_blank" rel="noopener" onClick="{{ r.openPost }}" style="color:#156479">{{ r.postLabel }}</a></sc-if></div>
@@ -451,6 +457,9 @@ class Component extends DCLogic {
           channel:r.channel, pain:r.pain || '—', score:String(r.score),
           state:this.STATE_LABEL[r.state] || r.state,
           c:this.STATE_COLOR[r.state] || '#8A8F9E',
+          // Метка отправки — под чипсом состояния: заказ, доставка и отказ
+          // читаются на месте, без открытия черновика.
+          sendBadge:this.sendBadgeOf(r),
           // 💬 — число отзывов: ноль показываем прочерком, чтобы столбец не
           // превращался в стену нулей.
           commentsLabel: r.comments_count ? String(r.comments_count) : '—',
@@ -508,11 +517,43 @@ class Component extends DCLogic {
   // Четвёртое состояние есть только у очереди сценария. Без него строка
   // подписывалась английским словом из базы, а чипса, который её считает, не было
   // вовсе: черновик находился только под «Все», и это выглядело как расхождение
-  // счётчиков.
+  // счётчиков. Пятое, `sent`, приезжает вместе с заказом отправки: доставленный
+  // черновик виден в срезе «Все» и подписан по-русски, а не английским словом.
   STATE_LABEL = {pending:'на ревью', approved:'одобрен', rejected:'отклонён',
-                 edited:'правлен'};
+                 edited:'правлен', sent:'отправлено'};
   STATE_COLOR = {pending:'#C98A1E', approved:'#2E7D57', rejected:'#DA501C',
-                 edited:'#156479'};
+                 edited:'#156479', sent:'#2E7D57'};
+
+  // Метка отправки у строки. `outbound` несёт ручка сценария; у общей очереди
+  // поля нет вовсе — показывать нечего, и это не сбой, а прежний вид. Пока
+  // заказ висит (pending/deferred), повторно заказать нельзя, но строка
+  // молчит об этом ровно до доставленного: живое состояние — здесь, у чипса.
+  sendBadgeOf(r){
+    const empty = {show:false, text:'', color:'#8A8F9E',
+                   hasLink:false, linkLabel:'', linkGo:()=>{}};
+    const ob = r && r.outbound;
+    if(!ob) return empty;
+    const api = this.props.api || {};
+    // Маршрут «Переписок» у сценария появляется в 16.5; ссылка ставится уже
+    // сейчас — доставленный черновик обязан вести в свой диалог.
+    const link = {
+      hasLink: ob.conversation_id != null, linkLabel:'в Переписки',
+      linkGo:()=>api.go && api.go('wf:' + this.wf() + ':conversations',
+                                    {focus:ob.conversation_id})
+    };
+    if(ob.state === 'pending')
+      return {show:true, text:'отправка заказана', color:'#C98A1E',
+              hasLink:false, linkLabel:'', linkGo:()=>{}};
+    if(ob.state === 'deferred')
+      return {show:true, text:'отложена: ' + (ob.error || '—'), color:'#C98A1E',
+              hasLink:false, linkLabel:'', linkGo:()=>{}};
+    if(ob.state === 'delivered')
+      return {show:true, text:'отправлено', color:'#2E7D57', ...link};
+    if(ob.state === 'failed')
+      return {show:true, text:'не отправлено: ' + (ob.error || '—'), color:'#DA501C',
+              hasLink:false, linkLabel:'', linkGo:()=>{}};
+    return empty;
+  }
 }
 </script>
 </body>

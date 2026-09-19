@@ -191,11 +191,25 @@
           </div>
         </sc-if>
 
+        <!-- Метка отправки живёт рядом с кнопками решений: состояние заказа
+             читается на экране, а не вспоминается по тосту, который давно уехал.
+             Цвет — по состоянию, ссылка «в Переписки» появляется только у
+             доставленного, когда известен номер диалога. -->
+        <sc-if value="{{ sendBadge.show }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:12px;padding:9px 12px;border:1px solid {{ sendBadge.color }};font:400 12px/1.4 'JetBrains Mono',monospace;color:{{ sendBadge.color }}">{{ sendBadge.text }}<sc-if value="{{ sendBadge.hasLink }}" hint-placeholder-val="{{ false }}"> · <span onClick="{{ sendBadge.linkGo }}" style="cursor:pointer;text-decoration:underline">{{ sendBadge.linkLabel }}</span></sc-if></div>
+        </sc-if>
+
         <div style="margin-top:18px;display:flex;gap:10px">
           <button onClick="{{ approve }}" style="flex:1;border:0;background:#156479;color:#F8F3E0;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#131E5F">A · Одобрить</button>
           <button onClick="{{ startEdit }}" style="flex:1;border:1px solid #131E5F;background:transparent;color:#131E5F;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#EDF4F3">E · Редактировать</button>
           <button onClick="{{ startReject }}" style="flex:1;border:1px solid #DA501C;background:transparent;color:#DA501C;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#FBEEE8">R · Отклонить</button>
           <button onClick="{{ startComment }}" style="flex:1;border:1px solid #C98A1E;background:transparent;color:#C98A1E;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#F8F3E0">C · Комментарий</button>
+          <!-- Отправить — пятая и последняя: она осмыслена только для
+               одобренного личного сообщения и только у того, кому сервер дал
+               право draft.send. Кнопка исчезает, пока заказ висит в работе. -->
+          <sc-if value="{{ canSend }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ send }}" style="flex:1;border:0;background:#2E7D57;color:#F8F3E0;padding:13px;font:400 14px/1 'Architexture',sans-serif" style-hover="background:#131E5F">S · Отправить</button>
+          </sc-if>
         </div>
       </div>
       <div style="border-top:1px solid rgba(19,30,95,0.16);padding:12px 16px;display:flex;gap:12px">
@@ -294,9 +308,15 @@
         </sc-for>
       </div>
     </sc-if>
+    <sc-if value="{{ sendBadge.show }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:12px;padding:10px 12px;border:1px solid {{ sendBadge.color }};font:400 12px/1.4 'JetBrains Mono',monospace;color:{{ sendBadge.color }}">{{ sendBadge.text }}<sc-if value="{{ sendBadge.hasLink }}" hint-placeholder-val="{{ false }}"> · <span onClick="{{ sendBadge.linkGo }}" style="cursor:pointer;text-decoration:underline">{{ sendBadge.linkLabel }}</span></sc-if></div>
+    </sc-if>
   </div>
   <div style="padding:10px 14px;border-top:1px solid rgba(19,30,95,0.16);background:#F8F3E0">
     <button onClick="{{ approve }}" style="width:100%;border:0;background:#156479;color:#F8F3E0;padding:16px;font:400 15px/1 'Architexture',sans-serif">Одобрить</button>
+    <sc-if value="{{ canSend }}" hint-placeholder-val="{{ false }}">
+      <button onClick="{{ send }}" style="width:100%;margin-top:8px;border:0;background:#2E7D57;color:#F8F3E0;padding:16px;font:400 15px/1 'Architexture',sans-serif">Отправить</button>
+    </sc-if>
     <div style="margin-top:8px;display:flex;gap:8px">
       <button onClick="{{ startEdit }}" style="flex:1;border:1px solid #131E5F;background:transparent;color:#131E5F;padding:14px;font:400 14px/1 'Architexture',sans-serif">Править</button>
       <button onClick="{{ startReject }}" style="flex:1;border:1px solid #DA501C;background:transparent;color:#DA501C;padding:14px;font:400 14px/1 'Architexture',sans-serif">Отклонить</button>
@@ -391,6 +411,7 @@ class Component extends DCLogic {
       else if(code === 'KeyE') this.startEdit();
       else if(code === 'KeyR') this.setState({rejecting:true});
       else if(code === 'KeyC') this.startComment();
+      else if(code === 'KeyS') this.send();
       else if(code === 'KeyL') this.openTrace();
       else if(code === 'KeyG') this.openTelegram();
       // «?» — Shift+/ в латинице и Shift+7 в кириллице, поэтому смотрим и символ.
@@ -621,6 +642,139 @@ class Component extends DCLogic {
       (r)=>'Отклонено: ' + r.reason + ' · записано в eval-датасет', '#DA501C');
   }
 
+  // ── отправка одобренного черновика ────────────────────────────────────────
+  //
+  // Кнопка — третий рубеж после интерфейса и гейта: право читается из
+  // capabilities, которые оболочка получила от /auth/me (первое использование
+  // capabilities в GUI), сам сервер всё равно отвечает 403 тем, у кого права
+  // нет. Нет ответа /auth/me — список пуст, кнопки нет; это запасное
+  // поведение, а не сбой, поэтому никаких тостов «нет прав» на ровном месте.
+
+  // Видимость кнопки: черновик одобрен, адресуется личным сообщением, право
+  // draft.send есть и заказ ещё не висит в работе. У pending/deferred кнопки
+  // нет вовсе — спорить с человеком тостом «уже заказано» хуже, чем не
+  // предлагать вторую отправку; у failed кнопка возвращается.
+  canSendDraft(d){
+    const api = this.props.api || {};
+    const caps = Array.isArray(api.capabilities) ? api.capabilities : [];
+    if(!d || d.state !== 'approved' || d.action !== 'dm') return false;
+    if(caps.indexOf('draft.send') === -1) return false;
+    const ob = d.outbound;
+    return !ob || (ob.state !== 'pending' && ob.state !== 'deferred');
+  }
+
+  async send(){
+    const d = this.state.draft;
+    if(!d || this.state.busy || !this.canSendDraft(d)) return;
+    this.setState({busy:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const pf = await get(this.base() + '/drafts/' + d.id + '/send-preflight');
+      this.setState({busy:false});
+      this.showSendModal(pf);
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({busy:false});
+      this.t(describe(e), '#DA501C');
+    }
+  }
+
+  // Модалка перед заказом. Три вида: обычная с подтверждением, с мёртвой
+  // кнопкой (гейт не пустил — причины видны) и без подтверждения (отправка
+  // уже была заказана). run возвращает false: тосты — его собственные, а
+  // зелёное «Готово» оболочки после 409 звучало бы как ложь.
+  showSendModal(pf){
+    const api = this.props.api || {};
+    const d = this.state.draft;
+    if(!api.modal || !d) return;
+
+    if(pf && pf.already){
+      const st = pf.already.state;
+      const what = st === 'delivered' ? 'уже доставлена'
+                 : st === 'failed' ? 'не отправлена: ' + (pf.already.error || '—')
+                 : 'уже заказана';
+      const lines = [{text:'Этот черновик ' + what}];
+      if(pf.already.task_id) lines.push({text:'заказ: ' + pf.already.task_id});
+      api.modal({title:'Отправить сообщение?', lines});
+      return;
+    }
+
+    const lines = [];
+    const who = (pf && pf.recipient) || {};
+    const uname = who.username ? '@' + String(who.username).replace(/^@/, '') : '';
+    const whom = [uname, who.name].filter(Boolean).join(' · ');
+    lines.push({text:'Адресат: ' + (whom || '—')});
+    if(pf && pf.account){
+      lines.push({text:'аккаунт #' + pf.account.id + ', остаток '
+        + (pf.account.remaining_messages == null ? '—' : pf.account.remaining_messages)
+        + ' сообщений'});
+    }
+    const text = String((pf && pf.text) || '');
+    lines.push({text:'Текст: ' + text.slice(0, 200) + (text.length > 200 ? '…' : '')});
+    const allowed = !!pf && pf.gate && pf.gate.allowed !== false;
+    lines.push({text: allowed ? 'проверки пройдены'
+      : 'проверки не пройдены: ' + (((pf && pf.gate && pf.gate.reasons) || []).join('; ') || '—')});
+
+    api.modal({
+      title:'Отправить сообщение?', lines,
+      confirm:'Отправить',
+      // Гейт не пустил — кнопка на виду, но мертва: причины прочитаны строчкой
+      // выше, и человек видит «почему», а не догадывается, почему кнопка серая.
+      disabled: !allowed,
+      btnBg: allowed ? '#2E7D57' : '#8A8F9E',
+      run: async ()=>{
+        try {
+          const { post } = await import('./radar-api.js');
+          const r = await post(this.base() + '/drafts/' + d.id + '/send', {});
+          this.t('Отправка заказана (аккаунт #' + (r && r.account_id != null ? r.account_id : '—') + ')',
+                 '#2E7D57');
+          // Перечитываем черновик: бейдж заказа живёт в нём, а не в ответе post.
+          await this.openById(d.id);
+        } catch (e) {
+          const { describe } = await import('./radar-api.js');
+          if(e && e.status === 409){
+            const reasons = ((e.body && e.body.reasons) || []).join('; ');
+            this.t(((e.body && e.body.detail) || 'Отправка не принята')
+                   + (reasons ? ' · ' + reasons : ''), '#DA501C');
+          } else {
+            this.t(describe(e), '#DA501C');
+          }
+        }
+        return false;
+      }
+    });
+  }
+
+  // Метка отправки у карточки: состояние заказа видно, пока тост давно уехал.
+  // Форма — контракт разметки: ключ живёт в shell и до загрузки тоже, пустой
+  // show прячет блок целиком.
+  sendBadgeOf(d){
+    const empty = {show:false, text:'', color:'#8A8F9E',
+                   hasLink:false, linkLabel:'', linkGo:()=>{}};
+    const ob = d && d.outbound;
+    if(!ob) return empty;
+    const api = this.props.api || {};
+    // Маршрут «Переписок» у сценария появляется в 16.5; ссылка ставится уже
+    // сейчас, чтобы доставленный черновик сразу вёл в диалог.
+    const link = {
+      hasLink: ob.conversation_id != null, linkLabel:'в Переписки',
+      linkGo:()=>api.go && api.go('wf:' + this.wf() + ':conversations',
+                                    {focus:ob.conversation_id})
+    };
+    if(ob.state === 'pending')
+      return {show:true, text:'отправка заказана', color:'#C98A1E',
+              hasLink:false, linkLabel:'', linkGo:()=>{}};
+    if(ob.state === 'deferred')
+      return {show:true, text:'отложена: ' + (ob.error || '—'), color:'#C98A1E',
+              hasLink:false, linkLabel:'', linkGo:()=>{}};
+    if(ob.state === 'delivered')
+      return {show:true, text:'отправлено', color:'#2E7D57', ...link};
+    if(ob.state === 'failed')
+      return {show:true, text:'не отправлено: ' + (ob.error || '—'), color:'#DA501C',
+              hasLink:false, linkLabel:'', linkGo:()=>{}};
+    return empty;
+  }
+
   // ── комментарии ────────────────────────────────────────────────────────────
 
   // Комментарий — развёрнутый отзыв для Ивана, а не решение по черновику:
@@ -828,6 +982,11 @@ class Component extends DCLogic {
       startEdit:()=>this.startEdit(), approve:()=>this.approve(),
       startReject:()=>this.setState({rejecting: !S.rejecting, confirmDelete:null}),
       rejecting:S.rejecting,
+      // Отправка: видимость кнопки и метка заказа — часть контракта дырок,
+      // поэтому живут в shell и до загрузки (там они честно скрыты).
+      canSend: this.canSendDraft(S.draft),
+      send:()=>this.send(),
+      sendBadge: this.sendBadgeOf(S.draft),
       reasons:reasons.map(r=>({n:String(r.n), label:r.label, pick:()=>this.reject(r)})),
       next:()=>this.next(), prev:()=>this.prev(),
       openTrace:()=>this.openTrace(), openTelegram:()=>this.openTelegram(),
@@ -839,6 +998,7 @@ class Component extends DCLogic {
         {k:'A', d:'одобрить активный вариант'},{k:'E', d:'редактировать вариант'},
         {k:'R', d:'выбор причины отклонения'},{k:'1…9 после R', d:'типизированная причина'},
         {k:'C', d:'комментарий к черновику · Esc закрывает панель'},
+        {k:'S', d:'отправить одобренный черновик · модалка перед заказом'},
         {k:'G', d:'открыть ветку в Telegram'},{k:'L', d:'показать LLM-трейс'},
         {k:'Esc', d:'закрыть панель'},{k:'⌘/Ctrl+K', d:'командная палитра'},
         {k:'раскладка', d:'клавиши работают и в русской раскладке'}
@@ -899,10 +1059,13 @@ class Component extends DCLogic {
       // «Всё, что не pending, — отклонено» было неверно: у сценария состояний
       // четыре, и черновик в состоянии `edited` подписывался как «отклонён: —».
       // Разбирается явно, а незнакомое состояние называет себя, а не врёт.
+      // Пятое, `sent`, появилось вместе с заказом отправки: доставленный
+      // черновик остаётся в срезе «Все» и подписывается делом.
       queueLabel: decided
         ? (d.state === 'approved' ? 'одобрен'
            : d.state === 'rejected' ? 'отклонён: ' + (d.reject_reason || '—')
            : d.state === 'edited' ? 'правлен вручную'
+           : d.state === 'sent' ? 'отправлено'
            : 'состояние: ' + d.state)
           + (d.decided_by ? ' · ' + d.decided_by : '')
         : S.remaining + ' в очереди',

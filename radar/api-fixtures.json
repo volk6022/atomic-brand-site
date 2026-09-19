@@ -130,6 +130,7 @@
     "capabilities": [
       "draft.decide",
       "draft.reopen",
+      "draft.send",
       "lead.status",
       "bulk.decide",
       "manual_send.record",
@@ -182,6 +183,35 @@
       "observability",
       "safety",
       "admin"
+    ]
+  },
+  "/auth/me-reviewer": {
+    "capabilities": [
+      "draft.decide",
+      "draft.reopen",
+      "lead.status",
+      "bulk.decide",
+      "run.eval",
+      "run.export",
+      "alert.ack"
+    ],
+    "email": "reviewer@local",
+    "initials": "РВ",
+    "name": "Ревьюер",
+    "role": "reviewer",
+    "sections": [
+      "dashboard",
+      "channels",
+      "stream",
+      "leads",
+      "drafts",
+      "conversations",
+      "activity",
+      "manual_sends",
+      "profile",
+      "runs",
+      "evals",
+      "attribution"
     ]
   },
   "/automation": {
@@ -3056,6 +3086,15 @@
         "created_at": "2026-09-03T10:56:11.318951+00:00",
         "final_text": null,
         "id": 91,
+        "outbound": {
+          "id": 5,
+          "state": "delivered",
+          "task_id": "out-91-1",
+          "delivered_message_id": 700,
+          "conversation_id": 12,
+          "error": null,
+          "created_at": "2026-09-18T12:40:00.000000+00:00"
+        },
         "pain": "хостинг тормозит/дорог",
         "prompt_version": "template-public-v0",
         "quote": "У кого есть рекомендация хорошего ВПН?",
@@ -3069,7 +3108,7 @@
           "post_link": null
         },
         "source_message_link": "https://t.me/devops_chat/1421",
-        "state": "pending",
+        "state": "sent",
         "target_id": 151,
         "tg_link": "https://t.me/user_17",
         "variants": [
@@ -3310,6 +3349,76 @@
       }
     ]
   },
+  "/workflows/{key}/drafts/{id}/outbound/deferred": {
+    "id": 7,
+    "state": "deferred",
+    "task_id": "out-28-3",
+    "delivered_message_id": null,
+    "conversation_id": null,
+    "error": "аккаунт #3 в паузе до 20:00",
+    "created_at": "2026-09-18T10:15:00.000000+00:00"
+  },
+  "/workflows/{key}/drafts/{id}/outbound/delivered": {
+    "id": 5,
+    "state": "delivered",
+    "task_id": "out-28-1",
+    "delivered_message_id": 701,
+    "conversation_id": 12,
+    "error": null,
+    "created_at": "2026-09-18T12:40:00.000000+00:00"
+  },
+  "/workflows/{key}/drafts/{id}/outbound/failed": {
+    "id": 8,
+    "state": "failed",
+    "task_id": "out-28-4",
+    "delivered_message_id": null,
+    "conversation_id": null,
+    "error": "получатель запретил личные сообщения",
+    "created_at": "2026-09-18T13:05:00.000000+00:00"
+  },
+  "/workflows/{key}/drafts/{id}/outbound/pending": {
+    "id": 6,
+    "state": "pending",
+    "task_id": "out-28-2",
+    "delivered_message_id": null,
+    "conversation_id": null,
+    "error": null,
+    "created_at": "2026-09-18T10:10:00.000000+00:00"
+  },
+  "/workflows/{key}/drafts/{id}/send": {
+    "outbound_id": 5,
+    "task_id": "out-28-1",
+    "state": "pending",
+    "account_id": 3
+  },
+  "/workflows/{key}/drafts/{id}/send:409": {
+    "detail": "Отправка не принята: аккаунт #3 остановлен",
+    "reasons": [
+      "аккаунт #3 в паузе",
+      "лимит сообщений на аккаунте исчерпан"
+    ]
+  },
+  "/workflows/{key}/drafts/{id}/send-preflight": {
+    "draft_id": 28,
+    "state": "approved",
+    "action": "dm",
+    "recipient": {
+      "peer_id": 123456,
+      "username": "ivan_p",
+      "name": "Иван П."
+    },
+    "account": {
+      "id": 3,
+      "status": "active",
+      "remaining_messages": 17
+    },
+    "gate": {
+      "allowed": true,
+      "reasons": []
+    },
+    "already": null,
+    "text": "Пётр, добрый день! Вы в DevOps Chat писали, что хостинг стал тормозить — если ещё актуально, подскажу проверенный вариант, с которого сам переезжал."
+  },
   "/workflows/{key}/drafts/next": {
     "action": "reply",
     "draft": {
@@ -3343,6 +3452,7 @@
       "disqualifiers": [],
       "final_text": null,
       "id": 28,
+      "outbound": null,
       "pain": "не может настроить сам",
       "prompt_version": "template-public-v0",
       "quote": "Кто ещё тут занимается хостингом? Просто любопытно",
@@ -3451,6 +3561,7 @@
       "disqualifiers": [],
       "final_text": null,
       "id": 91,
+      "outbound": null,
       "pain": "хостинг тормозит/дорог",
       "prompt_version": "template-public-v0",
       "quote": "У кого есть рекомендация хорошего ВПН?",

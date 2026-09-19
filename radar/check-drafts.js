@@ -32,11 +32,19 @@ const QUEUE = fixtures['/workflows/{key}/drafts'];
 const OPTIONS = fixtures['/workflows/{key}/drafts/accounts'];
 const LEGACY = fixtures['/drafts/list'];
 const REASONS = fixtures['/drafts/reasons'];
+// Образцы ручек отправки (16.4): форма — контракт задачи, живого сервера на
+// стенде ещё нет. Заглушка отдаёт ровно эти ответы, а не выдумку: иначе
+// расхождение формы с экраном не всплыло бы нигде.
+const PREFLIGHT = fixtures['/workflows/{key}/drafts/{id}/send-preflight'];
+const SEND_OK = fixtures['/workflows/{key}/drafts/{id}/send'];
+const SEND_409 = fixtures['/workflows/{key}/drafts/{id}/send:409'];
+const OUTBOUND = (s) => fixtures['/workflows/{key}/drafts/{id}/outbound/' + s];
 // Карточки старого контура: комментарии живут по тем же адресам без приставки
 // сценария, поэтому стенду нужны и их образцы.
 const OLD_NEXT = fixtures['/drafts/next'];
 const OLD_ONE = fixtures['/drafts/{id}'];
-if (!NEXT || !QUEUE || !OPTIONS || !LEGACY || !OLD_NEXT) {
+if (!NEXT || !QUEUE || !OPTIONS || !LEGACY || !OLD_NEXT
+    || !PREFLIGHT || !SEND_OK || !SEND_409) {
   console.error('нет образцов ответа. Пересними: python scripts/dump_gui_fixtures.py');
   process.exit(2);
 }
@@ -56,7 +64,7 @@ function build(file, props, opts) {
   opts = opts || {};
   const src = fs.readFileSync(DIR + '/' + file, 'utf8');
   const logic = src.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
-  const calls = {get: [], post: [], del: [], copied: [], toasts: []};
+  const calls = {get: [], post: [], del: [], copied: [], toasts: [], modal: [], go: []};
 
   const api = {
     get: async (p, q) => {
@@ -70,11 +78,29 @@ function build(file, props, opts) {
       if (p === '/drafts/list') return clone(LEGACY);
       if (/\/drafts$/.test(p)) return clone(opts.queue || QUEUE);
       if (p === '/drafts/reasons') return clone(REASONS || {rows: []});
+      if (/\/drafts\/\d+\/send-preflight$/.test(p)) {
+        if (opts.failPreflight) throw new Error('preflight недоступен');
+        return clone(opts.preflight || PREFLIGHT);
+      }
       if (/\/drafts\/\d+$/.test(p)) return clone(opts.one || ONE || NEXT);
       if (p === '/channels/options') return clone(fixtures['/channels/options']);
       throw new Error('нет образца ответа для ' + p);
     },
-    post: async (p, body) => { calls.post.push({p: p, body: body || {}}); return {ok: true}; },
+    post: async (p, body) => {
+      calls.post.push({p: p, body: body || {}});
+      // Ручка отправки отвечает формой контракта: 202 с аккаунтом, 409 с
+      // человеческой причиной и списком. Остальные ручки — по-старому.
+      if (/\/send$/.test(p)) {
+        if (opts.sendConflict) {
+          const err = new Error('/send → 409');
+          err.status = 409;
+          err.body = clone(SEND_409);
+          throw err;
+        }
+        return clone(SEND_OK);
+      }
+      return {ok: true};
+    },
     del: async (p) => { calls.del.push({p: p}); return {deleted: 7}; },
     patch: async () => ({ok: true}),
     describe: (e) => 'ошибка: ' + (e && e.message ? e.message : e),
@@ -112,7 +138,8 @@ function build(file, props, opts) {
   const base = `
     class DCLogic {
       constructor(p){ this.props = Object.assign(
-        {api:{toast:(t)=>__toasts.push(t), drill(){}, trace(){}, go(){}, modal(){}},
+        {api:{toast:(t)=>__toasts.push(t), drill(){}, trace(){}, go(){},
+              modal:(m)=>__modals.push(m)},
          mobile:false}, p || {}); }
       setState(patch, cb){
         const next = typeof patch === 'function' ? patch(this.state) : patch;
@@ -121,6 +148,7 @@ function build(file, props, opts) {
       }
     }`;
   ctx.__toasts = calls.toasts;
+  ctx.__modals = calls.modal;
   vm.runInContext(base + '\n' + logic.replace(/await import\(/g, 'await __imp(')
                   + '\n;this.__C = Component;', ctx);
   return {c: new ctx.__C(props || {}), calls: calls, ctx: ctx};
@@ -899,10 +927,324 @@ async function table() {
   }
 }
 
+// ── отправка одобренного черновика (16.4) ─────────────────────────────────────
+
+// Черновик в состоянии «можно отправлять»: одобрен и адресован личным
+// сообщением. Дополнительные поля (например, outbound) — поверх.
+function approvedDM(over, extraOpts) {
+  const next = clone(NEXT);
+  next.draft.state = 'approved';
+  next.draft.action = 'dm';
+  Object.assign(next.draft, over || {});
+  return Object.assign({next: next, one: clone(next)}, extraOpts || {});
+}
+
+// Право draft.send экран читает из api.capabilities — их приносит оболочка из
+// /auth/me. Здесь право выдаётся вручную, как это сделал бы сервер.
+function grantSend(c, calls, extra) {
+  c.props.api = Object.assign({}, c.props.api, extra || {}, {
+    capabilities: ['draft.send'],
+    modal: (m) => calls.modal.push(m),
+  });
+}
+
+async function sendChecks() {
+  // 30. Видимость кнопки — тройное условие: одобрен + личное сообщение +
+  //     право draft.send. Дырка есть всегда (контракт разметки), кнопка — нет.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF}, approvedDM());
+    await c.componentDidMount();
+    await settle();
+    check('отправка: до выдачи права кнопки нет (нет capabilities — нет кнопки)',
+          vals(c).canSend === false);
+    grantSend(c, calls);
+    check('отправка: у одобренного dm с правом кнопка есть',
+          vals(c).canSend === true && typeof vals(c).send === 'function');
+  }
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    check('отправка: у черновика на ревью кнопки нет', vals(c).canSend === false);
+  }
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF}, approvedDM({action: 'reply'}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    check('отправка: у публичного ответа кнопки нет', vals(c).canSend === false);
+  }
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({outbound: OUTBOUND('pending')}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    check('отправка: пока заказ висит (pending), кнопки нет', vals(c).canSend === false);
+  }
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({outbound: OUTBOUND('deferred')}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    check('отправка: пока заказ отложен (deferred), кнопки нет', vals(c).canSend === false);
+  }
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({outbound: OUTBOUND('failed')}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    check('отправка: после неудачной отправки кнопка доступна снова',
+          vals(c).canSend === true);
+  }
+
+  // 31. Нажатие: ровно один GET preflight, модалка с адресатом, остатком и
+  //     текстом; до подтверждения POST не уходит.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF}, approvedDM());
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    await vals(c).send();
+    await settle();
+    const pre = calls.get.filter((g) => /\/send-preflight$/.test(g.p));
+    check('отправка: нажатие спрашивает preflight ровно один раз', pre.length === 1);
+    check('отправка: preflight спрошен у черновика сценария',
+          !!pre[0] && pre[0].p === '/workflows/' + WF + '/drafts/28/send-preflight',
+          pre[0] && pre[0].p);
+    check('отправка: открыта ровно одна модалка', calls.modal.length === 1);
+    const m = calls.modal[0] || {};
+    const text = JSON.stringify(m.lines || []);
+    check('отправка: в модалке назван адресат (@username и имя)',
+          text.indexOf('@ivan_p') >= 0 && text.indexOf('Иван П.') >= 0, text);
+    check('отправка: в модалке назван аккаунт и остаток сообщений',
+          text.indexOf('аккаунт #3') >= 0 && text.indexOf('17 сообщений') >= 0, text);
+    check('отправка: в модалке текст черновика', text.indexOf('хостинг') >= 0, text);
+    check('отправка: пройденный гейт — подтверждение доступно',
+          m.disabled !== true && m.confirm === 'Отправить');
+    check('отправка: до подтверждения POST не уходит', calls.post.length === 0);
+
+    // Подтверждение: ровно один post на верный адрес с телом {}, тост,
+    // перечитывание черновика.
+    await m.run();
+    await settle();
+    const sent = calls.post.filter((p) => /\/send$/.test(p.p));
+    check('отправка: подтверждение шлёт ровно один post', sent.length === 1);
+    check('отправка: post уходит на верный адрес',
+          !!sent[0] && sent[0].p === '/workflows/' + WF + '/drafts/28/send',
+          sent[0] && sent[0].p);
+    check('отправка: тело post — пустой объект {}',
+          !!sent[0] && sent[0].body && Object.keys(sent[0].body).length === 0,
+          sent[0] && JSON.stringify(sent[0].body));
+    check('отправка: человек получил подтверждение с номером аккаунта',
+          calls.toasts.some((t) => String(t).indexOf('Отправка заказана (аккаунт #3)') >= 0),
+          calls.toasts.join(' | '));
+    check('отправка: после заказа черновик перечитан',
+          calls.get.some((g) => g.p === '/workflows/' + WF + '/drafts/28'));
+  }
+
+  // 32. Гейт не пустил: подтверждение недоступно, причины видны, POST нет.
+  {
+    const pf = clone(PREFLIGHT);
+    pf.gate = {allowed: false, reasons: ['аккаунт #3 в паузе', 'лимит исчерпан']};
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({}, {preflight: pf}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    await vals(c).send();
+    await settle();
+    const m = calls.modal[0] || {};
+    check('отправка: гейт не пустил — подтверждение недоступно',
+          m.disabled === true, JSON.stringify(m));
+    check('отправка: причины отказа показаны в модалке',
+          JSON.stringify(m.lines || []).indexOf('аккаунт #3 в паузе') >= 0
+          && JSON.stringify(m.lines || []).indexOf('лимит исчерпан') >= 0,
+          JSON.stringify(m.lines || []));
+    check('отправка: при непройденном гейте POST не уходит', calls.post.length === 0);
+  }
+
+  // 33. Отправка уже была: модалка сообщает, подтверждения нет, POST нет.
+  {
+    const pf = clone(PREFLIGHT);
+    pf.already = {outbound_id: 5, state: 'delivered', task_id: 'out-28-1',
+                  delivered_message_id: 701, conversation_id: 12, error: null};
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({}, {preflight: pf}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    await vals(c).send();
+    await settle();
+    const m = calls.modal[0] || {};
+    check('отправка: «уже доставлена» — модалка говорит об этом',
+          JSON.stringify(m.lines || []).indexOf('уже доставлена') >= 0,
+          JSON.stringify(m.lines || []));
+    check('отправка: у модалки «уже отправлено» нет подтверждения',
+          m.confirm == null && typeof m.run !== 'function', JSON.stringify(m));
+    check('отправка: «уже отправлено» — POST не уходит', calls.post.length === 0);
+  }
+  {
+    const pf = clone(PREFLIGHT);
+    pf.already = {outbound_id: 6, state: 'pending', task_id: 'out-28-2',
+                  delivered_message_id: null, conversation_id: null, error: null};
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({}, {preflight: pf}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    await vals(c).send();
+    await settle();
+    check('отправка: «уже заказана» — модалка без подтверждения',
+          JSON.stringify((calls.modal[0] || {}).lines || []).indexOf('уже заказана') >= 0
+          && (calls.modal[0] || {}).run === undefined);
+    check('отправка: «уже заказана» — POST не уходит', calls.post.length === 0);
+  }
+
+  // 34. 409: человеческая причина и список — тостом, экран цел.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({}, {sendConflict: true}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    await vals(c).send();
+    await settle();
+    await (calls.modal[0] || {}).run();
+    await settle();
+    check('отправка: 409 не роняет экран', !vals(c).__err);
+    const toast = calls.toasts.join(' | ');
+    check('отправка: 409 — тост с человеческой причиной (detail)',
+          toast.indexOf('Отправка не принята: аккаунт #3 остановлен') >= 0, toast);
+    check('отправка: 409 — тост с причинами',
+          toast.indexOf('аккаунт #3 в паузе') >= 0
+          && toast.indexOf('лимит сообщений') >= 0, toast);
+  }
+
+  // 35. Хоткей S ведёт себя как кнопка: один preflight, одна модалка.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF}, approvedDM());
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    c._key(keyEvent('KeyS'));
+    await settle();
+    check('отправка: хоткей S спрашивает preflight ровно один раз',
+          calls.get.filter((g) => /\/send-preflight$/.test(g.p)).length === 1);
+    check('отправка: хоткей S открывает модалку', calls.modal.length === 1);
+    check('отправка: клавиша S есть в списке горячих клавиш',
+          vals(c).hotkeys.some((h) => h.k === 'S'));
+  }
+
+  // 36. Метка отправки у карточки — все состояния, ссылка только у доставки.
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({outbound: OUTBOUND('delivered')}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls, {go: (r, p) => calls.go.push({r: r, p: p || {}})});
+    const b = vals(c).sendBadge || {};
+    check('отправка: доставленный черновик помечен «отправлено»',
+          b.show === true && b.text === 'отправлено', JSON.stringify(b));
+    check('отправка: у доставленного есть ссылка «в Переписки»',
+          b.hasLink === true && b.linkLabel === 'в Переписки');
+    b.linkGo();
+    check('отправка: ссылка ведёт в Переписки сценария с номером диалога',
+          calls.go.length === 1 && calls.go[0].r === 'wf:' + WF + ':conversations'
+          && calls.go[0].p.focus === 12,
+          JSON.stringify(calls.go));
+  }
+  {
+    const cases = [
+      ['pending', 'отправка заказана'],
+      ['deferred', 'отложена: аккаунт #3 в паузе до 20:00'],
+      ['failed', 'не отправлено: получатель запретил личные сообщения'],
+    ];
+    for (const [state, want] of cases) {
+      const {c} = build('RadarDrafts.dc.html', {workflow: WF},
+                        approvedDM({outbound: OUTBOUND(state)}));
+      await c.componentDidMount();
+      await settle();
+      const b = vals(c).sendBadge || {};
+      check('отправка: метка ' + state + ' — «' + want + '»',
+            b.show === true && b.text === want && b.hasLink === false,
+            JSON.stringify(b));
+    }
+  }
+  {
+    const {c} = build('RadarDrafts.dc.html', {workflow: WF},
+                      approvedDM({state: 'sent', outbound: OUTBOUND('delivered')}));
+    await c.componentDidMount();
+    await settle();
+    check('отправка: доставленный черновик подписан «отправлено», а не состоянием-номером',
+          String(vals(c).queueLabel).indexOf('отправлено') === 0,
+          String(vals(c).queueLabel));
+  }
+
+  // 37. Метка отправки в таблице: outbound приходит строкам сценария.
+  {
+    const {c, calls} = build('RadarDraftsTable.dc.html', {workflow: WF});
+    await c.componentDidMount();
+    await settle();
+    const v = vals(c);
+    const b0 = ((v.rows || [])[0] || {}).sendBadge || {};
+    check('таблица: строка с доставленным outbound подписана «отправлено»',
+          b0.show === true && b0.text === 'отправлено', JSON.stringify(b0));
+    check('таблица: доставленная строка подписана по-русски, а не «sent»',
+          ((v.rows || [])[0] || {}).state === 'отправлено',
+          ((v.rows || [])[0] || {}).state);
+    const noBadge = ((v.rows || [])[1] || {}).sendBadge || {};
+    check('таблица: строка без outbound метки не имеет', noBadge.show === false);
+    // Замыкание ссылки держит api момента рендера: подменяем api ПЕРВЫМ,
+    // перерисовываем и жмём уже свежую ссылку — как это случилось бы в живом
+    // экране после перерисовки.
+    c.props.api = Object.assign({}, c.props.api,
+                                {go: (r, p) => calls.go.push({r: r, p: p || {}})});
+    const fresh = ((vals(c).rows || [])[0] || {}).sendBadge || {};
+    fresh.linkGo();
+    check('таблица: ссылка ведёт в Переписки сценария с номером диалога',
+          calls.go.length === 1 && calls.go[0].r === 'wf:' + WF + ':conversations'
+          && calls.go[0].p.focus === 12,
+          JSON.stringify(calls.go));
+  }
+  {
+    const queue = clone(QUEUE);
+    queue.rows[1].outbound = OUTBOUND('failed');
+    const {c} = build('RadarDraftsTable.dc.html', {workflow: WF}, {queue: queue});
+    await c.componentDidMount();
+    await settle();
+    const b1 = ((vals(c).rows || [])[1] || {}).sendBadge || {};
+    check('таблица: строка с неудачной отправкой говорит «не отправлено: …»',
+          b1.show === true
+          && b1.text === 'не отправлено: получатель запретил личные сообщения',
+          JSON.stringify(b1));
+  }
+
+  // 38. Мёртвое подтверждение и capabilities живут в оболочке — обеих копиях.
+  //     Поведенчески их здесь не исполнить (стенд исполняет экран, не оболочку),
+  //     поэтому контракт фиксируется по исходнику, как это делает блок 29.
+  {
+    const shellSrc = fs.readFileSync(DIR + '/index.html', 'utf8');
+    const logic = shellSrc.match(/<script type="text\/x-dc"[^>]*>([\s\S]*?)<\/script>/)[1];
+    check('оболочка: confirmModal не исполняет действие недоступного подтверждения',
+          /if\(m\.disabled\) return;/.test(logic));
+    check('оболочка: api несёт capabilities из /auth/me',
+          /capabilities: \(S\.me && Array\.isArray\(S\.me\.capabilities\)\)/.test(logic));
+    check('оболочка: run, вернувший false, глушит зелёное «Готово»',
+          /await m\.run\(\) !== false/.test(logic));
+    check('оболочка: у модалки без подтверждения кнопки действия нет',
+          /<sc-if value="\{\{ modal\.confirm \}\}"/.test(shellSrc));
+  }
+}
+
 async function main() {
   await card();
   await comments();
   await table();
+  await sendChecks();
 
   for (const [mark, name] of results) console.log(mark + ' ' + name);
   const bad = results.filter((r) => r[0] === 'FAIL').length;

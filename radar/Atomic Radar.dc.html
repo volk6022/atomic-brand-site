@@ -333,7 +333,12 @@ table{border-collapse:collapse;width:100%}
       </div>
       <div style="padding:14px 20px;border-top:1px solid rgba(19,30,95,0.16);display:flex;gap:10px;justify-content:flex-end">
         <button onClick="{{ closeModal }}" style="border:1px solid rgba(19,30,95,0.24);background:transparent;color:#131E5F;padding:11px 16px;font:400 13px/1 'Architexture',sans-serif">Отмена</button>
-        <button onClick="{{ confirmModal }}" style="border:0;background:{{ modal.btnBg }};color:#F8F3E0;padding:11px 18px;font:400 13px/1 'Architexture',sans-serif">{{ modal.confirm }}</button>
+        <!-- Подтверждение рисуется, только когда модалка его просит: у
+             информационной («этот черновик уже заказан») кнопки действия нет —
+             и рисоваться она не должна. -->
+        <sc-if value="{{ modal.confirm }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ confirmModal }}" disabled="{{ modal.disabled }}" style="border:0;background:{{ modal.btnBg }};color:#F8F3E0;padding:11px 18px;font:400 13px/1 'Architexture',sans-serif">{{ modal.confirm }}</button>
+        </sc-if>
       </div>
     </div>
   </div>
@@ -434,7 +439,7 @@ class Component extends DCLogic {
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
-  SHELL_VERSION = '2026-09-15d';
+  SHELL_VERSION = '2026-09-19a';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
@@ -988,6 +993,10 @@ class Component extends DCLogic {
   async confirmModal(){
     const m = this.state.modal;
     if(!m) return;
+    // Модалка с недоступным подтверждением (гейт отправки не пустил, причины
+    // видны строками выше) действия не имеет: клик по месту кнопки — в том
+    // числе с клавиатуры — ничего не заказывает.
+    if(m.disabled) return;
     if(m.word && this.state.modalInput.trim() !== m.word) return;
     this.setState({modal:null, modalInput:''});
 
@@ -1021,10 +1030,17 @@ class Component extends DCLogic {
 
     // Обычная модалка: у неё может быть собственное действие. Без этого вызова
     // подтверждение показывало «Готово», не сделав ничего.
+    //
+    // Действие отвечает за свои тосты само: вернуло false — у него было что
+    // сказать (успех с числами из ответа или отказ с причиной), и зелёное
+    // «Готово» оболочки поверх было бы вторым, противоречащим словом. Упало —
+    // красный тост ошибки, и «Готово» после него тем более не звучит.
     if(typeof m.run === 'function'){
-      try { await m.run(); } catch (e) { this.toast(String(e && e.message || e), this.C.red); }
+      try { if(await m.run() !== false) this.toast(m.done || 'Готово', this.C.green); }
+      catch (e) { this.toast(String(e && e.message || e), this.C.red); }
+    } else {
+      this.toast(m.done || 'Готово', this.C.green);
     }
-    this.toast(m.done || 'Готово', this.C.green);
   }
 
   renderVals(){
@@ -1101,6 +1117,13 @@ class Component extends DCLogic {
 
     const api = {
       role, mode,
+      // Гранулярные права (draft.send и прочие) приходят от /auth/me вместе с
+      // ролью и разделами — и держатся там же, в state.me. Это первое их
+      // чтение в GUI: экраны прячут по ним действия, а не только разделы.
+      // Нет ответа сервера — список пуст, и всё, что прячется по праву,
+      // спрятано: запасное поведение, а не сбой. Последний рубеж всё равно
+      // сервер: 403 экраны показывают тостом.
+      capabilities: (S.me && Array.isArray(S.me.capabilities)) ? S.me.capabilities : [],
       // «Остановлено» из mode не видно: при kill effective_mode остаётся
       // DRY_RUN, и экран, которому важен именно стоп, читает этот флаг (14.8.21).
       killed: !!S.killed,
