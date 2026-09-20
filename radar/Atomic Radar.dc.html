@@ -170,7 +170,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
       <sc-if value="{{ v.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,500px"></dc-import></sc-if>
-      <sc-if value="{{ v.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" focus="{{ focusConversation }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.manual_sends }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarManualSends" api="{{ api }}" mobile="{{ false }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ v.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
       <sc-if value="{{ v.profile }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarProfile" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
@@ -217,7 +217,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
       <sc-if value="{{ m.draftsTable }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDraftsTable" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,500px"></dc-import></sc-if>
-      <sc-if value="{{ m.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.conversations }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarConversations" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" focus="{{ focusConversation }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.manual_sends }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarManualSends" api="{{ api }}" mobile="{{ true }}" hint-size="100%,500px"></dc-import></sc-if>
       <sc-if value="{{ m.activity }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarActivity" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,700px"></dc-import></sc-if>
       <sc-if value="{{ m.profile }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarProfile" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
@@ -439,7 +439,7 @@ class Component extends DCLogic {
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
-  SHELL_VERSION = '2026-09-19a';
+  SHELL_VERSION = '2026-09-20a';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
@@ -542,6 +542,8 @@ class Component extends DCLogic {
   // `visibility='public'`, — вместо «Переписок».
   WF_SECTION = {stream:'stream', targets:'leads', drafts:'drafts',
                 activity:'activity',
+                // Переписки сценария (16.5): сервер присылает раздел у `dm`.
+                conversations:'conversations',
                 // Табличный вид очереди — не отдельный раздел: сервер такой секции не
                 // присылает, в меню он не появляется, и пункт «Черновики» остаётся
                 // подсвеченным. Маршрут ему нужен затем, что до сих пор кнопка
@@ -554,7 +556,7 @@ class Component extends DCLogic {
   // очередь — как и у общего раздела через `SECTION_OF`.
   WF_NAV_ALIAS = {draftsTable:'drafts'};
 
-  WF_CODE = {stream:'ST', targets:'LD', drafts:'DR', activity:'AC'};
+  WF_CODE = {stream:'ST', targets:'LD', drafts:'DR', activity:'AC', conversations:'CV'};
 
   // Разбор маршрута сценария. Возвращает `null` для всего остального — включая
   // `wf:...` с разделом, которого мы не умеем рисовать: такой адрес обязан вести в
@@ -1156,6 +1158,9 @@ class Component extends DCLogic {
       // `wf:cold_dm:drafts`, и сравнение с 'drafts' давало ноль — переход из таблицы
       // сценария открывал бы очередь с начала, а не тот черновик, по которому нажали.
       focusDraft: (screen === 'drafts' && S.routeParams && S.routeParams.focusDraft) || 0,
+      // Нитка, которую просили открыть ссылкой «в Переписки» из черновика (16.4/16.5):
+      // `#wf:cold_dm:conversations?focus=<id>` — параметр приходит тем же разбором адреса.
+      focusConversation: (screen === 'conversations' && S.routeParams && S.routeParams.focus) || 0,
       // Ключ сценария и его название — пропсы экранам. Пустая строка означает общий
       // раздел: экран по ней и различает два своих вида. Название передаётся, чтобы
       // экран не ходил за ним в реестр второй раз — оболочка его уже запросила.

@@ -45,6 +45,10 @@ function build(opts) {
         if (opts.failThread) throw new Error('нитка недоступна');
         return clone(opts.thread || THREAD);
       }
+      if (/\/reply-preflight$/.test(p)) {
+        return clone(fixtures[opts.blocked ? '/conversations/{id}/reply-preflight:blocked'
+                                           : '/conversations/{id}/reply-preflight']);
+      }
       throw new Error('нет образца ответа для ' + p);
     },
     post: async (p, body) => {
@@ -52,6 +56,17 @@ function build(opts) {
       if (/\/read$/.test(p)) {
         return {id: Number(p.split('/')[2]), read_at: '2026-09-02T16:00:00', unread: false};
       }
+      // Заглушки повторяют реальные ответы ручек 16.5 (память проекта: щедрая
+      // заглушка прячет ошибку renderVals до прода).
+      if (/\/reply$/.test(p)) {
+        if (opts.reply409) {
+          const e = new Error('409'); e.status = 409;
+          e.body = clone(fixtures['/conversations/{id}/reply:409']); throw e;
+        }
+        return clone(fixtures['/conversations/{id}/reply']);
+      }
+      if (/\/handoff$/.test(p)) return clone(fixtures['/conversations/{id}/handoff']);
+      if (/\/close$/.test(p)) return clone(fixtures['/conversations/{id}/close']);
       return {ok: true};
     },
     patch: async () => ({ok: true}),
@@ -226,6 +241,93 @@ async function main() {
   }
 
   // ── итог ────────────────────────────────────────────────────────────────────
+  // ── 16.5: ответ из нитки, передача/закрытие, focus, чип «написал первым» ──
+  const withShell = (c, caps) => {
+    const toasts = [], modals = [];
+    c.props.api = {toast: (t, col) => toasts.push({t, col}), modal: (m) => modals.push(m),
+                   drill() {}, trace() {}, go() {}, capabilities: caps};
+    return {toasts, modals};
+  };
+  const tick = () => new Promise((r) => setTimeout(r, 30));
+  {
+    const {c, calls} = build({thread: fixtures['/conversations/{id}:unsolicited']});
+    withShell(c, []);
+    await c.componentDidMount(); await tick();
+    await open(c, 0);
+    let v = vals(c);
+    check('reply: без capability формы ответа нет, подпись панели на месте',
+          v.replyFormShown === false && v.replyFormHidden === true && !!v.panelNote);
+    check('reply: без capability нет кнопок передать/закрыть', v.canHandoff === false && v.canClose === false);
+    check('reply: чип «написал первым» у source=unsolicited', v.thread && v.thread.unsolicited === true);
+    check('reply: колонка «Входящее» в COLUMNS и в строке',
+          v.cols.some((x) => /Входящее/.test(x.label)) && typeof v.rows[0].inbound === 'string');
+    const sys = (v.thread.events || []).find((e) => e.system);
+    check('reply: событие system — серая строка «передан человеку (actor)»',
+          !!sys && /передан человеку \(staff@x\)/.test(sys.systemLabel));
+  }
+  {
+    const {c, calls} = build();
+    const sh = withShell(c, ['conversation.reply', 'conversation.state']);
+    await c.componentDidMount(); await tick();
+    await open(c, 0);
+    let v = vals(c);
+    check('reply: с capability форма показана, кнопка мертва при пустом тексте',
+          v.replyFormShown === true && v.replyBtnCursor === 'default');
+    v.setReplyText({target: {value: '  Да, поможем  '}});
+    v = vals(c);
+    check('reply: после ввода кнопка живая', v.replyBtnCursor === 'pointer' && v.replyText.trim() === 'Да, поможем');
+    const before = calls.get.length;
+    await v.sendReply(); await tick();
+    const pf = calls.get.slice(before).filter((g) => /reply-preflight$/.test(g.p));
+    check('reply: нажатие — ровно один GET preflight с text', pf.length === 1 && pf[0].q.text === 'Да, поможем');
+    check('reply: до подтверждения POST нет', calls.post.filter((x) => /\/reply$/.test(x.p)).length === 0);
+    const m = sh.modals[0];
+    check('reply: модалка с адресатом и остатком', !!m && m.lines.some((l) => /@user_23/.test(l.text))
+          && m.lines.some((l) => /аккаунт #3, остаток 7/.test(l.text)) && m.disabled === false);
+    await m.run(); await tick();
+    const posts = calls.post.filter((x) => /\/reply$/.test(x.p));
+    check('reply: подтверждение — ровно один POST на верный адрес с телом {text}',
+          posts.length === 1 && posts[0].p === '/conversations/1/reply' && posts[0].body.text === 'Да, поможем');
+    check('reply: тост «Ответ заказан (аккаунт #3)»', sh.toasts.some((t) => /Ответ заказан \(аккаунт #3\)/.test(t.t)));
+    check('reply: нитка перечитана, поле очищено',
+          calls.get.filter((g) => g.p === '/conversations/1').length >= 2 && vals(c).replyText === '');
+    // передать / закрыть
+    check('reply: кнопки передать/закрыть при capability', vals(c).canHandoff === true && vals(c).canClose === true);
+    await vals(c).handoffThread(); await tick();
+    check('reply: handoff — POST и перечитывание списка',
+          calls.post.some((x) => x.p === '/conversations/1/handoff') && listGets(calls).length >= 2);
+  }
+  {
+    const {c, calls} = build({blocked: true});
+    const sh = withShell(c, ['conversation.reply']);
+    await c.componentDidMount(); await tick();
+    await open(c, 0);
+    let v = vals(c);
+    v.setReplyText({target: {value: 'ночью'}});
+    await vals(c).sendReply(); await tick();
+    const m = sh.modals[0];
+    check('reply: gate.allowed=false — подтверждение недоступно, причина показана',
+          !!m && m.disabled === true && m.lines.some((l) => /тихие часы/.test(l.text)));
+  }
+  {
+    const {c, calls} = build({reply409: true});
+    const sh = withShell(c, ['conversation.reply']);
+    await c.componentDidMount(); await tick();
+    await open(c, 0);
+    vals(c).setReplyText({target: {value: 'ещё раз'}});
+    await vals(c).sendReply(); await tick();
+    await sh.modals[0].run(); await tick();
+    check('reply: 409 — тост с detail', sh.toasts.some((t) => /диалог закрыт/.test(t.t) && t.col === '#DA501C'));
+  }
+  {
+    const {c, calls} = build();
+    withShell(c, []);
+    c.props.focus = 1;
+    await c.componentDidMount(); await tick();
+    check('reply: focus=<id> открывает нитку без клика',
+          calls.get.some((g) => g.p === '/conversations/1') && !!vals(c).thread);
+  }
+
   for (const [mark, name] of results) console.log(mark + ' ' + name);
   const bad = results.filter((r) => r[0] === 'FAIL').length;
   console.log('\n' + (results.length - bad) + '/' + results.length + ' проверок прошло');

@@ -4085,5 +4085,113 @@
     "run_id": 3,
     "started": true
   },
-  "_note": "Снято прогоном настоящего приложения (scripts/dump_gui_fixtures.py). Руками не редактировать — перезапустить скрипт."
+  "_note": "Снято прогоном настоящего приложения (scripts/dump_gui_fixtures.py). Руками не редактировать — перезапустить скрипт.",
+  "/conversations/{id}/reply-preflight": {
+    "conversation_id": 1,
+    "state": "replied",
+    "recipient": {
+      "peer_id": 500308,
+      "username": "user_23"
+    },
+    "account": {
+      "id": 3,
+      "status": "active",
+      "remaining_messages": 7
+    },
+    "gate": {
+      "allowed": true,
+      "reasons": []
+    },
+    "already": null
+  },
+  "/conversations/{id}/reply-preflight:blocked": {
+    "conversation_id": 1,
+    "state": "replied",
+    "recipient": {
+      "peer_id": 500308,
+      "username": "user_23"
+    },
+    "account": {
+      "id": 3,
+      "status": "active",
+      "remaining_messages": 7
+    },
+    "gate": {
+      "allowed": false,
+      "reasons": [
+        "тихие часы: 3:00 попадает в 0:00-8:00"
+      ]
+    },
+    "already": null
+  },
+  "/conversations/{id}/reply": {
+    "outbound_id": 9,
+    "task_id": "task-9",
+    "state": "pending",
+    "account_id": 3
+  },
+  "/conversations/{id}/reply:409": {
+    "detail": "диалог закрыт",
+    "reasons": [
+      "диалог закрыт"
+    ]
+  },
+  "/conversations/{id}/handoff": {
+    "id": 1,
+    "state": "handed_off",
+    "handed_off_at": "2026-09-20T00:00:00+00:00"
+  },
+  "/conversations/{id}/close": {
+    "id": 1,
+    "state": "closed",
+    "handed_off_at": null
+  },
+  "/conversations/{id}:unsolicited": {
+    "conversation": {
+      "account": 1,
+      "handed_off_at": null,
+      "id": 1,
+      "last_inbound_at": "2026-09-03T07:56:08+00:00",
+      "last_sent_at": "2026-09-03T06:56:08+00:00",
+      "lead_id": 1,
+      "peer_id": 500308,
+      "peer_name": "Пётр К.",
+      "peer_username": "@user_23",
+      "read_at": null,
+      "sent_count": 1,
+      "state": "replied",
+      "unread": true,
+      "waiting_since": "2026-09-03T07:56:08+00:00",
+      "source": "unsolicited"
+    },
+    "events": [
+      {
+        "created_at": "2026-09-03T06:56:08+00:00",
+        "id": 1,
+        "kind": "outbound",
+        "payload": {
+          "text": "Привет. Судя по описанию, дело в конфиге."
+        }
+      },
+      {
+        "created_at": "2026-09-03T07:56:08+00:00",
+        "id": 2,
+        "kind": "inbound",
+        "payload": {
+          "text": "да, спасибо, попробую"
+        }
+      },
+      {
+        "created_at": "2026-09-03T08:00:00+00:00",
+        "id": 3,
+        "kind": "system",
+        "actor": "staff@x",
+        "text": null,
+        "payload": {
+          "from": "replied",
+          "to": "handed_off"
+        }
+      }
+    ]
+  }
 }

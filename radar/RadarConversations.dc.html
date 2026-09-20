@@ -36,8 +36,9 @@
           <tr onClick="{{ r.open }}" style="cursor:pointer" style-hover="background:#EDF4F3">
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">
               <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F"><span style="font:400 12px/1 'JetBrains Mono',monospace;color:#DA501C">{{ r.dot }}</span>{{ r.who }}</div>
-              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.last }}</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.last }}<sc-if value="{{ r.unsolicited }}"> · <span style="color:#C98A1E">написал первым</span></sc-if></div>
             </td>
+            <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);font:400 11px/1.4 'JetBrains Mono',monospace;color:#184153">{{ r.inbound }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.acct }}</td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.c }};border:1px solid {{ r.c }};padding:4px 7px">{{ r.state }}</span></td>
             <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08)">{{ r.wait }}</td>
@@ -60,8 +61,11 @@
     <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid rgba(19,30,95,0.16)">
       <div style="font:400 16px/1.2 'Architexture',sans-serif;color:#131E5F">{{ thread.peer }}</div>
       <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ thread.meta }}</div>
+      <sc-if value="{{ thread.unsolicited }}"><span style="font:400 10px/1 'JetBrains Mono',monospace;color:#C98A1E;border:1px solid #C98A1E;padding:3px 6px">написал первым</span></sc-if>
       <div style="flex:1"></div>
-      <div onClick="{{ closeThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">✕ закрыть</div>
+      <sc-if value="{{ canHandoff }}"><div onClick="{{ handoffThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">→ передать</div></sc-if>
+      <sc-if value="{{ canClose }}"><div onClick="{{ closeConversation }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">■ закрыть диалог</div></sc-if>
+      <div onClick="{{ closeThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">✕ скрыть</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:10px;padding:14px 16px">
       <sc-for list="{{ thread.events }}" as="e" hint-placeholder-count="4">
@@ -80,6 +84,9 @@
               <div style="margin-top:6px;font:400 13px/1.55 'JetBrains Mono',monospace">{{ e.text }}</div>
             </div>
           </div>
+        </sc-if>
+        <sc-if value="{{ e.system }}">
+          <div style="text-align:center;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">→ {{ e.systemLabel }} · {{ e.whenLabel }}</div>
         </sc-if>
       </sc-for>
     </div>
@@ -103,7 +110,16 @@
 
   <div style="border:1px dashed rgba(19,30,95,0.24);padding:14px 16px">
     <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Панель ответа</div>
-    <div style="margin-top:8px;font:400 13px/1.6 'JetBrains Mono',monospace;color:#184153">{{ panelNote }}</div>
+    <sc-if value="{{ replyFormShown }}">
+      <textarea value="{{ replyText }}" onChange="{{ setReplyText }}" placeholder="Ответ собеседнику…" style="margin-top:8px;width:100%;height:90px;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:10px;font:400 14px/1.55 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:12px">
+        <div onClick="{{ sendReply }}" style="cursor:{{ replyBtnCursor }};padding:7px 14px;background:{{ replyBtnBg }};color:#F8F3E0;font:400 12px/1 'JetBrains Mono',monospace">↗ Ответить</div>
+        <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ replyHint }}</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ replyFormHidden }}">
+      <div style="margin-top:8px;font:400 13px/1.6 'JetBrains Mono',monospace;color:#184153">{{ panelNote }}</div>
+    </sc-if>
   </div>
 </div>
 </sc-if>
@@ -122,7 +138,7 @@
         <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F"><span style="color:#DA501C">{{ r.dot }}</span>{{ r.who }}</div>
         <div style="font:400 12px/1.2 'JetBrains Mono',monospace;color:{{ r.c }}">{{ r.state }}</div>
       </div>
-      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.last }} · {{ r.acct }}</div>
+      <div style="margin-top:6px;font:400 12px/1.45 'JetBrains Mono',monospace;color:#184153">{{ r.last }} · {{ r.acct }} · вх. {{ r.inbound }}</div>
     </div>
   </sc-for>
 
@@ -139,7 +155,9 @@
     <div style="display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid rgba(19,30,95,0.16)">
       <div style="font:400 14px/1.2 'Architexture',sans-serif;color:#131E5F">{{ thread.peer }}</div>
       <div style="flex:1"></div>
-      <div onClick="{{ closeThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">✕ закрыть</div>
+      <sc-if value="{{ canHandoff }}"><div onClick="{{ handoffThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">→</div></sc-if>
+      <sc-if value="{{ canClose }}"><div onClick="{{ closeConversation }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C">■</div></sc-if>
+      <div onClick="{{ closeThread }}" style="cursor:pointer;font:400 11px/1 'JetBrains Mono',monospace;color:#156479">✕</div>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;padding:12px">
       <sc-for list="{{ thread.events }}" as="e" hint-placeholder-count="4">
@@ -159,6 +177,9 @@
             </div>
           </div>
         </sc-if>
+        <sc-if value="{{ e.system }}">
+          <div style="text-align:center;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">→ {{ e.systemLabel }} · {{ e.whenLabel }}</div>
+        </sc-if>
       </sc-for>
     </div>
     <div style="padding:0 12px 12px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ thread.meta }}</div>
@@ -167,17 +188,24 @@
 
   <div style="border:1px dashed rgba(19,30,95,0.24);padding:12px">
     <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Панель ответа</div>
-    <div style="margin-top:6px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ panelNote }}</div>
+    <sc-if value="{{ replyFormShown }}">
+      <textarea value="{{ replyText }}" onChange="{{ setReplyText }}" placeholder="Ответ собеседнику…" style="margin-top:6px;width:100%;height:80px;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:8px;font:400 13px/1.5 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+      <div onClick="{{ sendReply }}" style="margin-top:6px;cursor:{{ replyBtnCursor }};padding:8px 12px;text-align:center;background:{{ replyBtnBg }};color:#F8F3E0;font:400 12px/1 'JetBrains Mono',monospace">↗ Ответить</div>
+    </sc-if>
+    <sc-if value="{{ replyFormHidden }}">
+      <div style="margin-top:6px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ panelNote }}</div>
+    </sc-if>
   </div>
 </div>
 </sc-if>
 
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:460},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;workflow&quot;:{&quot;editor&quot;:&quot;string&quot;,&quot;default&quot;:&quot;&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;focus&quot;:{&quot;editor&quot;:&quot;number&quot;,&quot;default&quot;:0,&quot;tsType&quot;:&quot;number&quot;}}">
 class Component extends DCLogic {
   state = { rows:[], total:0, unreadTotal:0, states:[], note:'',
             loading:true, error:null,
-            thread:null, threadError:null, threadLoading:false };
+            thread:null, threadError:null, threadLoading:false,
+            replyText:'', replyBusy:false };
 
   // Поиска нет: в таблице диалогов нет текстовых полей, по которым его вести —
   // имя собеседника хранится у лида, а не здесь.
@@ -188,6 +216,7 @@ class Component extends DCLogic {
   // «Аккаунт» — идентификатор, порядок по нему ничего не значит.
   COLUMNS = [
     {label:'Собеседник · последнее', sort:'last'},
+    {label:'Входящее', sort:null},
     {label:'Аккаунт', sort:null},
     {label:'Состояние', sort:'state'},
     {label:'Отправлено', sort:'sent'},
@@ -212,6 +241,9 @@ class Component extends DCLogic {
     });
     this.table.attach(()=>this.load(), ()=>this.setState({}));
     this.load();
+    // Ссылка «в Переписки» из черновика (16.4): открыть нитку сразу, не дожидаясь клика.
+    const focus = parseInt(this.props.focus, 10);
+    if(focus > 0) this.openThread({id:focus});
   }
 
   async load(){
@@ -231,7 +263,7 @@ class Component extends DCLogic {
 
   async openThread(row){
     if(!row || !row.id) return;
-    this.setState({threadLoading:true, thread:null, threadError:null});
+    this.setState({threadLoading:true, thread:null, threadError:null, replyText:''});
     let data;
     try {
       const { get } = await import('./radar-api.js');
@@ -259,6 +291,8 @@ class Component extends DCLogic {
     const stateLabel = this.STATE_LABEL[conv.state] || conv.state || '—';
     const thread = {
       id: row.id,
+      state: conv.state || row.state || '',
+      unsolicited: conv.source === 'unsolicited',
       peer: uname ? (who + ' ' + uname) : who,
       meta: 'acc-' + (conv.account || row.account) + ' · ' + stateLabel
             + ' · лид #' + (conv.lead_id || row.lead_id),
@@ -270,7 +304,13 @@ class Component extends DCLogic {
         mine: (ev || {}).kind === 'outbound',
         theirs: (ev || {}).kind === 'inbound',
         who: (ev || {}).kind === 'outbound' ? 'мы' : who,
-        text: ((ev || {}).payload || {}).text || '',
+        // Служебная строка нитки (16.5): передан/закрыт — не пузырь, а отметка.
+        system: (ev || {}).kind === 'system',
+        systemLabel: (ev || {}).kind === 'system'
+          ? ((((ev || {}).payload || {}).to === 'closed') ? 'диалог закрыт' : 'передан человеку')
+            + ' (' + ((ev || {}).actor || '—') + ')'
+          : '',
+        text: (ev || {}).text || ((ev || {}).payload || {}).text || '',
         // Полный ISO-штамп: строки такого вида сравниваются по возрастанию
         // как есть — на этом держится и сортировка, и контракт проверки.
         when: String((ev || {}).created_at || ''),
@@ -301,7 +341,93 @@ class Component extends DCLogic {
   }
 
   closeThread(){
-    this.setState({thread:null, threadError:null, threadLoading:false});
+    this.setState({thread:null, threadError:null, threadLoading:false, replyText:''});
+  }
+
+  t(text, c){ const api = this.props.api || {}; if(api.toast) api.toast(text, c); }
+
+  // Права читаются из `/auth/me.capabilities` (оболочка отдаёт их как api.capabilities);
+  // сервер всё равно последний рубеж — 403 показывается тостом.
+  can(cap){
+    const caps = (this.props.api || {}).capabilities;
+    return Array.isArray(caps) && caps.indexOf(cap) !== -1;
+  }
+  canReply(){ const t = this.state.thread; return !!t && t.state !== 'closed' && this.can('conversation.reply'); }
+  canHandoff(){ const t = this.state.thread; return !!t && t.state !== 'handed_off' && t.state !== 'closed' && this.can('conversation.state'); }
+  canClose(){ const t = this.state.thread; return !!t && t.state !== 'closed' && this.can('conversation.state'); }
+
+  // Поток тот же, что у кнопки «Отправить» черновика (16.4): preflight → модалка с
+  // адресатом, аккаунтом и вердиктом → POST → тост → перечитать нитку. Пауза и
+  // потолок на ответ не действуют (решение владельца), тихие часы — действуют:
+  // гейт покажет причину, кнопка подтверждения будет мертва.
+  async sendReply(){
+    const t = this.state.thread;
+    const text = (this.state.replyText || '').trim();
+    const api = this.props.api || {};
+    if(!t || !text || this.state.replyBusy || !this.canReply() || !api.modal) return;
+    this.setState({replyBusy:true});
+    let pf;
+    try {
+      const { get } = await import('./radar-api.js');
+      pf = await get('/conversations/' + t.id + '/reply-preflight', {text});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({replyBusy:false});
+      this.t(describe(e), '#DA501C');
+      return;
+    }
+    this.setState({replyBusy:false});
+    const who = (pf && pf.recipient) || {};
+    const uname = who.username ? '@' + String(who.username).replace(/^@/, '') : '';
+    const lines = [{text:'Адресат: ' + (uname || ('peer ' + (who.peer_id || '—')))}];
+    if(pf && pf.account){
+      lines.push({text:'аккаунт #' + pf.account.id + ', остаток '
+        + (pf.account.remaining_messages == null ? '—' : pf.account.remaining_messages) + ' сообщений'});
+    }
+    lines.push({text:'Текст: ' + text.slice(0, 200) + (text.length > 200 ? '…' : '')});
+    const allowed = !!pf && !!pf.gate && pf.gate.allowed !== false;
+    lines.push({text: allowed ? 'проверки пройдены'
+      : 'проверки не пройдены: ' + (((pf && pf.gate && pf.gate.reasons) || []).join('; ') || '—')});
+    api.modal({
+      title:'Отправить ответ?', lines, confirm:'Отправить',
+      disabled: !allowed, btnBg: allowed ? '#2E7D57' : '#8A8F9E',
+      run: async ()=>{
+        try {
+          const { post } = await import('./radar-api.js');
+          const r = await post('/conversations/' + t.id + '/reply', {text});
+          this.t('Ответ заказан (аккаунт #' + (r && r.account_id != null ? r.account_id : '—') + ')', '#2E7D57');
+          this.setState({replyText:''});
+          await this.openThread({id:t.id});
+        } catch (e) {
+          const { describe } = await import('./radar-api.js');
+          if(e && e.status === 409){
+            const reasons = ((e.body && e.body.reasons) || []).join('; ');
+            this.t(((e.body && e.body.detail) || 'Ответ не принят') + (reasons ? ' · ' + reasons : ''), '#DA501C');
+          } else {
+            this.t(describe(e), '#DA501C');
+          }
+        }
+      }
+    });
+  }
+
+  async setThreadState(kind){
+    const t = this.state.thread;
+    if(!t || this.state.replyBusy) return;
+    if(kind === 'handoff' ? !this.canHandoff() : !this.canClose()) return;
+    this.setState({replyBusy:true});
+    try {
+      const { post } = await import('./radar-api.js');
+      await post('/conversations/' + t.id + '/' + kind, {});
+      this.t(kind === 'handoff' ? 'Диалог передан человеку' : 'Диалог закрыт', '#2E7D57');
+      this.setState({replyBusy:false});
+      await this.openThread({id:t.id});
+      await this.load();
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({replyBusy:false});
+      this.t(describe(e), '#DA501C');
+    }
   }
 
   renderVals(){
@@ -317,7 +443,11 @@ class Component extends DCLogic {
                                             bg:'transparent', fg:'#156479',
                                             pick:()=>{}},
               thread:null, threadError:null, threadLoading:false,
-              closeThread:()=>{},
+              closeThread:()=>{}, canHandoff:false, canClose:false,
+              handoffThread:()=>{}, closeConversation:()=>{},
+              replyFormShown:false, replyFormHidden:true, replyText:'',
+              setReplyText:()=>{}, sendReply:()=>{}, replyBtnBg:'#8A8F9E',
+              replyBtnCursor:'default', replyHint:'',
               rows:[], cols:[], pages:[], sizes:[], stateFilters:[],
               range:'загрузка…', panelNote:'', reload:()=>{},
               prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6'};
@@ -346,6 +476,9 @@ class Component extends DCLogic {
       pick: ()=>this.table.setFilter('unread_only', showAll ? '' : 'false'),
     };
 
+    const replyFormShown = this.canReply();
+    const replySendable = replyFormShown && (S.replyText || '').trim().length > 0 && !S.replyBusy;
+
     return {
       desktop: !this.props.mobile, isMobile: !!this.props.mobile,
       unreadLabel: 'непрочитанных: ' + (S.unreadTotal || 0),
@@ -354,6 +487,17 @@ class Component extends DCLogic {
       threadError: S.threadError || null,
       threadLoading: !!S.threadLoading,
       closeThread: ()=>this.closeThread(),
+      canHandoff: this.canHandoff(),
+      canClose: this.canClose(),
+      handoffThread: ()=>this.setThreadState('handoff'),
+      closeConversation: ()=>this.setThreadState('close'),
+      replyFormShown, replyFormHidden: !replyFormShown,
+      replyText: S.replyText,
+      setReplyText: (e)=>this.setState({replyText:e.target.value}),
+      sendReply: ()=>this.sendReply(),
+      replyBtnBg: replySendable ? '#2E7D57' : '#8A8F9E',
+      replyBtnCursor: replySendable ? 'pointer' : 'default',
+      replyHint: S.replyBusy ? 'проверяю…' : (replySendable ? 'без паузы и потолка — только тихие часы' : 'напишите ответ'),
       ...this.table.vals(S.total, {columns:this.COLUMNS, loading:S.loading,
                                    error:S.error}),
       reload:()=>this.load(),
@@ -377,6 +521,8 @@ class Component extends DCLogic {
         c: c.state === 'replied' ? '#2E7D57' : '#C98A1E',
         wait:String(c.sent_count) + ' отправлено',
         last:(c.last_sent_at || '—').slice(0, 16).replace('T', ' '),
+        inbound:(c.last_inbound_at || '—').slice(0, 16).replace('T', ' '),
+        unsolicited: c.source === 'unsolicited',
         open:()=>this.openThread(c)
       }))
     };
