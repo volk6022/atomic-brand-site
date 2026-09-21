@@ -8,6 +8,27 @@
 <body>
 <x-dc>
 <div style="display:flex;flex-direction:column;gap:14px">
+  <!-- Стили Markdown-ответа (.md): контейнер носит шрифт и рамку inline,
+       остальное — здесь. Правила в одном экземпляре на весь документ: класс
+       namespaced, конфликтов с другими экранами нет. -->
+  <style>
+    .md {color:#184153;word-break:break-word}
+    .md h1 {font:400 14px/1.4 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;margin:14px 0 6px}
+    .md h2 {font:400 13px/1.4 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;margin:12px 0 5px}
+    .md h3 {font:400 12px/1.4 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;margin:10px 0 4px}
+    .md h1:first-child, .md h2:first-child, .md h3:first-child {margin-top:0}
+    .md p {margin:6px 0}
+    .md ul, .md ol {margin:6px 0;padding-left:18px}
+    .md li {margin:2px 0}
+    .md code {background:#F8F3E0;border:1px solid rgba(19,30,95,0.16);padding:1px 5px;font:400 11px/1.4 'JetBrains Mono',monospace}
+    .md pre {background:#F8F3E0;border:1px solid rgba(19,30,95,0.16);padding:10px 12px;margin:8px 0;overflow:auto}
+    .md pre code {background:transparent;border:0;padding:0}
+    .md table {border-collapse:collapse;margin:8px 0}
+    .md th, .md td {border:1px solid rgba(19,30,95,0.16);padding:4px 8px;font:400 11px/1.5 'JetBrains Mono',monospace}
+    .md a {color:#156479;text-decoration:underline}
+    .md blockquote {border-left:3px solid #DA501C;margin:8px 0;padding:2px 12px}
+    .md img {max-width:100%}
+  </style>
   <div style="display:flex;align-items:center;gap:10px">
     <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Пачки и ревью</div>
     <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
@@ -76,7 +97,77 @@
         </sc-if>
       </sc-if>
     </div>
-    <div style="flex:2 1 460px;min-width:300px;display:flex;flex-direction:column;gap:10px">
+  </div>
+
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:1 1 380px;min-width:320px;display:flex;flex-direction:column;gap:10px;{{ listStickyStyle }}">
+
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select value="{{ statusFilter }}" onChange="{{ setStatus }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="9">
+            <option value="{{ o.value }}">{{ o.label }}</option>
+          </sc-for>
+        </select>
+        <select value="{{ reviewFilter }}" onChange="{{ setReview }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+          <sc-for list="{{ reviewOptions }}" as="o" hint-placeholder-count="4">
+            <option value="{{ o.value }}">{{ o.label }}</option>
+          </sc-for>
+        </select>
+        <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по запросу" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+        <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}">
+          <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+        </sc-if>
+      </div>
+      <sc-if value="{{ itemsLoading }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Загружаю строки…</div>
+      </sc-if>
+      <sc-if value="{{ hasItemsError }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Строки не открылись: {{ itemsErrorMsg }}</div>
+      </sc-if>
+      <sc-if value="{{ itemsEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px dashed rgba(19,30,95,0.24);padding:14px;text-align:center;font:400 12px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Под этот фильтр строк нет</div>
+      </sc-if>
+      <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+        <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+          <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+            <thead><tr>
+              <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+                <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap;cursor:{{ c.cursor }}">{{ c.label }} {{ c.arrow }}</th>
+              </sc-for>
+            </tr></thead>
+            <tbody>
+              <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+                <!-- Выбранная строка подсвечена (как активный пункт меню):
+                     видно, какая строка открыта в карточке справа. -->
+                <tr style-hover="background:#EDF4F3" onClick="{{ r.open }}" style="cursor:pointer;background:{{ r.bg }}">
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.no }}</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis">{{ r.query }}</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.statusLabel }}</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.critic }}</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.tokens }}</td>
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.reviewC }};border:1px solid {{ r.reviewC }};padding:3px 6px">{{ r.reviewLabel }}</span></td>
+                </tr>
+              </sc-for>
+            </tbody>
+          </table>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+          <div style="flex:1"></div>
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+          <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+            <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+          </sc-for>
+          <div style="width:12px"></div>
+          <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+          <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+            <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+          </sc-for>
+          <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+        </div>
+      </sc-if>
+    </div>
+    <div style="flex:1 1 460px;min-width:300px;display:flex;flex-direction:column;gap:10px">
       <sc-if value="{{ cardLoading }}" hint-placeholder-val="{{ false }}">
         <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Открываю строку…</div>
       </sc-if>
@@ -86,6 +177,13 @@
             <div style="font:400 17px/1.2 'Architexture',sans-serif;color:#131E5F">Строка {{ cardNo }}</div>
             <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ cardReviewC }};border:1px solid {{ cardReviewC }};padding:3px 6px">{{ cardReviewLabel }}</span>
             <div style="flex:1"></div>
+            <!-- Переход по строкам без таблицы: тот же open, что клик по строке
+                 (GET /intel/items/{id}); по краям списка кнопки гаснут. -->
+            <sc-if value="{{ hasRowNav }}" hint-placeholder-val="{{ false }}">
+              <div onClick="{{ prevRow }}" style="cursor:{{ rowNavPrevCursor }};font:400 12px/1 'JetBrains Mono',monospace;color:{{ rowNavPrevFg }}">← пред.</div>
+              <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ rowPosLabel }}</div>
+              <div onClick="{{ nextRow }}" style="cursor:{{ rowNavNextCursor }};font:400 12px/1 'JetBrains Mono',monospace;color:{{ rowNavNextFg }}">след. →</div>
+            </sc-if>
             <div onClick="{{ closeCard }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E;cursor:pointer">закрыть ×</div>
           </div>
           <div style="margin-top:10px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap;word-break:break-word">{{ cardQuery }}</div>
@@ -107,7 +205,9 @@
               <div style="margin-top:8px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C;white-space:pre-wrap;word-break:break-word">{{ cardFailText }}</div>
             </sc-if>
             <sc-if value="{{ hasMarkdown }}" hint-placeholder-val="{{ false }}">
-              <pre style="margin:8px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap">{{ cardMarkdown }}</pre>
+              <!-- Markdown-ответ: raw-HTML через дырку шаблон не подставляет,
+                   поэтому содержимое пишет componentDidUpdate (#intelMd). -->
+              <div id="intelMd" class="md" style="margin:8px 0 0;border:1px solid rgba(19,30,95,0.24);background:#fff;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace"></div>
             </sc-if>
             <sc-if value="{{ hasStructured }}" hint-placeholder-val="{{ false }}">
               <sc-for list="{{ cardOutputRows }}" as="o" hint-placeholder-count="3">
@@ -155,69 +255,6 @@
       </sc-if>
     </div>
   </div>
-
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <select value="{{ statusFilter }}" onChange="{{ setStatus }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
-      <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="9">
-        <option value="{{ o.value }}">{{ o.label }}</option>
-      </sc-for>
-    </select>
-    <select value="{{ reviewFilter }}" onChange="{{ setReview }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
-      <sc-for list="{{ reviewOptions }}" as="o" hint-placeholder-count="4">
-        <option value="{{ o.value }}">{{ o.label }}</option>
-      </sc-for>
-    </select>
-    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по запросу" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
-    <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}">
-      <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
-    </sc-if>
-  </div>
-  <sc-if value="{{ itemsLoading }}" hint-placeholder-val="{{ false }}">
-    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Загружаю строки…</div>
-  </sc-if>
-  <sc-if value="{{ hasItemsError }}" hint-placeholder-val="{{ false }}">
-    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Строки не открылись: {{ itemsErrorMsg }}</div>
-  </sc-if>
-  <sc-if value="{{ itemsEmpty }}" hint-placeholder-val="{{ false }}">
-    <div style="border:1px dashed rgba(19,30,95,0.24);padding:14px;text-align:center;font:400 12px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Под этот фильтр строк нет</div>
-  </sc-if>
-  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
-    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
-      <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
-        <thead><tr>
-          <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
-            <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap;cursor:{{ c.cursor }}">{{ c.label }} {{ c.arrow }}</th>
-          </sc-for>
-        </tr></thead>
-        <tbody>
-          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
-            <tr style-hover="background:#EDF4F3" onClick="{{ r.open }}" style="cursor:pointer">
-              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.no }}</td>
-              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis">{{ r.query }}</td>
-              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.statusLabel }}</td>
-              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.critic }}</td>
-              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.tokens }}</td>
-              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.reviewC }};border:1px solid {{ r.reviewC }};padding:3px 6px">{{ r.reviewLabel }}</span></td>
-            </tr>
-          </sc-for>
-        </tbody>
-      </table>
-    </div>
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
-      <div style="flex:1"></div>
-      <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
-      <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
-        <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
-      </sc-for>
-      <div style="width:12px"></div>
-      <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
-      <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
-        <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
-      </sc-for>
-      <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
-    </div>
-  </sc-if>
 </div>
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:760},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
@@ -281,6 +318,44 @@ class Component extends DCLogic {
 
   componentWillUnmount(){
     clearTimeout(this.timer);
+  }
+
+  // Markdown-ответ в карточке: шаблонный движок raw-HTML в дырки не подставляет
+  // (проверено: в support.js нет привязки innerHTML), поэтому готовый HTML пишет
+  // этот метод — после каждого рендера, как когда-то писался штамп #shellStamp.
+  // Узел #intelMd ищется заново при каждом вызове ({{ }}-рендер может его
+  // пересоздать), ссылка не хранится. Запись — только при смене строки или
+  // текста ответа; ключ живёт в компоненте (_mdKey), а пустой узел при
+  // совпавшем ключе — признак пересоздания: перерисовываем. При уходе со
+  // строки на структурный ответ/пусто — узел очищается.
+  // md.js (а с ним marked/DOMPurify) подгружается один раз и только когда
+  // Markdown действительно показан; структурный ответ и тексты error/failed
+  // сюда не попадают — у них свои блоки, не тронутые.
+  async componentDidUpdate(){
+    const doc = (typeof document === 'undefined') ? null : document;
+    const el = (doc && typeof doc.getElementById === 'function')
+      ? doc.getElementById('intelMd') : null;
+    if(!el) return;
+    const card = this.state.card;
+    const out = card ? card.output : null;
+    if(!card || typeof out !== 'string'){
+      if(el.innerHTML) el.innerHTML = '';
+      this._mdKey = '';
+      return;
+    }
+    const key = card.id + ':' + out;
+    if(this._mdKey === key && el.innerHTML) return; // тот же текст уже отрисован
+    this._mdKey = key;
+    try {
+      if(!this._md) this._md = await import('./md.js');
+      const html = await this._md.renderMarkdown(out);
+      if(this._mdKey !== key) return; // пока рендерили, открыли другую строку
+      el.innerHTML = html;
+    } catch (e) {
+      // Библиотеки не доехали (offline-стенд, старый браузер) — показать ответ
+      // хотя бы текстом: пустая карточка хуже непокрашенной.
+      el.textContent = String(out);
+    }
   }
 
   // Гранулярные права — capabilities из /auth/me (их держит оболочка);
@@ -551,6 +626,14 @@ class Component extends DCLogic {
   renderVals(){
     const S = this.state;
 
+    // Липкая таблица: карточка справа длинная, страница листается — таблица
+    // остаётся на экране. На мобильном стоп-режим отключён: в сложенном виде
+    // (flex-wrap) sticky-колонка — позиционированный элемент, она легла бы
+    // поверх карточки, которая едет под неё.
+    const listStickyStyle = (this.props && this.props.mobile)
+      ? ''
+      : 'position:sticky;top:12px;align-self:flex-start;max-height:calc(100vh - 96px);overflow:auto';
+
     // До монтирования таблицы (и вообще до загрузки) отдаём все дырки
     // разметки: отсутствующий ключ здесь не ошибка, а молча пустая ячейка.
     if(!this.table){
@@ -570,6 +653,10 @@ class Component extends DCLogic {
         q:'', setQ:()=>{}, hasFilters:false, resetAll:()=>{},
         cols:[], rows:[], range:'загрузка…', sizes:[], pages:[],
         prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+        listStickyStyle,
+        hasRowNav:false, prevRow:()=>{}, nextRow:()=>{},
+        rowPosLabel:'', rowNavPrevFg:'#C9CCD6', rowNavNextFg:'#C9CCD6',
+        rowNavPrevCursor:'default', rowNavNextCursor:'default',
         hasRows:false, itemsEmpty:false, itemsLoading:S.itemsLoading,
         hasItemsError:!!S.itemsError, itemsErrorMsg:S.itemsError || '',
         hasBatchError:false, batchErrorMsg:'',
@@ -649,6 +736,10 @@ class Component extends DCLogic {
         tokens:(it.tokens === null || it.tokens === undefined) ? '—' : it.tokens,
         reviewLabel:rv ? rv[0] : (it.review_status || '—'),
         reviewC:rv ? rv[1] : '#8A8F9E',
+        // Выбранная строка — та, что открыта в карточке справа. Пустая строка
+        // (не «transparent»): inline-фон без значения не перебивает hover
+        // style-hover у остальных строк.
+        bg:(S.card && S.card.id === it.id) ? 'rgba(148,190,190,0.18)' : '',
         open:()=>this.openCard(it.id)
       };
     });
@@ -702,6 +793,15 @@ class Component extends DCLogic {
       : '';
     const hasEdits = !!card && !!card.edited && Object.keys(card.edited).length > 0;
 
+    // Переход по строкам из шапки карточки: позиция открытой строки в текущем
+    // списке rows (текущий порядок сортировки + фильтр + страница). Строки нет
+    // в списке (фильтр спрятали открытую строку) — перехода нет вовсе. Кнопки
+    // зовут тот же open, что клик по строке, — GET /intel/items/{id}.
+    const selIdx = card ? rows.findIndex((x) => x.id === card.id) : -1;
+    const hasRowNav = selIdx !== -1;
+    const prevOk = selIdx > 0;
+    const nextOk = selIdx !== -1 && selIdx < rows.length - 1;
+
     return {
       reload:()=>this.reload(),
       batchesLoading:!!S.batchesLoading,
@@ -732,6 +832,7 @@ class Component extends DCLogic {
       ...this.table.vals(S.itemsTotal, {loading:S.itemsLoading, error:S.itemsError,
                                         columns:this.ITEM_COLS}),
 
+      listStickyStyle,
       hasRows, itemsEmpty,
       rows,
       itemsLoading:!!S.itemsLoading,
@@ -742,6 +843,13 @@ class Component extends DCLogic {
       cardNo:card ? card.row_no : '',
       cardReviewLabel:rv[0], cardReviewC:rv[1],
       closeCard:()=>this.closeCard(),
+      hasRowNav, prevRow:()=>{ if(prevOk) rows[selIdx - 1].open(); },
+      nextRow:()=>{ if(nextOk) rows[selIdx + 1].open(); },
+      rowPosLabel:hasRowNav ? ('строка ' + (selIdx + 1) + ' из ' + rows.length) : '',
+      rowNavPrevFg:prevOk ? '#156479' : '#C9CCD6',
+      rowNavNextFg:nextOk ? '#156479' : '#C9CCD6',
+      rowNavPrevCursor:prevOk ? 'pointer' : 'default',
+      rowNavNextCursor:nextOk ? 'pointer' : 'default',
       cardQuery:card ? (card.query || '—') : '',
       cardInputRows,
       hasCardError:!!S.cardError, cardError:S.cardError || '',

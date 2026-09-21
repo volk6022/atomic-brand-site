@@ -4533,6 +4533,65 @@
     "critic_score": null,
     "output": null
   },
+  "/intel/items/{id}-md": {
+    "id": 301,
+    "batch_id": 3,
+    "row_no": 1,
+    "input": {
+      "company": "ACME",
+      "url": "https://acme.example"
+    },
+    "query": "Исследуй компанию ACME (https://acme.example) — сегмент, размер, контакты",
+    "status": "completed",
+    "result": {
+      "structured_output": null,
+      "answer_markdown": "# Заголовок\n\n**жирно** и `код`",
+      "critic": 8.5,
+      "stats": {
+        "tokens": 3200,
+        "elapsed_seconds": 41.2
+      },
+      "sources": [
+        {
+          "url": "https://acme.example/about",
+          "what_it_provided": "о компании"
+        }
+      ]
+    },
+    "edited": null,
+    "review_status": "new",
+    "notes": "",
+    "error": null,
+    "critic_score": 8.5,
+    "output": "# Заголовок\n\n**жирно** и `код`"
+  },
+  "/intel/items/{id}-md-xss": {
+    "id": 302,
+    "batch_id": 3,
+    "row_no": 2,
+    "input": {
+      "company": "Globex",
+      "url": "https://globex.example"
+    },
+    "query": "Исследуй компанию Globex (https://globex.example) — сегмент, размер, контакты",
+    "status": "completed",
+    "result": {
+      "structured_output": null,
+      "answer_markdown": "<img src=x onerror=\"alert(1)\">текст <a href='javascript:alert(1)'>x</a>",
+      "critic": 7.1,
+      "stats": {
+        "tokens": 2950,
+        "elapsed_seconds": 38.0
+      },
+      "sources": []
+    },
+    "edited": null,
+    "review_status": "new",
+    "notes": "",
+    "error": null,
+    "critic_score": 7.1,
+    "output": "<img src=x onerror=\"alert(1)\">текст <a href='javascript:alert(1)'>x</a>"
+  },
   "PATCH /intel/items/{id}": {
     "id": 301,
     "review_status": "accepted",

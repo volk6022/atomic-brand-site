@@ -16,6 +16,15 @@
 //   • `modal` и `go` пишут журналы — отмена пачки и переход после 202;
 //   • таймер опроса — РЕАЛЬНЫЙ setTimeout: интервал вынесен в поле POLL_MS,
 //     проверка ставит малый и ждёт тики (см. N6);
+//   • setState зовёт componentDidUpdate (как рантайм support.js:914) — так
+//     проверяется запись Markdown в #intelMd (N-md1/N-md2); `document`
+//     песочницы отдаёт фейковый узел #intelMd с innerHTML;
+//   • md.js подключён как radar-table.js (снятие export + await import →
+//     __imp), а marked/purify — реальные файлы vendor/, свёрнутые в
+//     фабрику-модуль (export{…} → присваивание): vm.SourceTextModule без
+//     флага недоступен. Реальный DOMPurify без window возвращается из фабрики
+//     рано, без sanitize/addHook и с isSupported:false, — для песочницы его
+//     заменяет заглушка с тем же контрактом (см. makePurifyStub);
 //   • мутации заглушек: st.batch/status и fail*-поля меняются между шагами —
 //     проверки обязаны краснеть, если экран сломан.
 //
@@ -27,6 +36,80 @@ const vm = require('vm');
 const DIR = __dirname;
 const fixtures = JSON.parse(fs.readFileSync(DIR + '/api-fixtures.json', 'utf8'));
 const tableSrc = fs.readFileSync(DIR + '/radar-table.js', 'utf8').replace(/^export /gm, '');
+const mdSrc = fs.readFileSync(DIR + '/md.js', 'utf8')
+  .replace(/^export /gm, '')
+  .replace(/await import\(/g, 'await __imp(');
+
+// ESM-файл → фабрика модуля: снимаем единственный `export {…};` в конце и
+// возвращаем нужные имена через __exports. strict — как у настоящего ESM.
+function esmViaExports(src, tail) {
+  const body = src.replace(/^export\s*\{[\s\S]*?\};\s*$/m, '');
+  if (body === src) throw new Error('export-блок не найден');
+  return new Function('__exports', '"use strict";\n' + body + '\n;' + tail + '\n;return __exports;');
+}
+
+// marked 15 — реальный vendor-файл; DOM ему не нужен.
+const MARKED_NS = esmViaExports(
+  fs.readFileSync(DIR + '/../vendor/marked.esm.js', 'utf8'),
+  '__exports.marked = marked; __exports.parse = parse;')({});
+
+// DOMPurify 3.2.6 — реальный vendor-файл. В Node (нет window) фабрика
+// возвращает объект без методов: sanitize тут не работает в принципе.
+const REAL_PURIFY = esmViaExports(
+  fs.readFileSync(DIR + '/../vendor/purify.es.js', 'utf8'),
+  '__exports.default = purify;')({}).default;
+
+// Заглушка с тем же контрактом, что у md.js: addHook('afterSanitizeAttributes'),
+// sanitize(html, {USE_PROFILES}) — срезает on*-обработчики и javascript:/vbscript:-URL
+// у href/src, применяет хуки к <a>/<area> (target/rel из md.js). Это проверка
+// проводки экрана и md.js; настоящую санитизацию в браузере делает
+// неизменённый vendor/purify.es.js (там getGlobal() даёт настоящий window).
+function makePurifyStub() {
+  const hooks = {afterSanitizeAttributes: []};
+  const ATTR = /([a-zA-Z_:][-\w:.]*)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+  const UNSAFE_URL = /^(?:javascript|vbscript)\s*:/i;
+  const URL_ATTRS = ['href', 'src', 'xlink:href', 'action', 'formaction'];
+  const applyHooks = (tag, attrs) => {
+    if (tag !== 'a' && tag !== 'area') return attrs;
+    const node = {
+      tagName: tag.toUpperCase(),
+      setAttribute(n, v) {
+        const a = String(n).toLowerCase() + '="' + String(v).replace(/"/g, '&quot;') + '"';
+        const i = attrs.findIndex((x) => x.toLowerCase().startsWith(String(n).toLowerCase() + '='));
+        if (i >= 0) attrs[i] = a; else attrs.push(a);
+      },
+    };
+    for (const h of hooks.afterSanitizeAttributes) h(node);
+    return attrs;
+  };
+  const sanitize = (html) => String(html)
+    .replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<script[\s\S]*?<\/script\s*>/gi, '')
+    .replace(/<(\/?)\s*([a-zA-Z][-\w]*)((?:[^<>"']|"[^"]*"|'[^']*')*)>/g,
+      (whole, slash, rawTag, rawAttrs) => {
+        const tag = rawTag.toLowerCase();
+        if (slash || tag === 'script') return tag === 'script' ? '' : '</' + tag + '>';
+        const kept = [];
+        rawAttrs.replace(ATTR, (raw, name, dq, sq, uq) => {
+          const n = name.toLowerCase();
+          const v = dq !== undefined ? dq : (sq !== undefined ? sq : (uq !== undefined ? uq : ''));
+          if (n.startsWith('on')) return '';
+          if (URL_ATTRS.indexOf(n) !== -1 && UNSAFE_URL.test(v.trim())) return '';
+          kept.push(raw);
+          return '';
+        });
+        const selfClose = /\/\s*$/.test(rawAttrs);
+        const finalAttrs = applyHooks(tag, kept);
+        return '<' + tag + (finalAttrs.length ? ' ' + finalAttrs.join(' ') : '') + (selfClose ? ' />' : '>');
+      });
+  return {
+    isSupported: false,
+    addHook: (entryPoint, fn) => { if (hooks[entryPoint]) hooks[entryPoint].push(fn); },
+    sanitize,
+  };
+}
+
+const PURIFY = REAL_PURIFY.isSupported ? REAL_PURIFY : makePurifyStub();
 
 const SCREENS = {key: 'RadarIntelKey.dc.html',
                  batch: 'RadarIntelBatch.dc.html',
@@ -50,14 +133,17 @@ const CANCEL_ACK = fixtures['POST /intel/batches/{id}/cancel'];
 const ITEMS = fixtures['/intel/batches/{id}/items'];
 const CARD = fixtures['/intel/items/{id}'];
 const CARD_FAILED = fixtures['/intel/items/{id}-failed'];
+const CARD_MD = fixtures['/intel/items/{id}-md'];
+const CARD_MD_XSS = fixtures['/intel/items/{id}-md-xss'];
 const PATCH_ACK = fixtures['PATCH /intel/items/{id}'];
 const KEY_EMPTY = fixtures['/intel/key-unconfigured'];
 
 if (!KEY || !PUT_KEY || !VALIDATE_ACK || !START_ACK || !LIST ||
     !Array.isArray(LIST.rows) || !DETAIL || !CANCEL_ACK ||
     !ITEMS || !Array.isArray(ITEMS.rows) || !CARD || !PATCH_ACK ||
-    !CARD_FAILED || !KEY_EMPTY) {
-  console.error('нет образцов Intel в api-fixtures.json (§4.1): /intel/key, PUT /intel/key, POST /intel/batches/validate, POST /intel/batches, /intel/batches, /intel/batches/{id}, POST /intel/batches/{id}/cancel, /intel/batches/{id}/items, /intel/items/{id}, PATCH /intel/items/{id}, /intel/items/{id}-failed, /intel/key-unconfigured');
+    !CARD_FAILED || !KEY_EMPTY || !CARD_MD ||
+    !CARD_MD_XSS || typeof CARD_MD_XSS.output !== 'string') {
+  console.error('нет образцов Intel в api-fixtures.json (§4.1): /intel/key, PUT /intel/key, POST /intel/batches/validate, POST /intel/batches, /intel/batches, /intel/batches/{id}, POST /intel/batches/{id}/cancel, /intel/batches/{id}/items, /intel/items/{id}, PATCH /intel/items/{id}, /intel/items/{id}-failed, /intel/key-unconfigured, /intel/items/{id}-md, /intel/items/{id}-md-xss');
   process.exit(2);
 }
 
@@ -78,6 +164,8 @@ const CAPS = {
 function build(screen, opts) {
   opts = opts || {};
   const calls = {get: [], post: [], patch: [], fetch: [], toasts: [], modals: [], go: []};
+  // Фейковый узел #intelMd — на каждый билд свой (как свой DOM у экрана).
+  const mdEl = {innerHTML: '', textContent: ''};
   // Мутабельные ответы: проверки меняют их между шагами (N5/N6/N8).
   const st = {
     batch: clone(opts.batch || DETAIL),
@@ -107,7 +195,10 @@ function build(screen, opts) {
       if (/^\/intel\/batches\/\d+\/items$/.test(p)) return clone(st.items);
       if (/^\/intel\/items\/\d+$/.test(p)) {
         if (opts.failCard) throw new Error(opts.failCard);
-        return clone(st.card);
+        // сервер отвечает той строкой, что запросили: id ответа = id из пути
+        const d = clone(st.card);
+        d.id = Number(p.match(/^\/intel\/items\/(\d+)$/)[1]);
+        return d;
       }
       throw new Error('нет образца ответа для ' + p);
     },
@@ -144,6 +235,9 @@ function build(screen, opts) {
     history: {replaceState: () => {}},
     window: {addEventListener() {}, removeEventListener() {}, open() {}},
     document: {createElement: () => ({click() {}, remove() {}}),
+               // #intelMd — единственный id, который экран ищет в DOM
+               // (запись Markdown, N-md1/N-md2). Фейковый узел на билд.
+               getElementById: (id) => (id === 'intelMd' ? mdEl : null),
                body: {appendChild() {}}},
     // PUT экрана «Ключ Intel» идёт глобальным fetch (radar-api экспортирует
     // только get/post/patch/del) — примечание D1 к N2.
@@ -155,6 +249,9 @@ function build(screen, opts) {
     },
     __imp: async (p) => {
       if (p.indexOf('radar-table') >= 0) return {Table: ctx.__Table};
+      if (p.indexOf('md.js') >= 0) return {renderMarkdown: ctx.__renderMarkdown};
+      if (p.indexOf('marked.esm.js') >= 0) return MARKED_NS;
+      if (p.indexOf('purify.es.js') >= 0) return {default: PURIFY};
       return Object.assign({}, api, {
         API: '/api/v1',
         ApiError: class ApiError extends Error {
@@ -168,6 +265,7 @@ function build(screen, opts) {
   };
   vm.createContext(ctx);
   vm.runInContext(tableSrc + '\n;this.__Table = Table;', ctx);
+  vm.runInContext(mdSrc + '\n;this.__renderMarkdown = renderMarkdown;', ctx);
 
   // Роль и capabilities приходят в api — по ним экраны прячут формы и кнопки.
   const base = `
@@ -177,19 +275,23 @@ function build(screen, opts) {
               modal:(m)=>__calls.modals.push(m),
               go:(r)=>__calls.go.push(r),
               drill(){}, trace(){},
-              role: __role, capabilities: __caps.slice()}, mobile:false}, {}); }
+              role: __role, capabilities: __caps.slice()}, mobile: __mobile}, {}); }
       setState(patch, cb){
         const next = typeof patch === 'function' ? patch(this.state) : patch;
         this.state = Object.assign({}, this.state, next);
+        // componentDidUpdate — как в рантайме (support.js зовёт его после
+        // каждого рендера): на нём висит запись Markdown в #intelMd.
+        if (typeof this.componentDidUpdate === 'function') this.componentDidUpdate();
         if (cb) cb();
       }
     }`;
   ctx.__calls = calls;
   ctx.__role = opts.role || 'owner';
   ctx.__caps = CAPS[opts.role || 'owner'];
+  ctx.__mobile = !!opts.mobile;
   vm.runInContext(base + '\n' + logicOf[screen].replace(/await import\(/g, 'await __imp(')
                   + '\n;this.__C = Component;', ctx);
-  return {c: new ctx.__C(), calls: calls, st: st};
+  return {c: new ctx.__C(), calls: calls, st: st, md: mdEl};
 }
 
 const sleep = () => new Promise((r) => setTimeout(r, 30));
@@ -757,6 +859,115 @@ async function main() {
     v = vals(none.c);
     check('N10 без caps вовсе: ни «Отменить», ни экспорта, ни действий карточки',
           v.canCancel === false && v.hasExport === false && v.canReview === false);
+  }
+
+  // N-md1. Markdown в карточке: фикстура со строковым output («# Заголовок…»)
+  // → после открытия строки в #intelMd есть <h1>, <strong>, <code>; переход на
+  // структурную строку узел очищает. Мутация «убрать запись innerHTML в
+  // componentDidUpdate» красит обе первые проверки (снята в отчёте).
+  {
+    const md = build('review', {role: 'owner', card: CARD_MD});
+    await md.c.componentDidMount(); await sleep();
+    vals(md.c).batchRows[0].open(); await sleep();
+    vals(md.c).rows.find((r) => r.id === 301).open(); await sleep();
+    const vm1 = vals(md.c);
+    check('N-md1 строковый output → hasMarkdown, структурных строк нет',
+          vm1.hasMarkdown === true && vm1.hasStructured === false &&
+          vm1.noAnswer === false && vm1.cardOutputRows.length === 0,
+          JSON.stringify([vm1.hasMarkdown, vm1.hasStructured]));
+    check('N-md1 в #intelMd есть <h1> с текстом «Заголовок»',
+          /<h1[^>]*>\s*Заголовок\s*<\/h1>/.test(md.md.innerHTML), md.md.innerHTML);
+    check('N-md1 в #intelMd есть <strong>жирно</strong> и <code>код</code>',
+          /<strong>\s*жирно\s*<\/strong>/.test(md.md.innerHTML) &&
+          /<code>\s*код\s*<\/code>/.test(md.md.innerHTML), md.md.innerHTML);
+    md.st.card = clone(CARD); // теперь сервер вернёт структурную карточку
+    vals(md.c).rows.find((r) => r.id === 302).open(); await sleep();
+    check('N-md1 переход на структурную строку очищает #intelMd',
+          md.md.innerHTML === '', JSON.stringify(md.md.innerHTML));
+  }
+
+  // N-md2. Санитизация: output с <img onerror> и javascript:-ссылкой → в
+  // #intelMd нет onerror и javascript:, текст уцелел; ссылка получила
+  // target/_blank + rel из хука afterSanitizeAttributes.
+  {
+    const xss = build('review', {role: 'owner', card: CARD_MD_XSS});
+    await xss.c.componentDidMount(); await sleep();
+    vals(xss.c).batchRows[0].open(); await sleep();
+    vals(xss.c).rows.find((r) => r.id === 301).open(); await sleep();
+    const html = xss.md.innerHTML;
+    check('N-md2 в #intelMd нет onerror', html.indexOf('onerror') === -1, html);
+    check('N-md2 в #intelMd нет javascript:-URL', !/javascript\s*:/i.test(html), html);
+    check('N-md2 текст «текст» присутствует', html.indexOf('текст') !== -1, html);
+    check('N-md2 ссылка открылась в новой вкладке: target=_blank, rel=noopener noreferrer',
+          /<a [^>]*target="_blank"/.test(html) && /<a [^>]*rel="noopener noreferrer"/.test(html),
+          html);
+  }
+
+  // N-nav. Переход по строкам из шапки карточки: «строка N из M», края гаснут,
+  // «след.»/«пред.» зовут тот же GET /intel/items/{id}; выбранная строка
+  // подсвечена; sticky таблицы на десктопе и отключение на mobile.
+  {
+    const nav = build('review', {role: 'owner',
+      items: {limit: 50, offset: 0, total: 3, rows: clone(ITEMS.rows.slice(0, 3))}});
+    await nav.c.componentDidMount(); await sleep();
+    vals(nav.c).batchRows[0].open(); await sleep();
+    let v = vals(nav.c);
+    check('N-nav в списке 3 строки, до открытия карточки переходов нет',
+          v.rows.length === 3 && v.hasRowNav === false);
+    check('N-nav sticky таблицы на десктопе (position/top/max-height из renderVals)',
+          /position:sticky/.test(v.listStickyStyle) &&
+          /top:12px/.test(v.listStickyStyle) &&
+          /max-height:calc\(100vh - 96px\)/.test(v.listStickyStyle) &&
+          /overflow:auto/.test(v.listStickyStyle),
+          v.listStickyStyle);
+    const mob = build('review', {role: 'owner', mobile: true});
+    await mob.c.componentDidMount(); await sleep();
+    vals(mob.c).batchRows[0].open(); await sleep();
+    check('N-nav на mobile sticky отключён — карточка не перекрывает таблицу',
+          vals(mob.c).listStickyStyle === '', vals(mob.c).listStickyStyle);
+
+    v = vals(nav.c);
+    v.rows[0].open(); await sleep();
+    v = vals(nav.c);
+    check('N-nav открытая строка 1 из 3: подпись и «пред.» disabled',
+          v.rowPosLabel === 'строка 1 из 3' &&
+          v.rowNavPrevFg === '#C9CCD6' && v.rowNavPrevCursor === 'default' &&
+          v.rowNavNextFg === '#156479', JSON.stringify(v.rowPosLabel));
+    check('N-nav выбранная строка подсвечена, соседние — нет',
+          v.rows[0].bg === 'rgba(148,190,190,0.18)' &&
+          v.rows[1].bg !== 'rgba(148,190,190,0.18)',
+          JSON.stringify(v.rows.map((r) => r.bg)));
+    const gets301 = () => nav.calls.get.filter((g) => g.p === '/intel/items/301').length;
+    const gets302 = () => nav.calls.get.filter((g) => g.p === '/intel/items/302').length;
+    const gets303 = () => nav.calls.get.filter((g) => g.p === '/intel/items/303').length;
+    check('N-nav до навигации GET items/{id} по одному на строку 301',
+          gets301() === 1 && gets302() === 0 && gets303() === 0);
+    v.nextRow(); await sleep();
+    check('N-nav «след.» → GET /intel/items/302 (тот же путь, что клик по строке)',
+          gets302() === 1, JSON.stringify(nav.calls.get.map((g) => g.p)));
+    v = vals(nav.c);
+    check('N-nav на второй: подпись «строка 2 из 3», подсветка сместилась, обе кнопки активны',
+          v.rowPosLabel === 'строка 2 из 3' &&
+          v.rows[1].bg === 'rgba(148,190,190,0.18)' && v.rows[0].bg === '' &&
+          v.rowNavPrevFg === '#156479' && v.rowNavNextFg === '#156479');
+    v.prevRow(); await sleep();
+    check('N-nav «пред.» со второй → GET /intel/items/301 (второй раз: открытие + возврат)',
+          gets301() === 2 && gets302() === 1);
+    v = vals(nav.c);
+    v.nextRow(); await sleep(); v = vals(nav.c); // 1 → 2
+    v.nextRow(); await sleep(); v = vals(nav.c); // 2 → 3 (последняя)
+    check('N-nav на последней: подпись «строка 3 из 3», «след.» disabled',
+          v.rowPosLabel === 'строка 3 из 3' &&
+          v.rowNavNextFg === '#C9CCD6' && v.rowNavNextCursor === 'default');
+    const before303 = gets303();
+    v.nextRow(); await sleep();
+    check('N-nav «след.» на последней не запрашивает ничего',
+          gets303() === before303);
+    const beforeAll = nav.calls.get.length;
+    v.prevRow(); await sleep();
+    check('N-nav «пред.» с последней работает: +1 GET items/302 (третий заход на неё)',
+          nav.calls.get.length === beforeAll + 1 && gets302() === 3,
+          JSON.stringify(nav.calls.get.map((g) => g.p)));
   }
 
   // ── итог ────────────────────────────────────────────────────────────────────
