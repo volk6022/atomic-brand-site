@@ -160,7 +160,11 @@
       "blocklist.edit",
       "user.manage",
       "alert.ack",
-      "alert.rules"
+      "alert.rules",
+      "intel.run",
+      "intel.key_edit",
+      "intel.review",
+      "intel.export"
     ],
     "email": "owner@local",
     "initials": "ИВ",
@@ -170,6 +174,7 @@
       "dashboard",
       "fleet",
       "channels",
+      "intel",
       "stream",
       "leads",
       "drafts",
@@ -193,7 +198,9 @@
       "bulk.decide",
       "run.eval",
       "run.export",
-      "alert.ack"
+      "alert.ack",
+      "intel.review",
+      "intel.export"
     ],
     "email": "reviewer@local",
     "initials": "РВ",
@@ -202,6 +209,7 @@
     "sections": [
       "dashboard",
       "channels",
+      "intel",
       "stream",
       "leads",
       "drafts",
@@ -4193,5 +4201,351 @@
         }
       }
     ]
+  },
+  "/intel/key": {
+    "configured": true,
+    "base_url": "http://atomic-intel-api-1:8000",
+    "api_key_env": "RADAR_INTEL_API_KEY",
+    "masked": "…a1b2",
+    "concurrency": 2,
+    "quota_per_hour": 500,
+    "last_ok_at": "2026-09-20T10:00:00+00:00",
+    "last_error": null,
+    "ratelimit": {
+      "limit": 500,
+      "remaining": 480
+    }
+  },
+  "PUT /intel/key": {
+    "configured": true,
+    "base_url": "http://atomic-intel-api-1:8000",
+    "api_key_env": "RADAR_INTEL_API_KEY",
+    "masked": "…a1b2",
+    "concurrency": 2,
+    "quota_per_hour": 500,
+    "last_ok_at": "2026-09-20T10:00:00+00:00",
+    "last_error": null,
+    "ratelimit": {
+      "limit": 500,
+      "remaining": 480
+    }
+  },
+  "/intel/key-unconfigured": {
+    "configured": false,
+    "base_url": null,
+    "api_key_env": "RADAR_INTEL_API_KEY",
+    "masked": null,
+    "concurrency": 2,
+    "quota_per_hour": 500,
+    "last_ok_at": null,
+    "last_error": null,
+    "ratelimit": null
+  },
+  "POST /intel/batches/validate": {
+    "ok": true,
+    "errors": [],
+    "warnings": [],
+    "total": 2,
+    "estimated_quota_hours": 1
+  },
+  "POST /intel/batches": {
+    "batch_id": 3,
+    "run_id": 12,
+    "total": 2
+  },
+  "/intel/batches": {
+    "limit": 50,
+    "offset": 0,
+    "total": 2,
+    "rows": [
+      {
+        "id": 3,
+        "name": "Выгрузка CRM · сентябрь",
+        "status": "running",
+        "total": 50,
+        "done": 12,
+        "failed": 1,
+        "mode": "quality",
+        "language": "ru",
+        "source_kind": "csv",
+        "source_name": "crm.csv",
+        "created_by": "ivan@local",
+        "created_at": "2026-09-20T09:00:00+00:00",
+        "started_at": "2026-09-20T09:00:05+00:00",
+        "finished_at": null,
+        "run_id": 12
+      },
+      {
+        "id": 2,
+        "name": "Прогон по лидборду",
+        "status": "done",
+        "total": 20,
+        "done": 19,
+        "failed": 1,
+        "mode": "quality",
+        "language": "ru",
+        "source_kind": "json",
+        "source_name": "leaderboard.json",
+        "created_by": "ivan@local",
+        "created_at": "2026-09-19T15:00:00+00:00",
+        "started_at": "2026-09-19T15:00:04+00:00",
+        "finished_at": "2026-09-19T15:40:00+00:00",
+        "run_id": 9
+      }
+    ]
+  },
+  "/intel/batches/{id}": {
+    "id": 3,
+    "name": "Выгрузка CRM · сентябрь",
+    "status": "running",
+    "total": 50,
+    "done": 12,
+    "failed": 1,
+    "mode": "quality",
+    "language": "ru",
+    "source_kind": "csv",
+    "source_name": "crm.csv",
+    "created_by": "ivan@local",
+    "created_at": "2026-09-20T09:00:00+00:00",
+    "started_at": "2026-09-20T09:00:05+00:00",
+    "finished_at": null,
+    "run_id": 12,
+    "counts": {
+      "completed": 12,
+      "failed": 1,
+      "running": 2,
+      "waiting_llm": 1,
+      "pending": 34
+    },
+    "waiting_llm": 1,
+    "running": 2,
+    "log": [
+      "09:00:05 пачка 50 строк",
+      "09:01:12 429 work, ждём 30 с"
+    ]
+  },
+  "POST /intel/batches/{id}/cancel": {
+    "id": 3,
+    "status": "cancelled"
+  },
+  "/intel/batches/{id}/items": {
+    "limit": 50,
+    "offset": 0,
+    "total": 10,
+    "rows": [
+      {
+        "id": 301,
+        "row_no": 1,
+        "query": "Исследуй компанию ACME (https://acme.example) — сегмент, размер, контакт",
+        "status": "completed",
+        "critic_score": 8.5,
+        "tokens": 3200,
+        "elapsed_seconds": 41.2,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:04:10+00:00",
+        "has_result": true,
+        "error": null
+      },
+      {
+        "id": 302,
+        "row_no": 2,
+        "query": "Исследуй компанию Globex (https://globex.example) — сегмент, размер, конт",
+        "status": "completed",
+        "critic_score": 7.1,
+        "tokens": 2950,
+        "elapsed_seconds": 38.0,
+        "review_status": "accepted",
+        "updated_at": "2026-09-20T09:05:22+00:00",
+        "has_result": true,
+        "error": null
+      },
+      {
+        "id": 303,
+        "row_no": 3,
+        "query": "Исследуй компанию Initech (https://initech.example) — сегмент, размер,",
+        "status": "completed",
+        "critic_score": 5.0,
+        "tokens": 3100,
+        "elapsed_seconds": 44.8,
+        "review_status": "rejected",
+        "updated_at": "2026-09-20T09:06:40+00:00",
+        "has_result": true,
+        "error": null
+      },
+      {
+        "id": 304,
+        "row_no": 4,
+        "query": "Исследуй компанию Umbrella (https://umbrella.example) — сегмент, разм",
+        "status": "waiting_llm",
+        "critic_score": null,
+        "tokens": null,
+        "elapsed_seconds": null,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:07:02+00:00",
+        "has_result": false,
+        "error": null
+      },
+      {
+        "id": 305,
+        "row_no": 5,
+        "query": "Исследуй компанию Soylent (https://soylent.example) — сегмент, размер",
+        "status": "running",
+        "critic_score": null,
+        "tokens": null,
+        "elapsed_seconds": null,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:07:30+00:00",
+        "has_result": false,
+        "error": null
+      },
+      {
+        "id": 306,
+        "row_no": 6,
+        "query": "Исследуй компанию Hooli (https://hooli.example) — сегмент, размер, к",
+        "status": "submitted",
+        "critic_score": null,
+        "tokens": null,
+        "elapsed_seconds": null,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:07:55+00:00",
+        "has_result": false,
+        "error": null
+      },
+      {
+        "id": 307,
+        "row_no": 7,
+        "query": "Исследуй компанию Stark Industries (https://stark.example) — сегмент,",
+        "status": "pending",
+        "critic_score": null,
+        "tokens": null,
+        "elapsed_seconds": null,
+        "review_status": "new",
+        "updated_at": null,
+        "has_result": false,
+        "error": null
+      },
+      {
+        "id": 308,
+        "row_no": 8,
+        "query": "Исследуй компанию Wayne Group (https://wayne.example) — сегмент, разм",
+        "status": "failed",
+        "critic_score": null,
+        "tokens": null,
+        "elapsed_seconds": null,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:08:31+00:00",
+        "has_result": false,
+        "error": "таймаут модели"
+      },
+      {
+        "id": 309,
+        "row_no": 9,
+        "query": "Исследуй компанию Wonka Industries (https://wonka.example) — сегмент,",
+        "status": "stalled",
+        "critic_score": 4.2,
+        "tokens": 1800,
+        "elapsed_seconds": 92.5,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:09:12+00:00",
+        "has_result": false,
+        "error": null
+      },
+      {
+        "id": 310,
+        "row_no": 10,
+        "query": "Исследуй компанию Tyrell Corp (https://tyrell.example) — сегмент, раз",
+        "status": "cancelled",
+        "critic_score": null,
+        "tokens": null,
+        "elapsed_seconds": null,
+        "review_status": "new",
+        "updated_at": "2026-09-20T09:09:40+00:00",
+        "has_result": false,
+        "error": null
+      }
+    ]
+  },
+  "/intel/items/{id}": {
+    "id": 301,
+    "batch_id": 3,
+    "row_no": 1,
+    "input": {
+      "company": "ACME",
+      "url": "https://acme.example"
+    },
+    "query": "Исследуй компанию ACME (https://acme.example) — сегмент, размер, контакты",
+    "status": "completed",
+    "result": {
+      "structured_output": {
+        "segment": "B2B",
+        "size": "mid",
+        "contacts": {
+          "site": "https://acme.example"
+        }
+      },
+      "answer_markdown": null,
+      "critic": 8.5,
+      "stats": {
+        "tokens": 3200,
+        "elapsed_seconds": 41.2
+      },
+      "sources": [
+        {
+          "url": "https://acme.example/about",
+          "what_it_provided": "о компании"
+        },
+        {
+          "url": "https://example-news.ru/acme",
+          "what_it_provided": "упоминание в прессе"
+        }
+      ]
+    },
+    "edited": {
+      "segment": "B2C"
+    },
+    "review_status": "new",
+    "notes": "",
+    "error": null,
+    "critic_score": 8.5,
+    "output": {
+      "segment": "B2C",
+      "size": "mid",
+      "contacts": {
+        "site": "https://acme.example"
+      }
+    }
+  },
+  "/intel/items/{id}-failed": {
+    "id": 302,
+    "batch_id": 3,
+    "row_no": 2,
+    "input": {
+      "company": "Globex",
+      "url": "https://globex.example"
+    },
+    "query": "Исследуй компанию Globex (https://globex.example) — сегмент, размер, контакты",
+    "status": "failed",
+    "result": null,
+    "edited": null,
+    "review_status": "new",
+    "notes": "",
+    "error": "модель молчит",
+    "critic_score": null,
+    "output": null
+  },
+  "PATCH /intel/items/{id}": {
+    "id": 301,
+    "review_status": "accepted",
+    "notes": "проверено",
+    "edited": {
+      "segment": "B2C"
+    },
+    "output": {
+      "segment": "B2C",
+      "size": "mid",
+      "contacts": {
+        "site": "https://acme.example"
+      }
+    }
   }
 }

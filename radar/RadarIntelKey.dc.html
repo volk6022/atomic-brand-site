@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Ключ Intel</div>
+
+  <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Загружаю…</div>
+  </sc-if>
+
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Ключ не открылся: {{ errorMsg }} · <span onClick="{{ reload }}" style="cursor:pointer;text-decoration:underline">повторить</span></div>
+  </sc-if>
+
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Состояние ключа</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">
+      <span style="font:400 13px/1 'JetBrains Mono',monospace;color:{{ statusColor }}">{{ statusText }}</span>
+      <button onClick="{{ doProbe }}" disabled="{{ probeOff }}" style="border:0;background:{{ probeBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ probeCursor }}">{{ probeLabel }}</button>
+      <sc-if value="{{ probeBlocked }}" hint-placeholder-val="{{ false }}">
+        <span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">сначала сохраните адрес</span>
+      </sc-if>
+    </div>
+    <sc-for list="{{ viewRows }}" as="r" hint-placeholder-count="7">
+      <div style="border-bottom:1px solid rgba(19,30,95,0.08);padding:7px 0">
+        <span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ r.k }}</span>
+        <span style="font:400 13px/1.5 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap">{{ r.v }}</span>
+      </div>
+    </sc-for>
+    <sc-if value="{{ hasLastError }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:8px;color:#DA501C;font:400 12px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap">{{ lastErrorVal }}</div>
+    </sc-if>
+    <sc-if value="{{ notConfigured }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:10px;border:1px dashed rgba(19,30,95,0.3);padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Intel не настроен: укажите адрес сервера Intel и имя переменной ключа</div>
+    </sc-if>
+    <sc-if value="{{ hintOwner }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:10px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Ключ не настроен — обратитесь к владельцу</div>
+    </sc-if>
+  </div>
+
+  <sc-if value="{{ canEdit }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Настройки ключа</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-top:12px">
+        <div>
+          <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">base_url</div>
+          <input type="text" value="{{ formBaseUrl }}" onInput="{{ setFormBase }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </div>
+        <div>
+          <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">api_key_env</div>
+          <input type="text" value="{{ formEnv }}" onInput="{{ setFormEnv }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </div>
+        <div>
+          <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">concurrency — строк параллельно</div>
+          <input type="number" min="1" max="10" value="{{ formConc }}" onInput="{{ setFormConc }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </div>
+        <div>
+          <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">quota_per_hour — запросов в час</div>
+          <input type="number" min="1" value="{{ formQuota }}" onInput="{{ setFormQuota }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </div>
+        <div>
+          <button onClick="{{ doSave }}" disabled="{{ saving }}" style="border:0;background:{{ saveBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ saveCursor }}">Сохранить</button>
+        </div>
+        <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ formNote }}</div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:420},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  // Ключ Intel: состояние ручки GET /intel/key и форма настройки (PUT).
+  // Значение ключа в GUI не вводится — только имя env-переменной:
+  // KeyBody поля значения не имеет, ключ живёт в окружении инстанса.
+  // Форма видна только при праве intel.key_edit, остальным — просмотр
+  // и «Проверить связь»; последний рубеж всё равно сервер (403 тостом).
+  state = {
+    d:null, loading:true, error:null, probeBusy:false, saving:false,
+    form:{base_url:'', api_key_env:'', concurrency:'', quota_per_hour:''}
+  };
+
+  componentDidMount(){ this.load(); }
+
+  async load(){
+    const { get, describe } = await import('./radar-api.js');
+    try {
+      const d = await get('/intel/key');
+      this.setState({d, loading:false, error:null, form:this.formOf(d)});
+    } catch (e) {
+      this.setState({loading:false, error:describe(e)});
+    }
+  }
+
+  formOf(d){
+    return {
+      base_url:(d && d.base_url) || '',
+      api_key_env:(d && d.api_key_env) || '',
+      concurrency:String(d && d.concurrency != null ? d.concurrency : ''),
+      quota_per_hour:String(d && d.quota_per_hour != null ? d.quota_per_hour : '')
+    };
+  }
+
+  // Право правки — intel.key_edit из /auth/me; нет ответа /auth/me —
+  // списка нет, формы нет: запасное поведение, а не сбой.
+  canEdit(){
+    const caps = (this.props.api || {}).capabilities;
+    return Array.isArray(caps) && caps.indexOf('intel.key_edit') !== -1;
+  }
+
+  // Человеческая дата: дд.мм чч:мм — глубина тут в пределах суток-двух.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    const p = (n)=>String(n).padStart(2, '0');
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  // «Проверить связь» — дешёвая ручка, опроса по таймеру нет: обновление кнопкой.
+  // Ответ перерисовывает состояние; last_error — текст сервера, не «свой» текст.
+  async doProbe(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(this.state.probeBusy) return;
+    this.setState({probeBusy:true});
+    try {
+      const { get } = await import('./radar-api.js');
+      const d = await get('/intel/key', {probe:1});
+      this.setState({probeBusy:false, d});
+      if(d && d.last_error) t(d.last_error, '#DA501C');
+      else t('Связь есть', '#2E7D57');
+    } catch (e) {
+      this.setState({probeBusy:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  // Сохранение — PUT /intel/key; ответ ручки = форма ключа, из него и перерисовка.
+  async doSave(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(!this.canEdit() || this.state.saving) return;
+    const f = this.state.form;
+    const body = {
+      base_url:f.base_url.trim(),
+      api_key_env:f.api_key_env.trim(),
+      concurrency:Number(f.concurrency),
+      quota_per_hour:Number(f.quota_per_hour)
+    };
+    this.setState({saving:true});
+    try {
+      const d = await this.putJson('/intel/key', body);
+      this.setState({d, saving:false, form:this.formOf(d)});
+      t('Ключ сохранён', '#2E7D57');
+    } catch (e) {
+      this.setState({saving:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  // put в radar-api.js нет, а править его этот экран не имеет права;
+  // ApiError берётся из модуля, чтобы describe(e) показывал detail сервера
+  // (включая склейку pydantic-списков при 422).
+  async putJson(path, body){
+    const { API, ApiError } = await import('./radar-api.js');
+    const r = await fetch(API + path, {
+      method:'PUT', credentials:'same-origin',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    const text = await r.text();
+    let parsed = null;
+    try { parsed = text ? JSON.parse(text) : null; }
+    catch (e) { parsed = text; }
+    if (!r.ok) throw new ApiError(r.status, path, parsed);
+    return parsed;
+  }
+
+  renderVals(){
+    const S = this.state, d = S.d;
+    const edit = this.canEdit();
+    const notConfigured = !!(d && d.configured === false);
+    // Пока ключ не сохранён вовсе (configured:false и адреса нет), сервер
+    // отвечает на probe 409 «ключ Intel ещё не сохранён — сначала укажите
+    // адрес». Кнопку гасим и подсказываем про адрес; doProbe с тостом
+    // describe(e) остаётся последним рубежом на случай устаревшего экрана
+    // (дефект 2 отчёта браузерной проверки).
+    const probeBlocked = !!(d && d.configured === false && !d.base_url);
+    return {
+      loading:S.loading,
+      hasError:!!S.error,
+      errorMsg:S.error || '',
+      reload:()=>this.load(),
+      statusText: d ? (d.configured ? 'настроен' : 'не настроен') : '—',
+      statusColor: (d && d.configured) ? '#2E7D57' : '#DA501C',
+      // configured:false → блок «не настроен», маска и лимиты уходят в «—»
+      viewRows: [
+        {k:'Маска ключа', v:(d && d.masked) || '—'},
+        {k:'Адрес сервера', v:(d && d.base_url) || '—'},
+        {k:'Переменная ключа', v:(d && d.api_key_env) || '—'},
+        {k:'Строк параллельно', v:(d && d.concurrency != null) ? d.concurrency : '—'},
+        {k:'Запросов в час', v:(d && d.quota_per_hour != null) ? d.quota_per_hour : '—'},
+        {k:'Последний успех', v:this.when(d && d.last_ok_at)},
+        {k:'Остаток квоты', v:(d && d.ratelimit && d.ratelimit.limit != null) ? (d.ratelimit.remaining + ' из ' + d.ratelimit.limit) : '—'}
+      ],
+      hasLastError: !!(d && d.last_error),
+      lastErrorVal: (d && d.last_error) || '',
+      notConfigured,
+      hintOwner: notConfigured && !edit,
+      canEdit: edit,
+      formBaseUrl:S.form.base_url,
+      formEnv:S.form.api_key_env,
+      formConc:S.form.concurrency,
+      formQuota:S.form.quota_per_hour,
+      setFormBase:(e)=>this.setState({form:Object.assign({}, S.form, {base_url:e.target.value})}),
+      setFormEnv:(e)=>this.setState({form:Object.assign({}, S.form, {api_key_env:e.target.value})}),
+      setFormConc:(e)=>this.setState({form:Object.assign({}, S.form, {concurrency:e.target.value})}),
+      setFormQuota:(e)=>this.setState({form:Object.assign({}, S.form, {quota_per_hour:e.target.value})}),
+      formNote:'Значение ключа задаётся в окружении инстанса (.env), выдаёт Иван. В форме указывается только имя переменной.',
+      saving:S.saving,
+      saveBg: S.saving ? '#8A8F9E' : '#131E5F',
+      saveCursor: S.saving ? 'default' : 'pointer',
+      doSave:()=>this.doSave(),
+      probeBusy:S.probeBusy,
+      probeOff:S.probeBusy || probeBlocked,
+      probeBlocked,
+      probeLabel:S.probeBusy ? 'Проверяю…' : 'Проверить связь',
+      probeBg: (S.probeBusy || probeBlocked) ? '#8A8F9E' : '#131E5F',
+      probeCursor: (S.probeBusy || probeBlocked) ? 'default' : 'pointer',
+      doProbe:()=>this.doProbe()
+    };
+  }
+}
+</script>
+</body>
+</html>

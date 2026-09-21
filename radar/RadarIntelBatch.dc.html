@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Новая пачка</div>
+  <sc-if value="{{ noRun }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+      <div style="font:400 13px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Запуск пачек доступен владельцу и заказчику</div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ hasError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Пачка не открылась: {{ errorMsg }}</div>
+  </sc-if>
+  <sc-if value="{{ canRun }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Источник строк</div>
+        <sc-if value="{{ sourceEmpty }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Выберите файл CSV/JSON или вставьте данные</div>
+        </sc-if>
+        <sc-if value="{{ sourceLoaded }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font:400 13px/1.4 'JetBrains Mono',monospace;color:#131E5F">{{ sourceLabel }}</span>
+            <div onClick="{{ removeSource }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">убрать файл</div>
+          </div>
+        </sc-if>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="border:0;background:{{ pickBg }};color:#F8F3E0;padding:9px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ pickCursor }};display:inline-block">
+            <input type="file" accept=".csv,.json" onChange="{{ doPickFile }}" style="display:none">{{ pickLabel }}</label>
+          <span style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">CSV (заголовок с колонками) или JSON (массив объектов, либо объект с массивом items). Не больше 10 МБ.</span>
+        </div>
+        <div style="margin-top:10px">
+          <div style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">…или вставить руками</div>
+          <textarea rows="6" value="{{ manualVal }}" onInput="{{ setManual }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+          <div style="margin-top:8px">
+            <button onClick="{{ doParseManual }}" disabled="{{ parseBusy }}" style="border:0;background:{{ parseBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ parseCursor }}">Разобрать вставленное</button>
+          </div>
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Шаблон промпта</div>
+        <textarea rows="5" value="{{ templateVal }}" onInput="{{ setTemplate }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+        <sc-if value="{{ hasPreview }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:8px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Предпросмотр первой строки:</div>
+          <pre style="margin:8px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap"><sc-if value="{{ previewBad }}" hint-placeholder-val="{{ false }}"><span style="color:#DA501C">{{ previewBadVal }}</span></sc-if><sc-if value="{{ previewOk }}" hint-placeholder-val="{{ false }}"><span style="color:#131E5F">{{ previewVal }}</span></sc-if></pre>
+        </sc-if>
+        <div style="margin-top:8px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ templateNote }}</div>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Схема JSON (необязательно)</div>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <label style="border:0;background:{{ schemaBg }};color:#F8F3E0;padding:9px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ schemaCursor }};display:inline-block">
+            <input type="file" accept=".json,application/json" onChange="{{ doPickSchema }}" style="display:none">{{ schemaPickLabel }}</label>
+          <sc-if value="{{ hasSchema }}" hint-placeholder-val="{{ false }}">
+            <span style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#156479">{{ schemaLabel }}</span>
+            <div onClick="{{ removeSchema }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">убрать схему</div>
+          </sc-if>
+        </div>
+        <div style="margin-top:8px">
+          <textarea rows="5" value="{{ schemaVal }}" onInput="{{ setSchema }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+        </div>
+        <div style="margin-top:8px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ schemaNote }}</div>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Имя пачки</div>
+        <div style="margin-top:10px">
+          <input value="{{ nameVal }}" onInput="{{ setName }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+        </div>
+      </div>
+      <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Проверка</div>
+        <sc-if value="{{ hasReport }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:10px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#131E5F">{{ reportTotal }}</div>
+          <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#131E5F">{{ reportEstimate }}</div>
+          <sc-if value="{{ reportOk }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:6px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#2E7D57">Ошибок нет</div>
+          </sc-if>
+          <sc-if value="{{ hasErrors }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:6px">
+              <sc-for list="{{ reportErrors }}" as="e" hint-placeholder-count="2">
+                <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">{{ e.t }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+          <sc-if value="{{ hasWarnings }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:6px">
+              <sc-for list="{{ reportWarnings }}" as="w" hint-placeholder-count="1">
+                <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ w.t }}</div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </sc-if>
+        <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <button onClick="{{ doCheck }}" disabled="{{ checkBusy }}" style="border:0;background:{{ checkBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ checkCursor }}">Проверить</button>
+          <button onClick="{{ doRun }}" disabled="{{ runDisabled }}" style="border:0;background:{{ runBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ runCursor }}">Запустить</button>
+          <span style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ runHint }}</span>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:760},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  // «Новая пачка»: файл CSV/JSON (свой мини-парсер, лимит 10 МБ) или вставка
+  // руками, шаблон {{col}} с живым предпросмотром первой строки, схема JSON
+  // как есть, «Проверить» → POST /intel/batches/validate, «Запустить» активен
+  // только после ok-проверки. Режим/язык в интерфейсе нет — серверные дефолты
+  // (quality/ru). Форма и кнопки — только при праве intel.run.
+  state = {
+    rows:null, cols:[], sourceKind:'', sourceName:'',
+    manual:'', template:'', schema:'', schemaName:'', name:'',
+    quota:500, parseBusy:false, schemaBusy:false, checkBusy:false, runBusy:false,
+    report:null, startedOk:false, error:null
+  };
+
+  componentDidMount(){ this.load(); }
+
+  // Квота нужна только подписи оценки («при квоте N/ч»); не получили — остаётся 500.
+  async load(){
+    try {
+      const { get } = await import('./radar-api.js');
+      const k = await get('/intel/key');
+      this.setState({quota:(k && k.quota_per_hour) || 500});
+    } catch (e) { /* подпись оценки, не ход работы */ }
+  }
+
+  // Право запуска — intel.run: owner и customer; reviewer видит заглушку.
+  canRun(){
+    const caps = (this.props.api || {}).capabilities;
+    return Array.isArray(caps) && caps.indexOf('intel.run') !== -1;
+  }
+
+  async pickFile(event){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if(!file || this.state.parseBusy) return;
+    // Клиентский предел — по SPEC; серверный лимит тела экран не проверяет.
+    if(file.size > 10 * 1024 * 1024) { t('Файл больше 10 МБ', '#DA501C'); return; }
+    this.setState({parseBusy:true});
+    try {
+      const text = await file.text();
+      const kind = /\.json$/i.test(file.name) ? 'json' : 'csv';
+      this.parseData(text, kind, file.name);
+    } catch (e) {
+      t('Файл «' + file.name + '» — не удалось прочитать: ' + e.message, '#DA501C');
+    } finally {
+      this.setState({parseBusy:false});
+    }
+  }
+
+  doParseManual(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(this.state.parseBusy) return;
+    const text = this.state.manual;
+    if(!text.trim()) { t('Пусто — вставьте CSV или JSON', '#DA501C'); return; }
+    const kind = (text.trim()[0] === '[' || text.trim()[0] === '{') ? 'json' : 'csv';
+    this.setState({parseBusy:true});
+    try { this.parseData(text, kind, null); }
+    finally { this.setState({parseBusy:false}); }
+  }
+
+  // Разбор — целиком на клиенте: сломанный файл объясняется словами про файл,
+  // а не ответом сервера про тело запроса. На экран байты не попадают —
+  // только сводка «строк/колонок».
+  parseData(text, kind, name){
+    const t = (this.props.api || {}).toast || (()=>{});
+    try {
+      let rows, cols;
+      if(kind === 'json') {
+        const data = JSON.parse(text);
+        rows = Array.isArray(data) ? data : (data && Array.isArray(data.items) ? data.items : null);
+        if(!rows) throw new Error('ожидался массив объектов или объект с массивом items');
+        if(rows.some((r)=>!r || typeof r !== 'object' || Array.isArray(r)))
+          throw new Error('каждая строка должна быть объектом');
+        cols = rows.length ? Object.keys(rows[0]) : [];
+      } else {
+        const parsed = this.parseCsv(text);
+        rows = parsed.rows; cols = parsed.cols;
+      }
+      this.setState({rows, cols, sourceKind:kind, sourceName:name || '', startedOk:false, report:null});
+    } catch (e) {
+      t('Файл «' + (name || 'вставленные данные') + '» — не удалось разобрать: ' + e.message, '#DA501C');
+    }
+  }
+
+  // Свой мини-парсер CSV: авто-разделитель по заголовку (; , таб), кавычки "",
+  // пустые строки пропускаются. PapaParse в репо нет — вендор не тянем.
+  parseCsv(text){
+    const header = text.split(/\r?\n/)[0] || '';
+    let sep = ';';
+    let best = -1;
+    for(const d of [';', ',', '\t']) {
+      const n = header.split(d).length - 1;
+      if(n > best) { best = n; sep = d; }
+    }
+    const rows = [];
+    let cols = [], row = [], field = '', inQ = false;
+    const endRow = () => {
+      row.push(field); field = '';
+      if(row.length === 1 && row[0] === '') { row = []; return; } // пустая строка
+      if(!cols.length) { cols = row; }
+      else {
+        const o = {};
+        row.forEach((v, i)=>{ o[cols[i]] = v; });
+        rows.push(o);
+      }
+      row = [];
+    };
+    for(let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if(inQ) {
+        if(ch === '"') {
+          if(text[i + 1] === '"') { field += '"'; i++; }
+          else inQ = false;
+        } else field += ch;
+      } else if(ch === '"') inQ = true;
+      else if(ch === sep) { row.push(field); field = ''; }
+      else if(ch === '\n' || ch === '\r') {
+        if(ch === '\r' && text[i + 1] === '\n') i++;
+        endRow();
+      } else field += ch;
+    }
+    if(field !== '' || row.length) endRow();
+    return {cols, rows};
+  }
+
+  removeSource(){
+    this.setState({rows:null, cols:[], sourceKind:'', sourceName:'', startedOk:false, report:null});
+  }
+
+  // Схема уходит «как есть»; dict|null со стороны pydantic — значит разобрать
+  // в объект обязаны на клиенте, битый JSON не доезжает до сервера.
+  schemaOrNull(){
+    const s = String(this.state.schema || '').trim();
+    if(!s) return null;
+    return JSON.parse(s);
+  }
+
+  // То же тело у проверки и у запуска: лишних полей нет, server лишнего
+  // не ждёт (ValidateBody extra=forbid; name обязателен уже у BatchBody).
+  buildBody(){
+    return {
+      name:String(this.state.name || '').trim(),
+      rows:this.state.rows,
+      prompt_template:this.state.template,
+      schema_json:this.schemaOrNull(),
+      source_kind:this.state.sourceKind,
+      source_name:this.state.sourceName || null
+    };
+  }
+
+  async doCheck(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(!this.canRun() || this.state.checkBusy || this.state.runBusy) return;
+    if(!this.state.rows) { t('Сначала загрузите строки', '#DA501C'); return; }
+    let body;
+    try { body = this.buildBody(); }
+    catch (e) { t('Схема — не удалось разобрать: ' + e.message, '#DA501C'); return; }
+    this.setState({checkBusy:true});
+    try {
+      const { post } = await import('./radar-api.js');
+      const r = await post('/intel/batches/validate', body);
+      this.setState({report:r, checkBusy:false, startedOk:!!(r && r.ok)});
+    } catch (e) {
+      this.setState({checkBusy:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  async doRun(){
+    const t = (this.props.api || {}).toast || (()=>{});
+    if(!this.canRun() || this.state.runBusy || this.state.checkBusy || !this.state.startedOk) return;
+    let body;
+    try { body = this.buildBody(); }
+    catch (e) { t('Схема — не удалось разобрать: ' + e.message, '#DA501C'); return; }
+    this.setState({runBusy:true});
+    const { post, describe } = await import('./radar-api.js');
+    try {
+      const r = await post('/intel/batches', body);
+      this.setState({runBusy:false});
+      t('Пачка №' + r.batch_id + ' запущена — прогон #' + r.run_id, '#156479');
+      const api = this.props.api || {};
+      if(api.go) api.go('intel_review');
+    } catch (e) {
+      this.setState({runBusy:false});
+      // 422 приходит с телом-отчётом проверки (та же форма, что у validate) —
+      // рисуем его как отчёт. 409 «уже идёт пачка» и 503 — ответы сервера,
+      // а не поломка: текст describe тостом, экран живёт.
+      if(e && e.body && e.body.ok === false && Array.isArray(e.body.errors)) {
+        this.setState({report:e.body, startedOk:false});
+      } else {
+        t(describe(e), '#DA501C');
+      }
+    }
+  }
+
+  // Живой предпросмотр по первой строке: чужая колонка — «нет колонки X»
+  // (сервер такую же строку сочтёт ошибкой validate).
+  previewQuery(){
+    const rows = this.state.rows, tpl = this.state.template;
+    if(!rows || !rows.length || !tpl) return {text:'', bad:''};
+    const row = rows[0];
+    let bad = '';
+    const text = tpl.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (m, key) => {
+      if(Object.prototype.hasOwnProperty.call(row, key))
+        return String(row[key] == null ? '' : row[key]);
+      if(!bad) bad = 'нет колонки ' + key;
+      return m;
+    });
+    return {text, bad};
+  }
+
+  async pickSchema(event){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const input = event.target;
+    const file = input.files && input.files[0];
+    input.value = '';
+    if(!file || this.state.schemaBusy) return;
+    this.setState({schemaBusy:true});
+    try {
+      const text = await file.text();
+      JSON.parse(text); // только разбор; содержательную валидацию делает сервер
+      this.setState({schemaBusy:false, schema:text, schemaName:file.name, startedOk:false});
+    } catch (e) {
+      this.setState({schemaBusy:false});
+      t('Файл «' + file.name + '» — не удалось разобрать: ' + e.message, '#DA501C');
+    }
+  }
+
+  renderVals(){
+    const S = this.state;
+    const canRun = this.canRun();
+    const sourceLabel = S.rows
+      ? ('строк: ' + S.rows.length + ' · колонок: ' + S.cols.length +
+         (S.sourceName ? ' · файл: ' + S.sourceName : ' · вставлено вручную') +
+         (S.sourceKind ? ' (' + S.sourceKind + ')' : ''))
+      : '';
+    const pv = this.previewQuery();
+    const rep = S.report;
+    // row:0 — про файл целиком, остальные — построчно
+    const fmt = (list) => (list || []).map((x) => ({
+      t:(x.row === 0 ? 'Файл: ' : 'Строка ' + x.row + ': ') + x.message
+    }));
+    const errs = rep ? fmt(rep.errors) : [];
+    const warns = rep ? fmt(rep.warnings) : [];
+    return {
+      hasError:false, errorMsg:'', reload:()=>this.load(),
+      canRun, noRun:!canRun,
+      sourceEmpty:!S.rows, sourceLoaded:!!S.rows, sourceLabel,
+      pickLabel:S.parseBusy ? 'Загружаю…' : 'Выбрать файл CSV/JSON',
+      pickBg:S.parseBusy ? '#8A8F9E' : '#131E5F',
+      pickCursor:S.parseBusy ? 'default' : 'pointer',
+      parseBg:S.parseBusy ? '#8A8F9E' : '#131E5F',
+      parseCursor:S.parseBusy ? 'default' : 'pointer',
+      parseBusy:S.parseBusy,
+      doPickFile:(e)=>this.pickFile(e),
+      doParseManual:()=>this.doParseManual(),
+      manualVal:S.manual,
+      setManual:(e)=>this.setState({manual:e.target.value, startedOk:false}),
+      removeSource:()=>this.removeSource(),
+      templateVal:S.template,
+      setTemplate:(e)=>this.setState({template:e.target.value, startedOk:false}),
+      hasPreview:!!(pv && (pv.text || pv.bad)),
+      previewOk:!!(pv && pv.text && !pv.bad),
+      previewVal:(pv && pv.text) || '',
+      previewBad:!!(pv && pv.bad),
+      previewBadVal:(pv && pv.bad) || '',
+      templateNote:'Каждая строка файла → один запрос. Длина запроса 3..8000 символов. Плейсхолдеры — {{колонка}}.',
+      schemaPickLabel:S.schemaBusy ? 'Загружаю…' : 'Выбрать схему JSON',
+      schemaBg:S.schemaBusy ? '#8A8F9E' : '#131E5F',
+      schemaCursor:S.schemaBusy ? 'default' : 'pointer',
+      schemaBusy:S.schemaBusy,
+      doPickSchema:(e)=>this.pickSchema(e),
+      hasSchema:!!S.schema,
+      schemaLabel:S.schemaName ? ('схема: ' + S.schemaName) : 'схема вставлена руками',
+      removeSchema:()=>this.setState({schema:'', schemaName:'', startedOk:false}),
+      schemaVal:S.schema,
+      setSchema:(e)=>this.setState({schema:e.target.value, schemaName:'', startedOk:false}),
+      schemaNote:'JSON Schema (draft-07 / 2020-12) — если указан, Intel вернёт структурный ответ по полям.',
+      nameVal:S.name,
+      setName:(e)=>this.setState({name:e.target.value, startedOk:false}),
+      hasReport:!!rep,
+      reportOk:!!(rep && rep.ok),
+      reportTotal: rep ? ('строк: ' + rep.total) : '',
+      reportEstimate: rep ? ('≈' + rep.estimated_quota_hours + ' ч при квоте ' + S.quota + '/ч') : '',
+      hasErrors:errs.length > 0, reportErrors:errs,
+      hasWarnings:warns.length > 0, reportWarnings:warns,
+      doCheck:()=>this.doCheck(),
+      checkBusy:S.checkBusy,
+      checkBg:S.checkBusy ? '#8A8F9E' : '#131E5F',
+      checkCursor:S.checkBusy ? 'default' : 'pointer',
+      doRun:()=>this.doRun(),
+      runBusy:S.runBusy,
+      // Любое изменение формы снова блокирует запуск (startedOk сбрасывается в set*)
+      runDisabled:!S.startedOk || S.runBusy || S.checkBusy,
+      runBg:(!S.startedOk || S.runBusy || S.checkBusy) ? '#8A8F9E' : '#131E5F',
+      runCursor:(!S.startedOk || S.runBusy || S.checkBusy) ? 'default' : 'pointer',
+      runHint:S.startedOk
+        ? 'Проверка прошла — можно запускать.'
+        : 'Сначала «Проверить»: запуск активен только после ok-проверки.'
+    };
+  }
+}
+</script>
+</body>
+</html>

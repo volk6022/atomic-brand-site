@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Пачки и ревью</div>
+    <div onClick="{{ reload }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">↻ обновить</div>
+  </div>
+  <sc-if value="{{ hasListError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Пачки не открылись: {{ listErrorMsg }} · <span onClick="{{ reload }}" style="cursor:pointer;text-decoration:underline">повторить</span></div>
+  </sc-if>
+  <div style="display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap">
+    <div style="flex:1 1 320px;min-width:280px;display:flex;flex-direction:column;gap:10px">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Пачки</div>
+      <sc-if value="{{ batchesLoading }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Загружаю пачки…</div>
+      </sc-if>
+      <sc-if value="{{ batchesEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px dashed rgba(19,30,95,0.24);padding:22px;text-align:center">
+          <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Пачек ещё не было — начните с „Новая пачка“</div>
+          <div onClick="{{ goNewBatch }}" style="margin-top:8px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer">Новая пачка →</div>
+        </div>
+      </sc-if>
+      <sc-for list="{{ batchRows }}" as="b" hint-placeholder-count="2">
+        <div onClick="{{ b.open }}" style="background:{{ b.bg }};border:1px solid rgba(19,30,95,0.16);padding:12px;cursor:pointer">
+          <div style="display:flex;justify-content:space-between;gap:10px">
+            <div style="font:400 13px/1.3 'Architexture',sans-serif;color:#131E5F">{{ b.name }}</div>
+            <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ b.badgeC }};border:1px solid {{ b.badgeC }};padding:3px 6px;white-space:nowrap">{{ b.badge }}</span>
+          </div>
+          <div style="margin-top:5px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ b.done }} готово · из {{ b.total }}<sc-if value="{{ b.hasFailed }}" hint-placeholder-val="{{ false }}"><span style="color:#DA501C"> · {{ b.failed }} упало</span></sc-if></div>
+          <div style="margin-top:3px;font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ b.by }} · {{ b.when }}</div>
+        </div>
+      </sc-for>
+    </div>
+    <div style="flex:2 1 460px;min-width:300px;display:flex;flex-direction:column;gap:10px">
+      <sc-if value="{{ noSelection }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E;border:1px dashed rgba(19,30,95,0.24);padding:22px;text-align:center">Выберите пачку слева</div>
+      </sc-if>
+      <sc-if value="{{ hasBatchError }}" hint-placeholder-val="{{ false }}">
+        <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Пачка не открылась: {{ batchErrorMsg }}</div>
+      </sc-if>
+      <sc-if value="{{ hasBatch }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font:400 17px/1.2 'Architexture',sans-serif;color:#131E5F">{{ bTitle }}</div>
+            <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ bStatusC }};border:1px solid {{ bStatusC }};padding:3px 6px">{{ bStatusLabel }}</span>
+            <div style="flex:1"></div>
+            <sc-if value="{{ canCancel }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ doCancel }}" disabled="{{ cancelBusy }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отменить</button>
+            </sc-if>
+          </div>
+          <div style="margin-top:10px;height:8px;background:#EDF4F3"><div style="height:8px;width:{{ bBarW }};background:{{ bBarC }}"></div></div>
+          <div style="margin-top:8px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ bProgressLine }}</div>
+          <div style="margin-top:4px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ bWaitingLine }}</div>
+        </div>
+        <sc-if value="{{ hasLog }}" hint-placeholder-val="{{ false }}">
+          <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Лог</div>
+            <sc-for list="{{ logRows }}" as="l" hint-placeholder-count="2">
+              <div style="margin-top:4px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#184153">{{ l }}</div>
+            </sc-for>
+          </div>
+        </sc-if>
+        <sc-if value="{{ hasExport }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Скачать с учётом фильтра ревью:</span>
+            <a href="{{ exportJsonHref }}" download style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479">JSON</a>
+            <a href="{{ exportCsvHref }}" download style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479">CSV</a>
+          </div>
+        </sc-if>
+      </sc-if>
+    </div>
+    <div style="flex:2 1 460px;min-width:300px;display:flex;flex-direction:column;gap:10px">
+      <sc-if value="{{ cardLoading }}" hint-placeholder-val="{{ false }}">
+        <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Открываю строку…</div>
+      </sc-if>
+      <sc-if value="{{ hasCard }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <div style="font:400 17px/1.2 'Architexture',sans-serif;color:#131E5F">Строка {{ cardNo }}</div>
+            <span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ cardReviewC }};border:1px solid {{ cardReviewC }};padding:3px 6px">{{ cardReviewLabel }}</span>
+            <div style="flex:1"></div>
+            <div onClick="{{ closeCard }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E;cursor:pointer">закрыть ×</div>
+          </div>
+          <div style="margin-top:10px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap;word-break:break-word">{{ cardQuery }}</div>
+          <sc-if value="{{ hasCardError }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:10px;border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">{{ cardError }}</div>
+          </sc-if>
+          <div style="margin-top:14px">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Вход</div>
+            <sc-for list="{{ cardInputRows }}" as="ir" hint-placeholder-count="2">
+              <div style="margin-top:4px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ ir.k }}: <span style="font-size:12px;color:#131E5F">{{ ir.v }}</span></div>
+            </sc-for>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Ответ (с правками)</div>
+            <sc-if value="{{ noAnswer }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">Ответа ещё нет</div>
+            </sc-if>
+            <sc-if value="{{ hasCardFail }}" hint-placeholder-val="{{ false }}">
+              <div style="margin-top:8px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C;white-space:pre-wrap;word-break:break-word">{{ cardFailText }}</div>
+            </sc-if>
+            <sc-if value="{{ hasMarkdown }}" hint-placeholder-val="{{ false }}">
+              <pre style="margin:8px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap">{{ cardMarkdown }}</pre>
+            </sc-if>
+            <sc-if value="{{ hasStructured }}" hint-placeholder-val="{{ false }}">
+              <sc-for list="{{ cardOutputRows }}" as="o" hint-placeholder-count="3">
+                <div style="margin-top:4px;font:400 11px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">
+                  {{ o.k }} =
+                  <sc-if value="{{ o.notEditing }}" hint-placeholder-val="{{ false }}">
+                    <span onClick="{{ o.edit }}" style="cursor:{{ o.cursor }};color:#131E5F">{{ o.v }}</span>
+                  </sc-if>
+                  <sc-if value="{{ o.editing }}" hint-placeholder-val="{{ false }}">
+                    <input value="{{ o.editVal }}" onInput="{{ o.setEdit }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:6px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+                    <button onClick="{{ o.saveEdit }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:5px 10px;font:400 11px/1 'JetBrains Mono',monospace;cursor:pointer;margin-left:6px">ok</button>
+                    <span onClick="{{ o.cancelEdit }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E;cursor:pointer;margin-left:6px">отмена</span>
+                  </sc-if>
+                </div>
+              </sc-for>
+            </sc-if>
+          </div>
+          <div style="margin-top:14px">
+            <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Источники</div>
+            <sc-for list="{{ cardSources }}" as="s" hint-placeholder-count="2">
+              <div style="margin-top:4px;font:400 11px/1.6 'JetBrains Mono',monospace">
+                <a href="{{ s.url }}" target="_blank" rel="noopener">{{ s.url }}</a>
+                <span style="font:400 10px/1.4 'JetBrains Mono',monospace;color:#8A8F9E"> {{ s.what }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="margin-top:14px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ cardStats }}</div>
+          <div style="margin-top:8px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#184153">Заметка: {{ cardNotes }}</div>
+          <sc-if value="{{ canReview }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <button onClick="{{ doAccept }}" disabled="{{ cardBusy }}" style="border:0;background:#2E7D57;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Принять</button>
+              <button onClick="{{ doReject }}" disabled="{{ cardBusy }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отклонить</button>
+              <sc-if value="{{ hasEdits }}" hint-placeholder-val="{{ false }}">
+                <div onClick="{{ doResetEdits }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">сбросить правки</div>
+              </sc-if>
+            </div>
+            <div style="margin-top:12px">
+              <textarea value="{{ noteVal }}" onInput="{{ setNote }}" rows="2" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+              <div style="margin-top:8px">
+                <button onClick="{{ saveNote }}" disabled="{{ cardBusy }}" style="border:0;background:#131E5F;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Сохранить заметку</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <select value="{{ statusFilter }}" onChange="{{ setStatus }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ statusOptions }}" as="o" hint-placeholder-count="9">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+    <select value="{{ reviewFilter }}" onChange="{{ setReview }}" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none">
+      <sc-for list="{{ reviewOptions }}" as="o" hint-placeholder-count="4">
+        <option value="{{ o.value }}">{{ o.label }}</option>
+      </sc-for>
+    </select>
+    <input value="{{ q }}" onInput="{{ setQ }}" placeholder="поиск по запросу" style="border:1px solid rgba(19,30,95,0.24);background:#fff;padding:7px 10px;font:400 12px/1 'JetBrains Mono',monospace;color:#131E5F;outline:none;width:220px">
+    <sc-if value="{{ hasFilters }}" hint-placeholder-val="{{ false }}">
+      <div onClick="{{ resetAll }}" style="padding:6px 9px;font:400 11px/1 'JetBrains Mono',monospace;color:#DA501C;cursor:pointer">Сбросить</div>
+    </sc-if>
+  </div>
+  <sc-if value="{{ itemsLoading }}" hint-placeholder-val="{{ false }}">
+    <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">Загружаю строки…</div>
+  </sc-if>
+  <sc-if value="{{ hasItemsError }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px solid #DA501C;background:#FBEDE7;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">Строки не открылись: {{ itemsErrorMsg }}</div>
+  </sc-if>
+  <sc-if value="{{ itemsEmpty }}" hint-placeholder-val="{{ false }}">
+    <div style="border:1px dashed rgba(19,30,95,0.24);padding:14px;text-align:center;font:400 12px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">Под этот фильтр строк нет</div>
+  </sc-if>
+  <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);overflow:auto">
+      <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+        <thead><tr>
+          <sc-for list="{{ cols }}" as="c" hint-placeholder-count="6">
+            <th onClick="{{ c.pick }}" style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:{{ c.fg }};border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap;cursor:{{ c.cursor }}">{{ c.label }} {{ c.arrow }}</th>
+          </sc-for>
+        </tr></thead>
+        <tbody>
+          <sc-for list="{{ rows }}" as="r" hint-placeholder-count="6">
+            <tr style-hover="background:#EDF4F3" onClick="{{ r.open }}" style="cursor:pointer">
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.no }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap;max-width:280px;overflow:hidden;text-overflow:ellipsis">{{ r.query }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.statusLabel }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.critic }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap">{{ r.tokens }}</td>
+              <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap"><span style="font:400 11px/1 'JetBrains Mono',monospace;color:{{ r.reviewC }};border:1px solid {{ r.reviewC }};padding:3px 6px">{{ r.reviewLabel }}</span></td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font:400 11px/1 'JetBrains Mono',monospace;color:#8A8F9E">{{ range }}</div>
+      <div style="flex:1"></div>
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E">строк на странице</div>
+      <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="4">
+        <div onClick="{{ s.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ s.bg }};color:{{ s.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ s.label }}</div>
+      </sc-for>
+      <div style="width:12px"></div>
+      <div onClick="{{ prev }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ prevFg }}">←</div>
+      <sc-for list="{{ pages }}" as="p" hint-placeholder-count="5">
+        <div onClick="{{ p.pick }}" style="cursor:pointer;padding:5px 9px;border:1px solid rgba(19,30,95,0.24);background:{{ p.bg }};color:{{ p.fg }};font:400 11px/1 'JetBrains Mono',monospace">{{ p.label }}</div>
+      </sc-for>
+      <div onClick="{{ next }}" style="cursor:pointer;padding:5px 9px;font:400 12px/1 'JetBrains Mono',monospace;color:{{ nextFg }}">→</div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:760},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  // «Пачки и ревью»: список пачек (GET /intel/batches) → выбранная пачка
+  // (GET /intel/batches/{id}) и её строки (GET /intel/batches/{id}/items
+  // через radar-table.js: фильтры status/review_status/q, страницы, сортировки).
+  // Пока пачка queued|running — опрос пары ручек раз в 10 с (POLL_MS — поле
+  // класса; таймер гасится при уходе с экрана, смене пачки и терминальном
+  // статусе, как у RadarRuns). Карточка строки — GET /intel/items/{id};
+  // действия по праву intel.review: принять/отклонить/заметка/правка полей
+  // (PATCH /intel/items/{id}); экспорт — прямые ссылки при intel.export.
+  state = {
+    batches:[], batchesLoading:true, batchesError:null,
+    selected:null, batch:null, batchError:null,
+    items:[], itemsTotal:0, itemsLoading:false, itemsError:null,
+    card:null, cardLoading:false, cardBusy:false, cardError:null,
+    noteVal:'', editPath:null, editVal:'', cancelBusy:false
+  };
+
+  // Статусы пачки — словарь БД; «остановлена» для cancelled (не «canceled» —
+  // урок check-runs.js:182-184), «готова» — пачка, не прогон.
+  BATCH_STATUS = {queued:'в очереди', running:'выполняется', done:'готова',
+                  failed:'упала', cancelled:'остановлена',
+                  interrupted:'прервана перезапуском'};
+  BATCH_COLOR = {queued:'#C98A1E', running:'#156479', done:'#2E7D57',
+                 failed:'#DA501C', cancelled:'#8A8F9E', interrupted:'#DA501C'};
+
+  // Статусы строк — слова сервера (intel_api.py), экран только подписывает.
+  ITEM_STATUS = {pending:'ждёт', submitted:'отправлена', running:'выполняется',
+                 waiting_llm:'ждёт модель', completed:'готова', failed:'ошибка',
+                 stalled:'застяла', cancelled:'отменена'};
+
+  // Бейдж ревью: [слово, цвет].
+  REVIEW = {new:['новая', '#8A8F9E'], accepted:['принята', '#2E7D57'],
+            rejected:['отклонена', '#DA501C']};
+
+  // Колонки строк. Сортировки — только те, что разрешает сервер
+  // (row_no|critic_score|updated_at|status, default row_no); sorts из ответа
+  // items-ручка не присылает — список статален и сверяется с контрактом §1.
+  ITEM_COLS = [{label:'№', sort:'row_no'}, {label:'Запрос', sort:null},
+               {label:'Статус', sort:'status'}, {label:'Критик', sort:'critic_score'},
+               {label:'Токены', sort:null}, {label:'Ревью', sort:null}];
+
+  // Пауза опроса активной пачки. Поле — не константа: поведенческий стенд
+  // ставит малый интервал, чтобы ждать два тика, а не двадцать секунд.
+  POLL_MS = 10000;
+
+  async componentDidMount(){
+    const { Table } = await import('./radar-table.js');
+    this.table = new Table({
+      key:'intel_review', size:50, sort:'row_no', order:'asc',
+      sorts:[{key:'row_no'}, {key:'critic_score'}, {key:'updated_at'}, {key:'status'}],
+      // review_status по умолчанию «new» — экран ревью открывается со строк,
+      // которые ждут решения (SPEC §6.3); пустое значение — «все».
+      filters:{status:'', review_status:'new'},
+    });
+    this.table.attach(()=>this.loadItems(), ()=>this.setState({}));
+    this.loadBatches();
+  }
+
+  componentWillUnmount(){
+    clearTimeout(this.timer);
+  }
+
+  // Гранулярные права — capabilities из /auth/me (их держит оболочка);
+  // нет ответа — списка нет, всё, что прячется по праву, спрятано.
+  caps(cap){
+    const c = (this.props.api || {}).capabilities;
+    return Array.isArray(c) && c.indexOf(cap) !== -1;
+  }
+
+  // Человеческая дата: дд.мм чч:мм — как на соседних экранах.
+  when(iso){
+    if(!iso) return '—';
+    const d = new Date(iso);
+    if(isNaN(d)) return String(iso);
+    const p = (n)=>String(n).padStart(2, '0');
+    return p(d.getDate()) + '.' + p(d.getMonth() + 1) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  async loadBatches(){
+    this.setState({batchesLoading:true});
+    try {
+      const { get, describe } = await import('./radar-api.js');
+      const d = await get('/intel/batches', {limit:50, offset:0});
+      this.setState({batches:d.rows || [], batchesLoading:false, batchesError:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({batchesError:describe(e), batchesLoading:false});
+    }
+  }
+
+  // Выбор пачки: таймер прежней пачки гасится, фильтры — к дефолту
+  // («нужно ревью»), страница — к первой; карточка строки закрывается.
+  async selectBatch(id){
+    clearTimeout(this.timer);
+    if(this.table){
+      this.table.q = '';
+      this.table.page = 1;
+      this.table.sort = 'row_no';
+      this.table.order = 'asc';
+      this.table.filters = {status:'', review_status:'new'};
+      this.table.sync();
+    }
+    this.setState({selected:id, batch:null, batchError:null,
+                   items:[], itemsTotal:0, itemsError:null,
+                   card:null, cardError:null, cardLoading:false});
+    await this.loadBatch();
+    await this.loadItems();
+  }
+
+  async loadBatch(){
+    const id = this.state.selected;
+    if(!id) return;
+    try {
+      const { get, describe } = await import('./radar-api.js');
+      const d = await get('/intel/batches/' + id);
+      if(this.state.selected !== id) return; // пока ехал ответ, выбрали другую
+      this.setState({batch:d, batchError:null});
+      this.schedule(d);
+    } catch (e) {
+      if(e && e.status === 404){
+        // Пачку удалили, пока смотрели список, — назад к списку с тостом.
+        const t = (this.props.api || {}).toast || (()=>{});
+        t('Пачка не найдена', '#DA501C');
+        clearTimeout(this.timer);
+        this.setState({selected:null, batch:null, items:[], itemsTotal:0});
+        return;
+      }
+      const { describe } = await import('./radar-api.js');
+      this.setState({batchError:describe(e)});
+    }
+  }
+
+  async loadItems(){
+    const id = this.state.selected;
+    if(!id || !this.table) return;
+    this.setState({itemsLoading:true});
+    try {
+      const { get, describe } = await import('./radar-api.js');
+      const d = await get('/intel/batches/' + id + '/items', this.table.query());
+      if(this.state.selected !== id) return;
+      this.setState({items:d.rows || [], itemsTotal:d.total || 0,
+                     itemsLoading:false, itemsError:null});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({itemsError:describe(e), itemsLoading:false});
+    }
+  }
+
+  // Опрос: пока пачка queued|running — перечитываем её и её строки (с теми же
+  // фильтрами: запрос идёт через this.table.query()). Терминальный статус —
+  // тишина: дёргать сервер вхолостую хуже, чем обновить кнопкой. loadBatch
+  // после ответа вызывает schedule снова — цепочка setTimeout, не setInterval.
+  schedule(d){
+    clearTimeout(this.timer);
+    const active = !!d && (d.status === 'queued' || d.status === 'running');
+    if(active) this.timer = setTimeout(()=>this.tick(), this.POLL_MS);
+  }
+
+  async tick(){
+    if(!this.state.selected) return;
+    await this.loadBatch();
+    await this.loadItems();
+  }
+
+  // Отмена — необратимое действие, только через модалку оболочки. Ответ
+  // {id, status} обновляет строку списка и шапку на месте: перечитывание
+  // дало бы гонку с воркером, который ставит тот же статус.
+  doCancel(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const b = this.state.batch;
+    if(!b || !api.modal || !this.caps('intel.run') || this.state.cancelBusy) return;
+    api.modal({
+      title:'Отменить пачку «' + b.name + '»?',
+      lines:[{text:'Поставленные задачи доработают, новые ставиться не будут.'}],
+      confirm:'Отменить', btnBg:'#DA501C',
+      run: async ()=>{
+        this.setState({cancelBusy:true});
+        try {
+          const { post, describe } = await import('./radar-api.js');
+          const ack = await post('/intel/batches/' + b.id + '/cancel', {});
+          clearTimeout(this.timer); // статус из ответа терминальный — опрос стоп
+          this.setState(s=>({
+            cancelBusy:false,
+            batches:s.batches.map(x=>x.id === ack.id
+              ? Object.assign({}, x, {status:ack.status}) : x),
+            batch:(s.batch && s.batch.id === ack.id)
+              ? Object.assign({}, s.batch, {status:ack.status}) : s.batch
+          }));
+          t('Пачка отменена', '#8A8F9E');
+        } catch (e) {
+          this.setState({cancelBusy:false});
+          const { describe } = await import('./radar-api.js');
+          t(describe(e), '#DA501C');
+        }
+      }
+    });
+  }
+
+  async openCard(id){
+    this.setState({cardLoading:true});
+    try {
+      const { get, describe } = await import('./radar-api.js');
+      const d = await get('/intel/items/' + id);
+      this.setState({card:d, cardLoading:false, cardError:null,
+                     noteVal:(d && d.notes) || '', editPath:null, editVal:''});
+    } catch (e) {
+      const { describe } = await import('./radar-api.js');
+      this.setState({cardError:describe(e), cardLoading:false});
+    }
+  }
+
+  closeCard(){
+    this.setState({card:null, cardError:null});
+  }
+
+  // Все правки строки — одним PATCH. Ответ {id, review_status, notes, edited,
+  // output} обновляет карточку на месте и бейдж строки в таблице; список
+  // не перечитывается (образец одобрения в discovery). Отказ — тост с текстом
+  // сервера («правка не проходит схему: …» при 422), значение не меняется.
+  async patchCard(body, okMsg, okColor){
+    const t = (this.props.api || {}).toast || (()=>{});
+    const card = this.state.card;
+    if(!card || !this.caps('intel.review') || this.state.cardBusy) return null;
+    this.setState({cardBusy:true});
+    try {
+      const { patch, describe } = await import('./radar-api.js');
+      const ack = await patch('/intel/items/' + card.id, body);
+      this.setState(s=>({
+        cardBusy:false,
+        card:(s.card && s.card.id === ack.id) ? Object.assign({}, s.card, ack) : s.card,
+        noteVal:(s.card && s.card.id === ack.id && 'notes' in ack) ? (ack.notes || '') : s.noteVal,
+        items:s.items.map(x=>(x.id === ack.id && ack.review_status)
+          ? Object.assign({}, x, {review_status:ack.review_status}) : x)
+      }));
+      if(okMsg) t(okMsg, okColor || '#2E7D57');
+      return ack;
+    } catch (e) {
+      this.setState({cardBusy:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+      return null;
+    }
+  }
+
+  // Решения обратимы (accepted ↔ rejected), поэтому — сразу, без модалки.
+  accept(){ this.patchCard({review_status:'accepted'}, 'Строка принята', '#2E7D57'); }
+  reject(){ this.patchCard({review_status:'rejected'}, 'Строка отклонена', '#8A8F9E'); }
+  saveNote(){ this.patchCard({notes:this.state.noteVal}, 'Заметка сохранена', '#2E7D57'); }
+  // edited:{} — сервер понимает пустой словарь как «снять правки».
+  resetEdits(){ this.patchCard({edited:{}}, 'Правки сброшены', '#156479'); }
+
+  startEdit(path, val){
+    if(!this.caps('intel.review')) return;
+    this.setState({editPath:path, editVal:String(val)});
+  }
+
+  setEditVal(e){
+    this.setState({editVal:e.target.value});
+  }
+
+  cancelEdit(){
+    this.setState({editPath:null, editVal:''});
+  }
+
+  // Правка одного значения: к прежнему edited добавляется «путь.через.точки →
+  // значение». Значение из инпута — текст; если он разобрался как JSON
+  // (число, true, null…) — уходит типом, иначе строкой. Отказ 422 патчит
+  // patchCard: тост красным, editPath остаётся, output в карточке прежний.
+  async saveEdit(){
+    const p = this.state.editPath;
+    if(!p) return;
+    const cur = (this.state.card && this.state.card.edited) ? this.state.card.edited : {};
+    let v = String(this.state.editVal).trim();
+    try { v = JSON.parse(v); } catch (e) { /* остаётся строкой */ }
+    const body = Object.assign({}, cur);
+    body[p] = v;
+    const ack = await this.patchCard({edited:body}, 'Правка сохранена', '#2E7D57');
+    if(ack) this.setState({editPath:null, editVal:''});
+  }
+
+  // Разворачивает структурный ответ в строки «путь → значение» (вложенные
+  // объекты — через точку, массивы — «;»-склейкой): те же пути, что понимает
+  // сервер в edited (apply_edits) и CSV-экспорт (flatten).
+  flatRows(value, prefix){
+    const out = [];
+    if(value === null || value === undefined){
+      out.push({k:prefix || 'ответ', v:'—'});
+      return out;
+    }
+    if(typeof value !== 'object'){
+      out.push({k:prefix || 'ответ', v:String(value)});
+      return out;
+    }
+    if(Array.isArray(value)){
+      out.push({k:prefix || 'ответ', v:value.map(x=>this.fmtVal(x)).join('; ')});
+      return out;
+    }
+    const keys = Object.keys(value);
+    if(!keys.length && prefix === ''){
+      out.push({k:'—', v:'—'});
+      return out;
+    }
+    for(const k of keys){
+      const p = prefix ? prefix + '.' + k : k;
+      const v = value[k];
+      if(v !== null && v !== undefined && typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length)
+        out.push(...this.flatRows(v, p));
+      else out.push({k:p, v:this.fmtVal(v)});
+    }
+    return out;
+  }
+
+  fmtVal(v){
+    if(v === null || v === undefined) return '—';
+    if(typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
+
+  reload(){
+    this.loadBatches();
+    if(this.state.selected){
+      this.loadBatch();
+      this.loadItems();
+    }
+  }
+
+  renderVals(){
+    const S = this.state;
+
+    // До монтирования таблицы (и вообще до загрузки) отдаём все дырки
+    // разметки: отсутствующий ключ здесь не ошибка, а молча пустая ячейка.
+    if(!this.table){
+      return {
+        reload:()=>{},
+        batchesLoading:S.batchesLoading,
+        hasListError:!!S.batchesError, listErrorMsg:S.batchesError || '',
+        batchesEmpty:false, goNewBatch:()=>{}, batchRows:[],
+        hasBatch:false, noSelection:false,
+        bTitle:'', bStatusLabel:'', bStatusC:'#8A8F9E', bBarW:'0%', bBarC:'#8A8F9E',
+        bProgressLine:'', bWaitingLine:'',
+        canCancel:false, doCancel:()=>{}, cancelBusy:false,
+        hasLog:false, logRows:[],
+        hasExport:false, exportJsonHref:'', exportCsvHref:'',
+        statusFilter:'', setStatus:()=>{}, statusOptions:[],
+        reviewFilter:'new', setReview:()=>{}, reviewOptions:[],
+        q:'', setQ:()=>{}, hasFilters:false, resetAll:()=>{},
+        cols:[], rows:[], range:'загрузка…', sizes:[], pages:[],
+        prev:()=>{}, next:()=>{}, prevFg:'#C9CCD6', nextFg:'#C9CCD6',
+        hasRows:false, itemsEmpty:false, itemsLoading:S.itemsLoading,
+        hasItemsError:!!S.itemsError, itemsErrorMsg:S.itemsError || '',
+        hasBatchError:false, batchErrorMsg:'',
+        hasCard:false, cardLoading:false, cardNo:'',
+        cardReviewLabel:'', cardReviewC:'#8A8F9E', closeCard:()=>{}, cardQuery:'',
+        cardInputRows:[], hasCardError:false, cardError:'',
+        hasStructured:false, cardOutputRows:[], hasMarkdown:false, cardMarkdown:'',
+        noAnswer:false, hasCardFail:false, cardFailText:'', cardSources:[], cardStats:'', cardNotes:'—',
+        canReview:false, doAccept:()=>{}, doReject:()=>{}, hasEdits:false, doResetEdits:()=>{},
+        noteVal:'', setNote:()=>{}, saveNote:()=>{}, cardBusy:false
+      };
+    }
+
+    const b = S.batch;
+    const filter = this.table.filters;
+    const reviewF = (filter && filter.review_status) || '';
+    const canRun = this.caps('intel.run');
+    const review = this.caps('intel.review');
+    const exportable = this.caps('intel.export');
+
+    // ── список пачек ──
+    const listLoaded = !S.batchesLoading && !S.batchesError;
+    const batchesEmpty = listLoaded && S.batches.length === 0;
+    const noSelection = !S.selected && listLoaded && !batchesEmpty;
+    const batchRows = S.batches.map(x=>({
+      id:x.id,
+      name:x.name || ('пачка #' + x.id),
+      badge:this.BATCH_STATUS[x.status] || x.status || '—',
+      badgeC:this.BATCH_COLOR[x.status] || '#8A8F9E',
+      done:x.done || 0, failed:x.failed || 0, total:x.total || 0,
+      hasFailed:(x.failed || 0) > 0,
+      by:x.created_by || '—',
+      when:this.when(x.created_at),
+      bg:S.selected === x.id ? '#EDF4F3' : '#fff',
+      open:()=>this.selectBatch(x.id)
+    }));
+
+    // ── шапка выбранной пачки ──
+    const total = b ? (b.total || 0) : 0;
+    const done = b ? (b.done || 0) : 0;
+    const failed = b ? (b.failed || 0) : 0;
+    const bBarW = total ? Math.min(100, Math.round(done / total * 100)) + '%' : '0%';
+    const bBarC = b ? (this.BATCH_COLOR[b.status] || '#8A8F9E') : '#8A8F9E';
+    const canCancel = !!(b && canRun &&
+                         (b.status === 'queued' || b.status === 'running'));
+    const hasLog = !!(b && Array.isArray(b.log) && b.log.length);
+
+    // Экспорт — прямые ссылки (ручка отдаёт файл с BOM и Content-Disposition;
+    // api.get здесь нельзя — он парсит JSON и CSV сломал бы). Параметр
+    // review_status повторяет активный фильтр, «все» — параметра нет.
+    const exportBase = '/api/v1/intel/batches/' + S.selected + '/export';
+    const exportTail = reviewF ? ('&review_status=' + reviewF) : '';
+
+    // ── фильтры строк ──
+    const statusOptions = [{value:'', label:'все статусы'}]
+      .concat(Object.keys(this.ITEM_STATUS).map(k=>({value:k, label:this.ITEM_STATUS[k]})))
+      .map(o=>Object.assign({}, o, {selected:String(o.value) === String(filter.status || '')}));
+    const reviewOptions = [{value:'new', label:'нужно ревью'},
+                           {value:'', label:'все'},
+                           {value:'accepted', label:'принята'},
+                           {value:'rejected', label:'отклонена'}]
+      .map(o=>Object.assign({}, o, {selected:String(o.value) === String(reviewF)}));
+
+    // ── таблица строк ──
+    const itemsLoaded = !S.itemsLoading && !S.itemsError;
+    const hasBatch = !!b;
+    const hasRows = hasBatch && itemsLoaded && S.items.length > 0;
+    const itemsEmpty = hasBatch && itemsLoaded && S.items.length === 0;
+    const rows = S.items.map(it=>{
+      const rv = this.REVIEW[it.review_status];
+      return {
+        id:it.id,
+        no:it.row_no,
+        query:it.query || '—',
+        statusLabel:this.ITEM_STATUS[it.status] || it.status || '—',
+        critic:(it.critic_score === null || it.critic_score === undefined) ? '—' : it.critic_score,
+        tokens:(it.tokens === null || it.tokens === undefined) ? '—' : it.tokens,
+        reviewLabel:rv ? rv[0] : (it.review_status || '—'),
+        reviewC:rv ? rv[1] : '#8A8F9E',
+        open:()=>this.openCard(it.id)
+      };
+    });
+
+    // ── карточка строки ──
+    const card = S.card;
+    const rv = card ? (this.REVIEW[card.review_status]
+                       || [card.review_status || '—', '#8A8F9E']) : ['', '#8A8F9E'];
+    const out = card ? card.output : null;
+    const hasStructured = !!card && out !== null && out !== undefined &&
+                          typeof out === 'object' && !Array.isArray(out);
+    const hasMarkdown = !!card && typeof out === 'string';
+    // «Ответа ещё нет» — только строкам, которые ещё могут дождаться ответа
+    // (ждёт / выполняется / ждёт модель). failed и stalled ответа не дождутся:
+    // вместо заглушки карточка показывает причину из card.error ручки
+    // GET /intel/items/{id} (дефект 4 отчёта браузерной проверки).
+    const noAnswer = !!card && !hasStructured && !hasMarkdown &&
+                     (card.status === 'pending' || card.status === 'running' ||
+                      card.status === 'waiting_llm');
+    const cardFail = !!card && (card.status === 'failed' || card.status === 'stalled') &&
+                     !!card.error;
+    const cardOutputRows = hasStructured
+      ? this.flatRows(out, '').map(o=>{
+          const editing = S.editPath === o.k;
+          return {
+            k:o.k, v:o.v,
+            editing, notEditing:!editing,
+            editVal: editing ? S.editVal : '',
+            setEdit:(e)=>this.setEditVal(e),
+            saveEdit:()=>this.saveEdit(),
+            cancelEdit:()=>this.cancelEdit(),
+            edit:()=>this.startEdit(o.k, o.v),
+            cursor: review ? 'pointer' : 'default'
+          };
+        })
+      : [];
+    const cardInputRows = (card && card.input && typeof card.input === 'object' && !Array.isArray(card.input))
+      ? Object.keys(card.input).map(k=>({k, v:this.fmtVal(card.input[k])}))
+      : [];
+    const sources = (card && card.result && Array.isArray(card.result.sources))
+      ? card.result.sources : [];
+    const cardSources = sources.map(s=>({
+      url:(s && s.url) || '',
+      what:(s && s.what_it_provided) || ''
+    }));
+    const st = (card && card.result && card.result.stats) || {};
+    const cardStats = card
+      ? ('критик: ' + ((card.critic_score === null || card.critic_score === undefined) ? '—' : card.critic_score)
+         + ' · токены: ' + ((st.tokens === null || st.tokens === undefined) ? '—' : st.tokens)
+         + ' · секунды: ' + ((st.elapsed_seconds === null || st.elapsed_seconds === undefined) ? '—' : st.elapsed_seconds))
+      : '';
+    const hasEdits = !!card && !!card.edited && Object.keys(card.edited).length > 0;
+
+    return {
+      reload:()=>this.reload(),
+      batchesLoading:!!S.batchesLoading,
+      hasListError:!!S.batchesError, listErrorMsg:S.batchesError || '',
+      batchesEmpty, goNewBatch:()=>{ const api = this.props.api || {}; if(api.go) api.go('intel_batch'); },
+      batchRows,
+
+      hasBatch, noSelection,
+      bTitle:b ? (b.name || ('пачка #' + b.id)) : '',
+      bStatusLabel:b ? (this.BATCH_STATUS[b.status] || b.status || '—') : '',
+      bStatusC:bBarC, bBarW, bBarC,
+      bProgressLine: done + ' готово · ' + failed + ' упало · из ' + total,
+      bWaitingLine:b ? ('ждёт модель: ' + (b.waiting_llm || 0) + ' · выполняется: ' + (b.running || 0)) : '',
+      canCancel, doCancel:()=>this.doCancel(), cancelBusy:!!S.cancelBusy,
+      hasLog, logRows:(b && b.log) || [],
+      hasExport:exportable && !!S.selected,
+      exportJsonHref:exportBase + '?format=json' + exportTail,
+      exportCsvHref:exportBase + '?format=csv' + exportTail,
+
+      statusFilter:filter.status || '',
+      setStatus:(e)=>this.table.setFilter('status', e && e.target ? e.target.value : ''),
+      statusOptions,
+      reviewFilter:reviewF,
+      setReview:(e)=>this.table.setFilter('review_status', e && e.target ? e.target.value : ''),
+      reviewOptions,
+
+      // Колонки, страницы, размер страницы, поиск — собирает radar-table.js.
+      ...this.table.vals(S.itemsTotal, {loading:S.itemsLoading, error:S.itemsError,
+                                        columns:this.ITEM_COLS}),
+
+      hasRows, itemsEmpty,
+      rows,
+      itemsLoading:!!S.itemsLoading,
+      hasItemsError:!!S.itemsError, itemsErrorMsg:S.itemsError || '',
+      hasBatchError:!!S.batchError, batchErrorMsg:S.batchError || '',
+
+      hasCard:!!card, cardLoading:!!S.cardLoading,
+      cardNo:card ? card.row_no : '',
+      cardReviewLabel:rv[0], cardReviewC:rv[1],
+      closeCard:()=>this.closeCard(),
+      cardQuery:card ? (card.query || '—') : '',
+      cardInputRows,
+      hasCardError:!!S.cardError, cardError:S.cardError || '',
+      hasStructured, cardOutputRows, hasMarkdown,
+      cardMarkdown:hasMarkdown ? String(out) : '',
+      noAnswer, hasCardFail:cardFail, cardFailText:(card && card.error) || '',
+      cardSources, cardStats,
+      cardNotes:(card && card.notes) ? card.notes : '—',
+      canReview:review,
+      doAccept:()=>this.accept(), doReject:()=>this.reject(),
+      hasEdits, doResetEdits:()=>this.resetEdits(),
+      noteVal:S.noteVal,
+      setNote:(e)=>this.setState({noteVal:e.target.value}),
+      saveNote:()=>this.saveNote(),
+      cardBusy:!!S.cardBusy
+    };
+  }
+}
+</script>
+</body>
+</html>

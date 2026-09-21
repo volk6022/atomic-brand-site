@@ -64,7 +64,7 @@ table{border-collapse:collapse;width:100%}
         <div style="margin-top:14px;text-align:center"><a href="#" onClick="{{ noop }}" style="font:400 12px/1 'JetBrains Mono',monospace">Использовать резервный код</a></div>
       </div>
       </sc-if>
-      <div id="shellStamp" style="margin-top:28px;border-top:1px solid rgba(19,30,95,0.16);padding-top:12px;font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;letter-spacing:.06em">v1.0 · radar.atomic-automation.net</div>
+      <div id="shellStamp" style="margin-top:28px;border-top:1px solid rgba(19,30,95,0.16);padding-top:12px;font:400 10px/1 'JetBrains Mono',monospace;color:#8A8F9E;letter-spacing:.06em">{{ shellStamp }}</div>
     </div>
   </div>
 </div>
@@ -167,6 +167,9 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.discovery }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDiscovery" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.backfill }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarBackfill" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.intel_key }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelKey" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.intel_batch }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelBatch" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ v.intel_review }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelReview" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
@@ -214,6 +217,9 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.channels }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarChannels" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.discovery }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDiscovery" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.backfill }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarBackfill" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.intel_key }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelKey" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.intel_batch }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelBatch" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ m.intel_review }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelReview" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
@@ -387,13 +393,12 @@ class Component extends DCLogic {
 
   async componentDidMount(){
     // Штамп версии: в консоль — один раз при монтировании оболочки. В строке внизу
-    // формы входа разметка статическая, поэтому дату вписывает этот код. В песочницах
-    // скретч-проверок документа нет либо это огрызок без getElementById — там штамп живёт только в консоли.
+    // формы входа дату отсюда не пишем: панель входа перемонтируется после «Выйти»
+    // и при истечении сессии, и одноразовая запись в DOM из этого метода пережила
+    // бы только первый показ. Строку собирает renderVals (`{{ shellStamp }}`), поэтому
+    // штамп рендерится при каждом показе формы входа; в песочницах скретч-проверок
+    // рендера нет — там штамп живёт в renderVals и в консоли.
     console.info('radar shell', this.SHELL_VERSION);
-    if(typeof document !== 'undefined' && typeof document.getElementById === 'function'){
-      const el = document.getElementById('shellStamp');
-      if(el) el.textContent = 'v1.0 · ' + this.SHELL_VERSION + ' · radar.atomic-automation.net';
-    }
 
     // Адрес — часть состояния, и применяется он до всех запросов: какой раздел
     // ни открывай, первым рисуется тот, что стоит в строке браузера. Слушатель
@@ -440,7 +445,7 @@ class Component extends DCLogic {
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
-  SHELL_VERSION = '2026-09-20a';
+  SHELL_VERSION = '2026-09-21a';
 
   ACCESS = {
     dashboard:['owner','customer','reviewer','viewer'], fleet:['owner'],
@@ -451,6 +456,10 @@ class Component extends DCLogic {
     // Очередь дочитывания — работа с каналами, и права у неё канальные:
     // совпадает с Section.CHANNELS на сервере. Настоящая проверка там.
     backfill:['owner','customer','reviewer'],
+    // Intel — серверный раздел `Section.INTEL`. Просмотр всем staff; действия
+    // внутри экранов режутся по `capabilities` (intel.key_edit/intel.run/...).
+    intel_key:['owner','customer','reviewer'], intel_batch:['owner','customer','reviewer'],
+    intel_review:['owner','customer','reviewer'],
     stream:['owner','customer','reviewer'],
     leads:['owner','customer','reviewer'], drafts:['owner','customer','reviewer'],
     draftsTable:['owner','customer','reviewer'],
@@ -475,6 +484,7 @@ class Component extends DCLogic {
   NAV = [
     {title:'Dashboard', items:[{key:'dashboard', label:'Dashboard', code:'DS'}]},
     {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'discovery', label:'Подбор каналов', code:'DI'},{key:'backfill', label:'Дочитывание', code:'BF'},{key:'stream', label:'Stream', code:'ST'}]},
+    {title:'Intel', items:[{key:'intel_key', label:'Ключ Intel', code:'IK'},{key:'intel_batch', label:'Новая пачка', code:'IB'},{key:'intel_review', label:'Пачки и ревью', code:'IR'}]},
     {title:'Конвейер лидов', items:[{key:'leads', label:'Leads', code:'LD'},{key:'drafts', label:'Drafts', code:'DR', badgeKey:'drafts'},{key:'conversations', label:'Conversations', code:'CV', badgeKey:'conversations'},{key:'manual_sends', label:'Ручные отправки', code:'MS'}]},
     {title:'Настройка', items:[{key:'profile', label:'Profile & Prompts', code:'PP'},{key:'runs', label:'Runs', code:'RN'},{key:'automation', label:'Автоматика', code:'AU'},{key:'evals', label:'Evaluations', code:'EV'}]},
     {title:'Бизнес', items:[{key:'attribution', label:'Attribution', code:'AT'}]},
@@ -498,7 +508,7 @@ class Component extends DCLogic {
   // Ключ здесь — имя экрана, а не маршрута: у раздела сценария общего маршрута нет
   // вовсе, и подпись мобильной шапки берётся по `w.screen`. Поэтому `activity`
   // лежит в этой же карте, хотя перейти на него по имени раздела нельзя.
-  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', discovery:'Подбор каналов', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', automation:'Автоматика', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin'};
+  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', discovery:'Подбор каналов', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', automation:'Автоматика', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin', intel_key:'Ключ Intel', intel_batch:'Новая пачка', intel_review:'Пачки и ревью'};
 
   // Здесь лежали три выдуманные тревоги с выдуманными датами — «vertsanov-03 ушёл
   // в паузу», «run_20260805_regen упал», «новый ответ от Игоря С.». Они показывались
@@ -512,7 +522,7 @@ class Component extends DCLogic {
   // `automation`/`discovery` — новые экраны при правах `runs`/`channels`: сервер
   // этих имён в `/auth/me.sections` не пришлёт никогда. `backfill` — давний долг:
   // сервер о разделе тоже не знает, и без алиаса пункт «Дочитывание» скрыт у всех.
-  SECTION_OF = {draftsTable:'drafts', automation:'runs', discovery:'channels', backfill:'channels'};
+  SECTION_OF = {draftsTable:'drafts', automation:'runs', discovery:'channels', backfill:'channels', intel_key:'intel', intel_batch:'intel', intel_review:'intel'};
 
   // Ключи таблиц из radar-table.js, не совпавшие с именами маршрутов: таблица
   // пишет в адрес свой ключ, и такой адрес обязан открываться разделом, а не
@@ -1170,7 +1180,7 @@ class Component extends DCLogic {
       v:{
         login: !authed, stepLogin: S.step === 'login', stepTotp: S.step === 'totp',
         appDesktop: authed && !isMobile, mobile: authed && isMobile,
-        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), discovery:on('discovery'), backfill:on('backfill'), stream:on('stream'),
+        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), discovery:on('discovery'), backfill:on('backfill'), stream:on('stream'), intel_key:on('intel_key'), intel_batch:on('intel_batch'), intel_review:on('intel_review'),
         leads:on('leads'), drafts:on('drafts'), draftsTable:on('draftsTable'),
         conversations:on('conversations'), manual_sends:on('manual_sends'),
         activity:on('activity'),
@@ -1179,7 +1189,7 @@ class Component extends DCLogic {
         observability:on('observability'), safety:on('safety'), admin:on('admin')
       },
       m:{
-        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), discovery:onM('discovery'), backfill:onM('backfill'), stream:onM('stream'),
+        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), discovery:onM('discovery'), backfill:onM('backfill'), stream:onM('stream'), intel_key:onM('intel_key'), intel_batch:onM('intel_batch'), intel_review:onM('intel_review'),
         leads:onM('leads'), drafts:onM('drafts'), draftsTable:onM('draftsTable'),
         conversations:onM('conversations'), manual_sends:onM('manual_sends'),
         activity:onM('activity'),
@@ -1194,6 +1204,10 @@ class Component extends DCLogic {
       deniedRoles:(this.ACCESS[this.sectionOf(route)]||[]).join(', '),
 
       login:S.login, totp:S.totp, loginError:S.loginError, pwType:S.showPw ? 'text' : 'password',
+      // Штамп версии внизу формы входа: значение пересобирается при каждом
+      // рендере, поэтому после «Выйти» и истечения сессии строка внизу панели
+      // не остаётся без даты (дефект 3 отчёта браузерной проверки).
+      shellStamp:'v1.0 · ' + this.SHELL_VERSION + ' · radar.atomic-automation.net',
       totpError:S.totpError, totpBack:S.totpBack,
       setLoginU:(e)=>this.setState({login:{...S.login, u:e.target.value}}),
       setLoginP:(e)=>this.setState({login:{...S.login, p:e.target.value}}),
