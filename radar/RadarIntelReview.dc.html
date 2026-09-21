@@ -75,10 +75,19 @@
             <sc-if value="{{ canCancel }}" hint-placeholder-val="{{ false }}">
               <button onClick="{{ doCancel }}" disabled="{{ cancelBusy }}" style="border:0;background:#DA501C;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Отменить</button>
             </sc-if>
+            <sc-if value="{{ canResume }}" hint-placeholder-val="{{ false }}">
+              <button onClick="{{ doResume }}" disabled="{{ resumeBusy }}" style="border:0;background:#156479;color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:pointer">Возобновить</button>
+            </sc-if>
+            <sc-if value="{{ hasRunFail }}" hint-placeholder-val="{{ false }}">
+              <span style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">прогон упал — строки в полёте подхватятся</span>
+            </sc-if>
           </div>
           <div style="margin-top:10px;height:8px;background:#EDF4F3"><div style="height:8px;width:{{ bBarW }};background:{{ bBarC }}"></div></div>
           <div style="margin-top:8px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ bProgressLine }}</div>
           <div style="margin-top:4px;font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">{{ bWaitingLine }}</div>
+          <sc-if value="{{ hasRunFail }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:8px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#DA501C">{{ bRunFailLine }}</div>
+          </sc-if>
         </div>
         <sc-if value="{{ hasLog }}" hint-placeholder-val="{{ false }}">
           <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px">
@@ -267,12 +276,14 @@ class Component extends DCLogic {
   // статусе, как у RadarRuns). Карточка строки — GET /intel/items/{id};
   // действия по праву intel.review: принять/отклонить/заметка/правка полей
   // (PATCH /intel/items/{id}); экспорт — прямые ссылки при intel.export.
+  // Падший прогон возобновляется (POST /intel/batches/{id}/resume при
+  // intel.run), пока пачка не закрыта.
   state = {
     batches:[], batchesLoading:true, batchesError:null,
     selected:null, batch:null, batchError:null,
     items:[], itemsTotal:0, itemsLoading:false, itemsError:null,
     card:null, cardLoading:false, cardBusy:false, cardError:null,
-    noteVal:'', editPath:null, editVal:'', cancelBusy:false
+    noteVal:'', editPath:null, editVal:'', cancelBusy:false, resumeBusy:false
   };
 
   // Статусы пачки — словарь БД; «остановлена» для cancelled (не «canceled» —
@@ -495,6 +506,31 @@ class Component extends DCLogic {
     });
   }
 
+  // Возобновление — действие безопасное (возобновлять нечего сервер скажет сам,
+  // 409), поэтому — сразу, без модалки. Ответ {batch_id, run_id, status}: новый
+  // прогон встал в очередь — обновляем run_id/run_status шапки на месте (перечитывание
+  // дало бы ту же гонку, что у отмены) и перезапускаем опрос, как после старта.
+  async doResume(){
+    const api = this.props.api || {};
+    const t = api.toast || (()=>{});
+    const b = this.state.batch;
+    if(!b || !this.caps('intel.run') || this.state.resumeBusy) return;
+    this.setState({resumeBusy:true});
+    try {
+      const { post } = await import('./radar-api.js');
+      const ack = await post('/intel/batches/' + b.id + '/resume', {});
+      const nb = Object.assign({}, b, {run_id:ack.run_id, run_status:'queued'});
+      this.schedule(nb); // прогон снова queued|running — цепочка таймеров продолжается
+      this.setState(s=>({resumeBusy:false,
+                         batch:(s.batch && s.batch.id === b.id) ? nb : s.batch}));
+      t('Пачка №' + ack.batch_id + ' возобновлена — прогон #' + ack.run_id, '#156479');
+    } catch (e) {
+      this.setState({resumeBusy:false});
+      const { describe } = await import('./radar-api.js');
+      t(describe(e), '#DA501C');
+    }
+  }
+
   async openCard(id){
     this.setState({cardLoading:true});
     try {
@@ -646,6 +682,8 @@ class Component extends DCLogic {
         bTitle:'', bStatusLabel:'', bStatusC:'#8A8F9E', bBarW:'0%', bBarC:'#8A8F9E',
         bProgressLine:'', bWaitingLine:'',
         canCancel:false, doCancel:()=>{}, cancelBusy:false,
+        canResume:false, doResume:()=>{}, resumeBusy:false,
+        hasRunFail:false, bRunFailLine:'',
         hasLog:false, logRows:[],
         hasExport:false, exportJsonHref:'', exportCsvHref:'',
         statusFilter:'', setStatus:()=>{}, statusOptions:[],
@@ -702,6 +740,17 @@ class Component extends DCLogic {
     const bBarC = b ? (this.BATCH_COLOR[b.status] || '#8A8F9E') : '#8A8F9E';
     const canCancel = !!(b && canRun &&
                          (b.status === 'queued' || b.status === 'running'));
+    // Возобновление: прогон упал или потерян (failed|cancelled|null — ручка
+    // отдаёт run_status с Radar 8475607), а пачка ещё не закрыта — строки
+    // в полёте подхватятся новым прогоном.
+    const canResume = !!(b && canRun &&
+                         (b.status === 'queued' || b.status === 'running') &&
+                         (b.run_status === 'failed' || b.run_status === 'cancelled' ||
+                          b.run_status === null));
+    const hasRunFail = !!(b && b.run_status === 'failed');
+    const bRunFailLine = hasRunFail
+      ? ('Прогон #' + ((b.run_id === null || b.run_id === undefined) ? '—' : b.run_id) + ' упал')
+      : '';
     const hasLog = !!(b && Array.isArray(b.log) && b.log.length);
 
     // Экспорт — прямые ссылки (ручка отдаёт файл с BOM и Content-Disposition;
@@ -816,6 +865,8 @@ class Component extends DCLogic {
       bProgressLine: done + ' готово · ' + failed + ' упало · из ' + total,
       bWaitingLine:b ? ('ждёт модель: ' + (b.waiting_llm || 0) + ' · выполняется: ' + (b.running || 0)) : '',
       canCancel, doCancel:()=>this.doCancel(), cancelBusy:!!S.cancelBusy,
+      canResume, doResume:()=>this.doResume(), resumeBusy:!!S.resumeBusy,
+      hasRunFail, bRunFailLine,
       hasLog, logRows:(b && b.log) || [],
       hasExport:exportable && !!S.selected,
       exportJsonHref:exportBase + '?format=json' + exportTail,

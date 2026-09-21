@@ -129,7 +129,9 @@ const VALIDATE_ACK = fixtures['POST /intel/batches/validate'];
 const START_ACK = fixtures['POST /intel/batches'];
 const LIST = fixtures['/intel/batches'];
 const DETAIL = fixtures['/intel/batches/{id}'];
+const DETAIL_FAILED = fixtures['/intel/batches/{id}-run-failed'];
 const CANCEL_ACK = fixtures['POST /intel/batches/{id}/cancel'];
+const RESUME_ACK = fixtures['POST /intel/batches/{id}/resume'];
 const ITEMS = fixtures['/intel/batches/{id}/items'];
 const CARD = fixtures['/intel/items/{id}'];
 const CARD_FAILED = fixtures['/intel/items/{id}-failed'];
@@ -139,11 +141,12 @@ const PATCH_ACK = fixtures['PATCH /intel/items/{id}'];
 const KEY_EMPTY = fixtures['/intel/key-unconfigured'];
 
 if (!KEY || !PUT_KEY || !VALIDATE_ACK || !START_ACK || !LIST ||
-    !Array.isArray(LIST.rows) || !DETAIL || !CANCEL_ACK ||
+    !Array.isArray(LIST.rows) || !DETAIL || !CANCEL_ACK || !RESUME_ACK ||
+    !DETAIL_FAILED ||
     !ITEMS || !Array.isArray(ITEMS.rows) || !CARD || !PATCH_ACK ||
     !CARD_FAILED || !KEY_EMPTY || !CARD_MD ||
     !CARD_MD_XSS || typeof CARD_MD_XSS.output !== 'string') {
-  console.error('нет образцов Intel в api-fixtures.json (§4.1): /intel/key, PUT /intel/key, POST /intel/batches/validate, POST /intel/batches, /intel/batches, /intel/batches/{id}, POST /intel/batches/{id}/cancel, /intel/batches/{id}/items, /intel/items/{id}, PATCH /intel/items/{id}, /intel/items/{id}-failed, /intel/key-unconfigured, /intel/items/{id}-md, /intel/items/{id}-md-xss');
+  console.error('нет образцов Intel в api-fixtures.json (§4.1): /intel/key, PUT /intel/key, POST /intel/batches/validate, POST /intel/batches, /intel/batches, /intel/batches/{id}, /intel/batches/{id}-run-failed, POST /intel/batches/{id}/cancel, POST /intel/batches/{id}/resume, /intel/batches/{id}/items, /intel/items/{id}, PATCH /intel/items/{id}, /intel/items/{id}-failed, /intel/key-unconfigured, /intel/items/{id}-md, /intel/items/{id}-md-xss');
   process.exit(2);
 }
 
@@ -171,6 +174,7 @@ function build(screen, opts) {
     batch: clone(opts.batch || DETAIL),
     batch404: !!opts.batch404,
     failStart: opts.failStart || null,
+    failResume: opts.failResume || null,
     failPatch: opts.failPatch || null,
     validate: clone(opts.validate || VALIDATE_ACK),
     list: clone(opts.list || LIST),
@@ -213,6 +217,10 @@ function build(screen, opts) {
         return clone(START_ACK);
       }
       if (/^\/intel\/batches\/\d+\/cancel$/.test(p)) return clone(CANCEL_ACK);
+      if (/^\/intel\/batches\/\d+\/resume$/.test(p)) {
+        if (st.failResume) throw new Error(st.failResume);
+        return clone(RESUME_ACK);
+      }
       throw new Error('нет образца ответа для ' + p);
     },
     patch: async (p, body) => {
@@ -656,6 +664,70 @@ async function main() {
           v.batchRows[0].badge === 'остановлена' && v.bStatusLabel === 'остановлена' &&
           v.canCancel === false,
           JSON.stringify([v.batchRows[0].badge, v.bStatusLabel]));
+  }
+
+  // N-res. Возобновление (Radar 8475607): у пачки с run_status:"failed" (прогон
+  // упал, пачка ещё running) есть «Возобновить» и красное «Прогон #N упал»;
+  // клик → POST …/resume сразу, без модалки; тост «возобновлена», run_id и
+  // run_status в состоянии из ответа; при run_status:"running" кнопки нет;
+  // 409 «прогон #12 ещё идёт» → красный тост, кнопка на месте; reviewer
+  // (без intel.run) кнопки нет. Мутация «убрать условие run_status из
+  // canResume» красит N-res2 (снята в отчёте _REPORT-intel-resume-gui.md).
+  {
+    const failed = build('review', {role: 'owner', batch: DETAIL_FAILED});
+    await failed.c.componentDidMount(); await sleep();
+    vals(failed.c).batchRows[0].open(); await sleep();
+    let v = vals(failed.c);
+    check('N-res1 у run_status:"failed" есть «Возобновить» и красное «Прогон #' +
+          DETAIL_FAILED.run_id + ' упал»',
+          v.canResume === true && v.hasRunFail === true &&
+          v.bRunFailLine === 'Прогон #' + DETAIL_FAILED.run_id + ' упал',
+          JSON.stringify([v.canResume, v.hasRunFail, v.bRunFailLine]));
+    await vals(failed.c).doResume(); await sleep();
+    const resumes = failed.calls.post.filter((p) => /\/resume$/.test(p.p));
+    check('N-res1 клик → POST /intel/batches/3/resume ровно 1, тело {}',
+          resumes.length === 1 && resumes[0].p === '/intel/batches/3/resume' &&
+          JSON.stringify(resumes[0].body) === '{}',
+          JSON.stringify(failed.calls.post));
+    check('N-res1 тост «Пачка №' + RESUME_ACK.batch_id + ' возобновлена — прогон #' +
+          RESUME_ACK.run_id + '»',
+          failed.calls.toasts.some((t) => t.t === 'Пачка №' + RESUME_ACK.batch_id +
+            ' возобновлена — прогон #' + RESUME_ACK.run_id),
+          JSON.stringify(failed.calls.toasts));
+    check('N-res1 run_id в состоянии = ' + RESUME_ACK.run_id + ', run_status = "queued"',
+          failed.c.state.batch.run_id === RESUME_ACK.run_id &&
+          failed.c.state.batch.run_status === 'queued',
+          JSON.stringify([failed.c.state.batch.run_id, failed.c.state.batch.run_status]));
+
+    // N-res2: прогон жив (run_status:"running", дефолтная деталь) — возобновлять
+    // нечего, кнопки нет.
+    const running = build('review', {role: 'owner'});
+    await running.c.componentDidMount(); await sleep();
+    vals(running.c).batchRows[0].open(); await sleep();
+    v = vals(running.c);
+    check('N-res2 при run_status:"running" кнопки «Возобновить» нет',
+          v.canResume === false, JSON.stringify(v.canResume));
+
+    // N-res3: сервер отвечает 409 «прогон #12 ещё идёт» — красный тост,
+    // кнопка на месте, экран жив.
+    const busy = build('review', {role: 'owner', batch: DETAIL_FAILED,
+                                  failResume: 'прогон #12 ещё идёт'});
+    await busy.c.componentDidMount(); await sleep();
+    vals(busy.c).batchRows[0].open(); await sleep();
+    await vals(busy.c).doResume(); await sleep();
+    check('N-res3 мутация 409: красный тост с текстом сервера',
+          busy.calls.toasts.some((t) => t.c === '#DA501C' &&
+            /прогон #12 ещё идёт/.test(t.t)),
+          JSON.stringify(busy.calls.toasts));
+    check('N-res3 кнопка «Возобновить» на месте, экран жив',
+          vals(busy.c).canResume === true && !vals(busy.c).__err);
+
+    // N-res4: у reviewer права intel.run нет — кнопки нет вовсе.
+    const rev = build('review', {role: 'reviewer', batch: DETAIL_FAILED});
+    await rev.c.componentDidMount(); await sleep();
+    vals(rev.c).batchRows[0].open(); await sleep();
+    check('N-res4 reviewer (без intel.run) кнопки «Возобновить» нет',
+          vals(rev.c).canResume === false);
   }
 
   // N8. Карточка и PATCH: клик строки → GET /intel/items/{id}; output с
