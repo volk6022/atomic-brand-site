@@ -1,0 +1,138 @@
+{
+	admin 172.17.0.1:2019
+	metrics
+	email vpncreatedakk@gmail.com
+}
+
+(accesslog) {
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 64MiB
+			roll_keep 6
+			roll_keep_for 336h
+		}
+		format json
+	}
+}
+
+# apex — статический сайт Atomic
+atomic-automation.net {
+	import accesslog
+	root * /var/www/atomic
+	encode zstd gzip
+
+	# точка входа "/" → index.dc.html (внутренние ссылки идут по .dc.html-именам)
+	@root path /
+	rewrite @root /index.dc.html
+
+	file_server
+}
+
+# www → канонический apex
+www.atomic-automation.net {
+	import accesslog
+	redir https://atomic-automation.net{uri} permanent
+}
+
+# api.* — единственная публичная дверь к сервисам.
+#
+# Все бэкенды слушают на 127.0.0.1 и наружу не опубликованы: попасть в них можно
+# только сюда, через TLS. `handle_path` СРЕЗАЕТ префикс, поэтому приложение видит
+# свой обычный путь и ничего внутри менять не нужно:
+#     /intel/api/v1/research/run      → :8000  /api/v1/research/run
+#     /engage/clienta/v1/fleet/health → :8101  /v1/fleet/health
+#
+# Аутентификация — на самих сервисах (X-API-Key, fail-closed). Caddy только
+# маршрутизирует; ключ Engage-клиента подходит лишь к его собственному пути,
+# потому что ключи у инстансов разные.
+api.atomic-automation.net {
+	import accesslog
+	# ── Atomic Intel ──────────────────────────────────────────────────────
+	handle_path /intel/* {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	# ── Atomic Engage — по одному блоку на клиента ────────────────────────
+	# ДОБАВЛЕНИЕ КЛИЕНТА: скопируй блок, подставь client_id и его gateway_port
+	# из fleet_manager/instances/registry.json, затем:
+	#     caddy validate --config /etc/caddy/Caddyfile && systemctl reload caddy
+	handle_path /engage/clienta/* {
+		reverse_proxy 127.0.0.1:8101
+	}
+
+	handle_path /engage/clientb/* {
+		reverse_proxy 127.0.0.1:8102
+	}
+
+	handle_path /engage/vertsanov/* {
+		reverse_proxy 127.0.0.1:8103
+	}
+
+	# всё, что не попало в известный префикс — 404, ничего не раскрываем
+	handle {
+		respond "not found" 404
+	}
+}
+
+# docs.* — пока редирект на страницу docs основного сайта (M5 заменит)
+docs.atomic-automation.net {
+	import accesslog
+	redir https://atomic-automation.net/docs.dc.html
+}
+
+# Radar — админка лидогенерации. Статика и API на одном origin: сессия живёт в
+# cookie, и разные origin потребовали бы CORS с credentials, то есть лишнюю
+# поверхность там, где она не нужна.
+radar.atomic-automation.net {
+	import accesslog
+	encode zstd gzip
+
+	# Приём вебхуков Engage наружу не нужен: Engage ходит к Radar внутри
+	# docker-сети. Секрет в URL остаётся вторым рубежом, но публиковать ручку,
+	# у которой вся защита — токен в адресе, незачем.
+	handle /api/v1/ingest/* {
+		respond 404
+	}
+
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8104
+	}
+
+	handle {
+		root * /srv/atomic-brand-site
+		# Репозиторий один на сайт и на разработку, поэтому рядом с экранами
+		# лежат заглушки ответов и smoke-скрипты. Панели они не нужны.
+		@dev path /radar/check-*.js /radar/smoke-*.js /radar/api-fixtures.json /radar/audit_output.txt /radar/*.md
+		respond @dev 404
+		# Именно redir, а не rewrite: rewrite отдаёт файл, но оставляет в адресной
+		# строке "/", и относительные пути внутри страницы (./support.js, ../_ds/)
+		# начинают резолвиться от корня сайта. Страница при этом грузилась, а рантайм
+		# компонентов — нет, и вместо интерфейса были видны сырые {{ шаблоны }}.
+		redir / /radar/ 302
+		# Компоненты правятся выкаткой файлов, поэтому браузеру нельзя давать
+		# держать их по эвристике свежести: после деплоя страница грузилась из
+		# кэша, и новая логика молча не запускалась. no-cache не запрещает кэш,
+		# а требует перепроверки — с ETag это один дешёвый 304.
+		header /radar/* Cache-Control "no-cache"
+		file_server
+	}
+}
+
+# Grafana — monitoring UI, exposed 2026-09-02 at Ivan's request.
+#
+# Two locks, not one. The panel shows the internal shape of production -- tenant
+# names, container names, every service's activity -- so Grafana's own login is
+# not enough on its own, and Grafana has a steady supply of CVEs. basic_auth here
+# means a web-facing Grafana bug is unreachable without the first password.
+#
+# Grafana itself still listens only on 127.0.0.1:3000; this is its only door.
+grafana.atomic-automation.net {
+	import accesslog
+	encode zstd gzip
+
+	# Пароль не в репозитории: brand-site публичный, а argon2id-хэш офлайн
+	# перебирается. Файл лежит только на проде, root:root 600 (см. README).
+	import /etc/caddy/secrets/grafana-auth.caddy
+
+	reverse_proxy 127.0.0.1:3000
+}
