@@ -4998,5 +4998,76 @@
         "site": "https://acme.example"
       }
     }
+  },
+  "POST /intel/yandex": {
+    "kind": "extract",
+    "total": 3,
+    "ok": 2,
+    "failed": 1,
+    "results": [
+      {
+        "i": 0,
+        "ok": true,
+        "error": null,
+        "data": {
+          "organizations": [
+            {
+              "name": "Кофейня «Пример»",
+              "address": "Санкт-Петербург, Невский проспект, 1",
+              "phone": "+7 812 000-00-00",
+              "url": "https://kofeynya-primer.example",
+              "rating": 4.5,
+              "reviews_count": 128,
+              "business_oid": "1122446688",
+              "seoname": "kofeynya_primer",
+              "lat": 59.9356,
+              "lon": 30.3258
+            },
+            {
+              "name": "Пекарня «Образец»",
+              "address": "Санкт-Петербург, Гороховая улица, 2",
+              "phone": null,
+              "url": null,
+              "rating": 4.1,
+              "reviews_count": 41,
+              "business_oid": "1099887766",
+              "seoname": "pekarnya_obrazets",
+              "lat": 59.9301,
+              "lon": 30.3378
+            }
+          ]
+        }
+      },
+      {
+        "i": 1,
+        "ok": true,
+        "error": null,
+        "data": {
+          "organizations": [
+            {
+              "name": "Стоматология «Тест»",
+              "address": "Москва, Тверская улица, 3",
+              "phone": "+7 495 000-00-00",
+              "url": "https://stomatologiya-test.example",
+              "rating": 4.8,
+              "reviews_count": 210,
+              "business_oid": "1332211445",
+              "seoname": "stomatologiya_test",
+              "lat": 55.7615,
+              "lon": 37.6094
+            }
+          ]
+        }
+      },
+      {
+        "i": 2,
+        "ok": false,
+        "data": null,
+        "error": {
+          "code": "captcha",
+          "message": "Яндекс показал капчу — повторите позже"
+        }
+      }
+    ]
   }
 }

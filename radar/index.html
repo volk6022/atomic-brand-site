@@ -170,6 +170,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ v.intel_key }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelKey" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.intel_batch }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelBatch" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.intel_review }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelReview" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ vYandex }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelYandex" api="{{ api }}" mobile="{{ false }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ v.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ false }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
@@ -220,6 +221,7 @@ table{border-collapse:collapse;width:100%}
       <sc-if value="{{ m.intel_key }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelKey" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.intel_batch }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelBatch" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.intel_review }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelReview" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
+      <sc-if value="{{ mYandex }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarIntelYandex" api="{{ api }}" mobile="{{ true }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.stream }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarStream" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.leads }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarLeads" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" hint-size="100%,400px"></dc-import></sc-if>
       <sc-if value="{{ m.drafts }}" hint-placeholder-val="{{ false }}"><dc-import name="RadarDrafts" api="{{ api }}" mobile="{{ true }}" workflow="{{ workflowKey }}" workflowTitle="{{ workflowTitle }}" focusDraft="{{ focusDraft }}" hint-size="100%,600px"></dc-import></sc-if>
@@ -460,6 +462,10 @@ class Component extends DCLogic {
     // внутри экранов режутся по `capabilities` (intel.key_edit/intel.run/...).
     intel_key:['owner','customer','reviewer'], intel_batch:['owner','customer','reviewer'],
     intel_review:['owner','customer','reviewer'],
+    // Яндекс-карты — ручная выгрузка с Яндекс-карт; раздел тот же серверный
+    // `intel` (SECTION_OF ниже). Ключ маршрута с дефисом — как заведено в задаче,
+    // routeFromHash признаёт любую собственную строку ACCESS.
+    'intel-yandex':['owner','customer','reviewer'],
     stream:['owner','customer','reviewer'],
     leads:['owner','customer','reviewer'], drafts:['owner','customer','reviewer'],
     draftsTable:['owner','customer','reviewer'],
@@ -484,7 +490,7 @@ class Component extends DCLogic {
   NAV = [
     {title:'Dashboard', items:[{key:'dashboard', label:'Dashboard', code:'DS'}]},
     {title:'Флот и данные', items:[{key:'fleet', label:'Fleet', code:'FL'},{key:'channels', label:'Channels', code:'CH'},{key:'discovery', label:'Подбор каналов', code:'DI'},{key:'backfill', label:'Дочитывание', code:'BF'},{key:'stream', label:'Stream', code:'ST'}]},
-    {title:'Intel', items:[{key:'intel_key', label:'Ключ Intel', code:'IK'},{key:'intel_batch', label:'Новая пачка', code:'IB'},{key:'intel_review', label:'Пачки и ревью', code:'IR'}]},
+    {title:'Intel', items:[{key:'intel_key', label:'Ключ Intel', code:'IK'},{key:'intel_batch', label:'Новая пачка', code:'IB'},{key:'intel_review', label:'Пачки и ревью', code:'IR'},{key:'intel-yandex', label:'Яндекс-карты', code:'IY'}]},
     {title:'Конвейер лидов', items:[{key:'leads', label:'Leads', code:'LD'},{key:'drafts', label:'Drafts', code:'DR', badgeKey:'drafts'},{key:'conversations', label:'Conversations', code:'CV', badgeKey:'conversations'},{key:'manual_sends', label:'Ручные отправки', code:'MS'}]},
     {title:'Настройка', items:[{key:'profile', label:'Profile & Prompts', code:'PP'},{key:'runs', label:'Runs', code:'RN'},{key:'automation', label:'Автоматика', code:'AU'},{key:'evals', label:'Evaluations', code:'EV'}]},
     {title:'Бизнес', items:[{key:'attribution', label:'Attribution', code:'AT'}]},
@@ -508,7 +514,7 @@ class Component extends DCLogic {
   // Ключ здесь — имя экрана, а не маршрута: у раздела сценария общего маршрута нет
   // вовсе, и подпись мобильной шапки берётся по `w.screen`. Поэтому `activity`
   // лежит в этой же карте, хотя перейти на него по имени раздела нельзя.
-  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', discovery:'Подбор каналов', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', automation:'Автоматика', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin', intel_key:'Ключ Intel', intel_batch:'Новая пачка', intel_review:'Пачки и ревью'};
+  TITLES = {dashboard:'Dashboard', fleet:'Fleet', channels:'Channels', discovery:'Подбор каналов', backfill:'Дочитывание', stream:'Stream', leads:'Leads', drafts:'Drafts', conversations:'Conversations', manual_sends:'Ручные отправки', activity:'Активность', profile:'Profile & Prompts', runs:'Runs', automation:'Автоматика', evals:'Evaluations', attribution:'Attribution', observability:'Observability', safety:'Safety', admin:'Admin', intel_key:'Ключ Intel', intel_batch:'Новая пачка', intel_review:'Пачки и ревью', 'intel-yandex':'Яндекс-карты'};
 
   // Здесь лежали три выдуманные тревоги с выдуманными датами — «vertsanov-03 ушёл
   // в паузу», «run_20260805_regen упал», «новый ответ от Игоря С.». Они показывались
@@ -522,7 +528,7 @@ class Component extends DCLogic {
   // `automation`/`discovery` — новые экраны при правах `runs`/`channels`: сервер
   // этих имён в `/auth/me.sections` не пришлёт никогда. `backfill` — давний долг:
   // сервер о разделе тоже не знает, и без алиаса пункт «Дочитывание» скрыт у всех.
-  SECTION_OF = {draftsTable:'drafts', automation:'runs', discovery:'channels', backfill:'channels', intel_key:'intel', intel_batch:'intel', intel_review:'intel'};
+  SECTION_OF = {draftsTable:'drafts', automation:'runs', discovery:'channels', backfill:'channels', intel_key:'intel', intel_batch:'intel', intel_review:'intel', 'intel-yandex':'intel'};
 
   // Ключи таблиц из radar-table.js, не совпавшие с именами маршрутов: таблица
   // пишет в адрес свой ключ, и такой адрес обязан открываться разделом, а не
@@ -1180,7 +1186,7 @@ class Component extends DCLogic {
       v:{
         login: !authed, stepLogin: S.step === 'login', stepTotp: S.step === 'totp',
         appDesktop: authed && !isMobile, mobile: authed && isMobile,
-        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), discovery:on('discovery'), backfill:on('backfill'), stream:on('stream'), intel_key:on('intel_key'), intel_batch:on('intel_batch'), intel_review:on('intel_review'),
+        dashboard:on('dashboard'), fleet:on('fleet'), channels:on('channels'), discovery:on('discovery'), backfill:on('backfill'), stream:on('stream'), intel_key:on('intel_key'), intel_batch:on('intel_batch'), intel_review:on('intel_review'), 'intel-yandex':on('intel-yandex'),
         leads:on('leads'), drafts:on('drafts'), draftsTable:on('draftsTable'),
         conversations:on('conversations'), manual_sends:on('manual_sends'),
         activity:on('activity'),
@@ -1189,7 +1195,7 @@ class Component extends DCLogic {
         observability:on('observability'), safety:on('safety'), admin:on('admin')
       },
       m:{
-        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), discovery:onM('discovery'), backfill:onM('backfill'), stream:onM('stream'), intel_key:onM('intel_key'), intel_batch:onM('intel_batch'), intel_review:onM('intel_review'),
+        dashboard:onM('dashboard'), fleet:onM('fleet'), channels:onM('channels'), discovery:onM('discovery'), backfill:onM('backfill'), stream:onM('stream'), intel_key:onM('intel_key'), intel_batch:onM('intel_batch'), intel_review:onM('intel_review'), 'intel-yandex':onM('intel-yandex'),
         leads:onM('leads'), drafts:onM('drafts'), draftsTable:onM('draftsTable'),
         conversations:onM('conversations'), manual_sends:onM('manual_sends'),
         activity:onM('activity'),
@@ -1197,6 +1203,10 @@ class Component extends DCLogic {
         runs:onM('runs'), automation:onM('automation'), evals:onM('evals'), attribution:onM('attribution'),
         observability:onM('observability'), safety:onM('safety'), admin:onM('admin')
       },
+      // Маршрут `intel-yandex` с дефисом не выражается дыркой `{{ v.intel-… }}`
+      // (движок прочтёт её как вычитание), поэтому его флаги отдаются и сверху —
+      // только их и читают dc-import в разметке выше.
+      vYandex:on('intel-yandex'), mYandex:onM('intel-yandex'),
       // Кому раздел открыт — берётся из `ACCESS`: это текст экрана отказа, а не
       // само право. Сервер отдаёт разделы вошедшего, а не таблицу «кому что», и
       // назвать роли по его ответу нельзя.

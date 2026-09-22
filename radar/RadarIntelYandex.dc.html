@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<div style="display:flex;flex-direction:column;gap:14px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Яндекс-карты</div>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Что тянем</div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <sc-for list="{{ kinds }}" as="k" hint-placeholder-count="3">
+        <button onClick="{{ k.pick }}" disabled="{{ k.disabled }}" style="border:0;background:{{ k.bg }};color:{{ k.fg }};padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ k.cursor }}">{{ k.label }}</button>
+      </sc-for>
+    </div>
+    <div style="margin-top:8px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ kindHint }}</div>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Вход</div>
+      <div onClick="{{ doExample }}" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;cursor:pointer;border:1px solid rgba(19,30,95,0.24);padding:3px 7px">Пример</div>
+    </div>
+    <div style="margin-top:10px">
+      <textarea rows="10" value="{{ textVal }}" onInput="{{ setText }}" style="width:100%;box-sizing:border-box;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:10px 12px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#131E5F;outline:none;resize:vertical"></textarea>
+      <div style="margin-top:6px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">JSON-массив объектов <span style="color:#131E5F">или</span> CSV с заголовком</div>
+    </div>
+    <sc-if value="{{ parseOk }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:8px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#2E7D57">{{ parseSummary }}</div>
+    </sc-if>
+    <sc-if value="{{ hasParseErrors }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:8px">
+        <sc-for list="{{ parseErrors }}" as="e" hint-placeholder-count="2">
+          <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#DA501C">{{ e.t }}</div>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasIgnored }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:4px;font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ ignoredCols }}</div>
+    </sc-if>
+  </div>
+  <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:18px">
+    <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:#156479">Результат</div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button onClick="{{ doRun }}" disabled="{{ runDisabled }}" style="border:0;background:{{ runBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ runCursor }}">Запустить</button>
+      <sc-if value="{{ busy }}" hint-placeholder-val="{{ false }}">
+        <span style="font:400 11px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">{{ busyLabel }}</span>
+      </sc-if>
+      <sc-if value="{{ hasSummary }}" hint-placeholder-val="{{ false }}">
+        <span style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153">{{ summaryLabel }}</span>
+      </sc-if>
+    </div>
+    <sc-if value="{{ needKey }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:10px;border:1px solid #C98A1E;background:#FBF3E4;padding:10px 14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#C98A1E">Ключ Intel не заведён — выгрузка с Яндекс-карт без него не работает. <span onClick="{{ goKey }}" style="cursor:pointer;text-decoration:underline">Открыть «Ключ Intel»</span></div>
+    </sc-if>
+    <sc-if value="{{ hasRows }}" hint-placeholder-val="{{ false }}">
+      <div style="margin-top:10px;border:1px solid rgba(19,30,95,0.16);background:#fff;overflow:auto">
+        <table style="font:400 13px/1.35 'JetBrains Mono',monospace;color:#184153">
+          <thead><tr>
+            <sc-for list="{{ cols }}" as="c" hint-placeholder-count="4">
+              <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ c }}</th>
+            </sc-for>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ rows }}" as="r" hint-placeholder-count="3">
+              <tr onClick="{{ r.open }}" style="cursor:pointer;background:{{ r.bg }}">
+                <sc-for list="{{ r.cells }}" as="cell" hint-placeholder-count="4">
+                  <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:nowrap;color:{{ cell.c }}">{{ cell.t }}</td>
+                </sc-for>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+    </sc-if>
+    <sc-if value="{{ hasDetail }}" hint-placeholder-val="{{ false }}">
+      <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:12px;font:400 12px/1.6 'JetBrains Mono',monospace;white-space:pre-wrap;word-break:break-word;overflow:auto">{{ detailText }}</pre>
+    </sc-if>
+    <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <button onClick="{{ dlJson }}" disabled="{{ dlDisabled }}" style="border:0;background:{{ dlBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ dlCursor }}">Скачать JSON</button>
+      <button onClick="{{ dlCsv }}" disabled="{{ dlDisabled }}" style="border:0;background:{{ dlBg }};color:#F8F3E0;padding:8px 16px;font:400 12px/1 'JetBrains Mono',monospace;cursor:{{ dlCursor }}">Скачать CSV</button>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:760},&quot;api&quot;:{&quot;editor&quot;:null,&quot;tsType&quot;:&quot;object&quot;},&quot;mobile&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  // «Яндекс-карты»: ручная выгрузка организаций/карточек/отзывов без консоли.
+  // Вход — json/csv в textarea, разбор целиком на клиенте (как у «Новой пачки»):
+  // `[` → JSON.parse, иначе CSV (разделитель , или ; по первой строке, кавычки
+  // с удвоением, заголовок обязателен), а для extract — ещё и голые строки без
+  // заголовка: строка = {query}. Один запрос на экрана — POST /intel/yandex
+  // {kind, rows} (1..50); других ручек и ключей здесь нет. Ответ рисуется
+  // таблицей, клик по строке раскрывает data/ошибку; выгрузки — Blob+<a>.
+  state = {
+    kind:'extract', text:'', busy:false, busyAt:0,
+    resp:null, sentRows:[], openRow:null, needKey:false
+  };
+
+  // Режимы и их человеческое описание — одна строка под переключателем.
+  KINDS = [
+    {key:'extract', label:'Организации',
+     hint:'Ищем организации: каждая строка — один поисковый запрос. Поля: query (обязательно), region_id (2 — Санкт-Петербург, 213 — Москва), city_slug (например saint-petersburg), target_count (сколько собрать, до 200).'},
+    {key:'card', label:'Карточка',
+     hint:'Карточка одной организации: описание, телефоны, соцсети. Нужны оба поля: business_oid (цифровой код) и seoname (кусок адреса организации на Картах).'},
+    {key:'reviews', label:'Отзывы',
+     hint:'Отзывы одной организации. Нужны оба поля: business_oid и seoname; можно max_count (сколько отзывов, по умолчанию 50) и since_months (за сколько месяцев).'}
+  ];
+  KIND_LABEL = {extract:'«Организации»', card:'«Карточка»', reviews:'«Отзывы»'};
+
+  // Известные поля строк по режимам (форма запроса фиксирована сервером):
+  // need — обязательные, opt — остальные, num — приводятся к числу,
+  // oid — только цифры. Лишние колонки не отправляются и перечисляются под полем.
+  FIELDS = {
+    extract:{need:['query'], opt:['region_id','city_slug','target_count'],
+             num:['region_id','target_count'], oid:[]},
+    card:{need:['business_oid','seoname'], opt:[], num:[], oid:['business_oid']},
+    reviews:{need:['business_oid','seoname'], opt:['max_count','since_months'],
+             num:['max_count','since_months'], oid:['business_oid']}
+  };
+
+  EXAMPLES = {
+    extract:'query,region_id,city_slug,target_count\nкофейни,2,saint-petersburg,40\nстоматологии,213,,20',
+    card:'business_oid;seoname\n1122446688;kofeynya-u-petra',
+    reviews:'[\n  {"business_oid": "1122446688", "seoname": "kofeynya-u-petra", "max_count": 50, "since_months": 12}\n]'
+  };
+
+  componentWillUnmount(){
+    clearTimeout(this._timer);
+  }
+
+  setKind(kind){
+    if(this.state.busy || this.state.kind === kind) return;
+    // Ответ прошлого режима неуместен в новом — убираем вместе с подсказкой 409.
+    this.setState({kind, resp:null, sentRows:[], openRow:null, needKey:false});
+  }
+
+  setText(e){
+    this.setState({text:e.target.value, needKey:false});
+  }
+
+  doExample(){
+    this.setState({text:this.EXAMPLES[this.state.kind], needKey:false});
+  }
+
+  // ── разбор входа ─────────────────────────────────────────────────────────────
+
+  parse(text, kind){
+    const src = String(text == null ? '' : text).replace(/^\uFEFF/, '');
+    if(!src.trim()) return {rows:[], errors:[], ignored:[]};
+    if(src.trim()[0] === '[') return this.parseJson(src, kind);
+    return this.parseCsv(src, kind);
+  }
+
+  parseJson(src, kind){
+    let data;
+    try { data = JSON.parse(src); }
+    catch (e) { return {rows:[], errors:[{row:0, reason:'не удалось разобрать JSON: ' + e.message}], ignored:[]}; }
+    if(!Array.isArray(data)) return {rows:[], errors:[{row:0, reason:'ожидался JSON-массив объектов'}], ignored:[]};
+    const rows = [], errors = [], ignored = [];
+    data.forEach((item, idx)=>{
+      if(!item || typeof item !== 'object' || Array.isArray(item)){
+        errors.push({row:idx + 1, reason:'не объект'});
+        return;
+      }
+      const r = this.normalize(item, Object.keys(item), idx + 1, kind, errors, ignored);
+      if(r) rows.push(r);
+    });
+    return {rows, errors, ignored};
+  }
+
+  parseCsv(src, kind){
+    const first = src.split(/\r?\n/).find((l)=>l.trim()) || '';
+    const semi = (first.match(/;/g) || []).length;
+    const comma = (first.match(/,/g) || []).length;
+    // Голые строки — только у «Организаций»: строка без разделителей = запрос.
+    if(!semi && !comma){
+      if(kind !== 'extract'){
+        return {rows:[], errors:[{row:1,
+          reason:'нет заголовка — для режима ' + this.KIND_LABEL[kind] +
+                 ' нужен CSV с заголовком или JSON-массив'}], ignored:[]};
+      }
+      const rows = [];
+      src.split(/\r?\n/).forEach((line)=>{
+        const q = line.trim();
+        if(q) rows.push({query:q});
+      });
+      return {rows, errors:[], ignored:[]};
+    }
+    const sep = semi >= comma ? ';' : ',';
+    const records = this.csvRecords(src, sep).filter(
+      (r)=>!(r.length === 1 && r[0].trim() === '')); // пустые строки пропускаем
+    if(!records.length){
+      return {rows:[], errors:[{row:1, reason:'нет записей'}], ignored:[]};
+    }
+    const f = this.FIELDS[kind];
+    const known = f.need.concat(f.opt);
+    const canon = (name)=>{
+      const i = known.map((k)=>k.toLowerCase()).indexOf(String(name).trim().toLowerCase());
+      return i === -1 ? null : known[i];
+    };
+    const header = records[0].fields.map(canon);
+    const ignored = [];
+    records[0].fields.forEach((raw, i)=>{
+      if(!header[i] && String(raw).trim() && ignored.indexOf(String(raw).trim()) === -1)
+        ignored.push(String(raw).trim());
+    });
+    if(!header.some(Boolean)){
+      return {rows:[], errors:[{row:1,
+        reason:'в заголовке нет ни одного известного поля (' + known.join(', ') + ')'}], ignored:[]};
+    }
+    const rows = [], errors = [];
+    for(let r = 1; r < records.length; r++){
+      const item = {};
+      records[r].fields.forEach((v, i)=>{
+        if(header[i]) item[header[i]] = v;
+      });
+      const row = this.normalize(item, Object.keys(item), r + 1, kind, errors, ignored);
+      if(row) rows.push(row);
+    }
+    return {rows, errors, ignored};
+  }
+
+  // Свой мини-парсер CSV (PapaParse в репо нет — вендор не тянем): кавычки "…"
+  // с удвоением внутри, \r\n как конец записи.
+  csvRecords(text, sep){
+    const records = [];
+    let row = [], field = '', inQ = false;
+    const endRow = ()=>{ row.push(field); field = ''; records.push({fields:row}); row = []; };
+    for(let i = 0; i < text.length; i++){
+      const ch = text[i];
+      if(inQ){
+        if(ch === '"'){
+          if(text[i + 1] === '"'){ field += '"'; i++; }
+          else inQ = false;
+        } else field += ch;
+      } else if(ch === '"') inQ = true;
+      else if(ch === sep){ row.push(field); field = ''; }
+      else if(ch === '\n' || ch === '\r'){
+        if(ch === '\r' && text[i + 1] === '\n') i++;
+        endRow();
+      } else field += ch;
+    }
+    if(field !== '' || row.length) endRow();
+    return records;
+  }
+
+  // Одна строка входа → тело для запроса: только известные поля, пустые
+  // необязательные выбрасываются, числа — числами, business_oid — цифры.
+  // Ошибки строки попадают в общий список с её номером; строка не отправляется.
+  normalize(item, keys, rowNo, kind, errors, ignored){
+    const f = this.FIELDS[kind];
+    for(const k of keys){
+      if(f.need.indexOf(k) === -1 && f.opt.indexOf(k) === -1 &&
+         ignored.indexOf(k) === -1) ignored.push(k);
+    }
+    const out = {};
+    let bad = false;
+    const val = (k)=>item[k] === null || item[k] === undefined ? '' : String(item[k]).trim();
+    for(const k of f.need){
+      if(!val(k)){ errors.push({row:rowNo, reason:'нет поля ' + k}); bad = true; }
+      else out[k] = val(k);
+    }
+    for(const k of f.opt){
+      const v = val(k);
+      if(!v || out[k]) continue;
+      if(f.oid.indexOf(k) !== -1 && !/^\d+$/.test(v)){
+        errors.push({row:rowNo, reason:k + ' — только цифры'}); bad = true; continue;
+      }
+      if(f.num.indexOf(k) !== -1){
+        const n = Number(v.replace(',', '.'));
+        if(!isFinite(n)){ errors.push({row:rowNo, reason:k + ' — не число'}); bad = true; }
+        else out[k] = n;
+        continue;
+      }
+      out[k] = v;
+    }
+    return bad ? null : out;
+  }
+
+  // ── запуск ───────────────────────────────────────────────────────────────────
+
+  async doRun(){
+    if(this.state.busy) return;
+    const parsed = this.parse(this.state.text, this.state.kind);
+    const n = parsed.rows.length;
+    if(!n || n > 50) return; // кнопка задизейблена — подстраховка
+    this.setState({busy:true, busyAt:1, needKey:false});
+    this.startTicker(n);
+    const { post, describe } = await import('./radar-api.js');
+    try {
+      const resp = await post('/intel/yandex', {kind:this.state.kind, rows:parsed.rows});
+      clearTimeout(this._timer);
+      this.setState({busy:false, resp, sentRows:parsed.rows, openRow:null});
+    } catch (e) {
+      clearTimeout(this._timer);
+      // 409 — ключ Intel не заведён: не поломка, а повод сходить на «Ключ Intel».
+      if(e && e.status === 409){
+        this.setState({busy:false, needKey:true});
+        return;
+      }
+      this.setState({busy:false});
+      const t = (this.props.api || {}).toast || (()=>{});
+      t(describe(e), '#DA501C');
+    }
+  }
+
+  // Спиннер-текст «идёт: строка K из N»: прогресса сервер не отдаёт, поэтому
+  // K — местный тикер, который никогда не доходит до N, чтобы не обещать
+  // завершение. Гасится ответом, отказом и уходом с экрана.
+  startTicker(n){
+    const cap = Math.max(n - 1, 1);
+    this._tick = 1;
+    const step = ()=>{
+      if(!this.state.busy) return;
+      if(this._tick < cap){
+        this._tick += 1;
+        this.setState({busyAt:this._tick});
+      }
+      this._timer = setTimeout(step, 400);
+    };
+    this._timer = setTimeout(step, 400);
+  }
+
+  toggleRow(i){
+    this.setState({openRow:this.state.openRow === i ? null : i});
+  }
+
+  goKey(){
+    const api = this.props.api || {};
+    if(api.go) api.go('intel_key');
+  }
+
+  // ── выгрузки ─────────────────────────────────────────────────────────────────
+
+  // Плоская величина для ячейки CSV: массив — через «; », объект — JSON.
+  flatVal(v){
+    if(v === null || v === undefined) return '';
+    if(Array.isArray(v)) return v.map((x)=>this.flatVal(x)).join('; ');
+    if(typeof v === 'object') return JSON.stringify(v);
+    return String(v);
+  }
+
+  // RFC 4180: запятая, кавычка и переводы строки — в кавычках, кавычка
+  // удваивается. Разделитель — запятая, BOM ставит вызывающий.
+  csvCell(v){
+    const s = this.flatVal(v);
+    return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  }
+
+  buildCsv(){
+    const S = this.state;
+    const resp = S.resp || {};
+    const results = Array.isArray(resp.results) ? resp.results : [];
+    const lines = [];
+    if(S.kind === 'extract'){
+      const cols = ['query','name','address','phone','url','rating',
+                    'reviews_count','business_oid','seoname','lat','lon'];
+      lines.push(cols.join(','));
+      for(const res of results){
+        if(!res || !res.ok || !res.data || !Array.isArray(res.data.organizations)) continue;
+        const q = (S.sentRows[res.i] || {}).query || '';
+        for(const o of res.data.organizations){
+          lines.push(cols.map((c)=>this.csvCell(c === 'query' ? q : o[c])).join(','));
+        }
+      }
+    } else if(S.kind === 'card'){
+      const cols = ['business_oid','name','description','phones','socials'];
+      lines.push(cols.join(','));
+      for(const res of results){
+        if(!res || !res.ok || !res.data) continue;
+        const d = res.data;
+        const bid = d.business_oid || (S.sentRows[res.i] || {}).business_oid ||
+                    (S.sentRows[res.i] || {}).seoname || '';
+        lines.push(cols.map((c)=>this.csvCell(c === 'business_oid' ? bid : d[c])).join(','));
+      }
+    } else {
+      const cols = ['business_oid','author','rating','date','text'];
+      lines.push(cols.join(','));
+      for(const res of results){
+        if(!res || !res.ok || !res.data) continue;
+        const bid = res.data.business_oid || (S.sentRows[res.i] || {}).business_oid ||
+                    (S.sentRows[res.i] || {}).seoname || '';
+        const revs = Array.isArray(res.data.reviews) ? res.data.reviews : [];
+        for(const rv of revs){
+          lines.push(cols.map((c)=>this.csvCell(c === 'business_oid' ? bid : rv[c])).join(','));
+        }
+      }
+    }
+    return '\uFEFF' + lines.join('\r\n');
+  }
+
+  stamp(){
+    const d = new Date();
+    const p = (x)=>String(x).padStart(2, '0');
+    return '' + d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) +
+           '-' + p(d.getHours()) + p(d.getMinutes());
+  }
+
+  download(name, text, mime){
+    const blob = new Blob([text], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  dlJson(){
+    const S = this.state;
+    if(S.busy || !S.resp) return;
+    this.download('yandex-' + S.kind + '-' + this.stamp() + '.json',
+                  JSON.stringify(S.resp, null, 2), 'application/json');
+  }
+
+  dlCsv(){
+    const S = this.state;
+    if(S.busy || !S.resp) return;
+    this.download('yandex-' + S.kind + '-' + this.stamp() + '.csv',
+                  this.buildCsv(), 'text/csv;charset=utf-8');
+  }
+
+  // ── отрисовка ────────────────────────────────────────────────────────────────
+
+  renderVals(){
+    const S = this.state;
+    const parsed = this.parse(S.text, S.kind);
+    const n = parsed.rows.length;
+    const runBlocked = S.busy || !n || n > 50;
+    const resp = S.resp;
+    const results = (resp && Array.isArray(resp.results)) ? resp.results : [];
+    const okCount = resp ? (typeof resp.ok === 'number' ? resp.ok
+                            : results.filter((r)=>r && r.ok).length) : 0;
+    const failCount = resp ? (typeof resp.failed === 'number' ? resp.failed
+                            : results.filter((r)=>r && !r.ok).length) : 0;
+    const isExtract = S.kind === 'extract';
+    const cols = isExtract ? ['#', 'Запрос', 'Статус', 'Организаций']
+                           : ['#', 'business_oid', 'Статус'];
+    const rows = results.map((res, idx)=>{
+      const i = (res && typeof res.i === 'number') ? res.i : idx;
+      const inRow = S.sentRows[i] || {};
+      const okRes = !!(res && res.ok);
+      const key = isExtract
+        ? (inRow.query || '—')
+        : String(inRow.business_oid || inRow.seoname || '—');
+      const status = okRes
+        ? {t:'ok', c:'#2E7D57'}
+        : {t:((res && res.error && res.error.code) ? res.error.code : 'ошибка') +
+             ((res && res.error && res.error.message) ? ' — ' + res.error.message : ''),
+           c:'#DA501C'};
+      const orgs = okRes && res.data && Array.isArray(res.data.organizations)
+        ? String(res.data.organizations.length) : '—';
+      const cells = [{t:String(i + 1), c:'#184153'}, {t:key, c:'#184153'}, status];
+      if(isExtract) cells.push({t:orgs, c:'#184153'});
+      return {
+        cells,
+        bg:S.openRow === i ? '#EDF4F3' : '',
+        open:()=>this.toggleRow(i)
+      };
+    });
+    const open = results.find((r)=>r && r.i === S.openRow) || null;
+    const detailText = !open ? '' : (open.ok
+      ? JSON.stringify(open.data, null, 2)
+      : ((open.error && open.error.code ? open.error.code + ': ' : 'ошибка: ') +
+         ((open.error && open.error.message) || '')));
+    const dlActive = !S.busy && okCount > 0;
+    return {
+      kinds:this.KINDS.map((k)=>({
+        label:k.label,
+        bg:S.kind === k.key ? '#131E5F' : '#EDF4F3',
+        fg:S.kind === k.key ? '#F8F3E0' : '#131E5F',
+        cursor:S.busy ? 'default' : 'pointer',
+        disabled:S.busy,
+        pick:()=>this.setKind(k.key)
+      })),
+      kindHint:(this.KINDS.find((k)=>k.key === S.kind) || {}).hint || '',
+
+      textVal:S.text,
+      setText:(e)=>this.setText(e),
+      doExample:()=>this.doExample(),
+      parseOk:n > 0 && parsed.errors.length === 0,
+      parseSummary:'разобрано ' + n + ' строк' +
+        (n > 50 ? ' — не больше 50 за раз' : ''),
+      hasParseErrors:parsed.errors.length > 0,
+      parseErrors:parsed.errors.map((e)=>({
+        t:(e.row ? 'строка ' + e.row + ': ' : '') + e.reason
+      })),
+      hasIgnored:parsed.ignored.length > 0,
+      ignoredCols:'лишние колонки не отправляются: ' + parsed.ignored.join(', '),
+
+      doRun:()=>this.doRun(),
+      runDisabled:runBlocked,
+      runBg:runBlocked ? '#8A8F9E' : '#131E5F',
+      runCursor:runBlocked ? 'default' : 'pointer',
+      busy:!!S.busy,
+      busyAt:S.busyAt,
+      busyLabel:'идёт: строка ' + S.busyAt + ' из ' + n,
+      hasSummary:!!resp && !S.busy,
+      summaryLabel:'готово ' + okCount + ', ошибок ' + failCount,
+      needKey:!!S.needKey,
+      goKey:()=>this.goKey(),
+
+      hasRows:rows.length > 0,
+      cols, rows,
+      hasDetail:!!open,
+      detailText,
+
+      dlJson:()=>this.dlJson(),
+      dlCsv:()=>this.dlCsv(),
+      dlDisabled:!dlActive,
+      dlBg:dlActive ? '#156479' : '#8A8F9E',
+      dlCursor:dlActive ? 'pointer' : 'default'
+    };
+  }
+}
+</script>
+</body>
+</html>
