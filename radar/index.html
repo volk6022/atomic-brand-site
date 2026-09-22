@@ -364,7 +364,19 @@ table{border-collapse:collapse;width:100%}
   </div>
 </sc-if>
 
+<!-- Плашка «Интерфейс обновился»: на сервере лежит другой index.html, и новые
+     экраны приедут только с перезагрузкой. Перезагружать сами не вправе — в поле
+     может быть недописанный черновик; предлагаем, решает человек. Узкая полоса
+     снизу справа, в одном стеке с тостами (не поверх кнопок, не модальная);
+     «потом» прячет её до следующего расхождения метки версии. -->
 <div style="position:fixed;right:20px;bottom:20px;z-index:90;display:flex;flex-direction:column;gap:8px">
+  <sc-if value="{{ updateReady }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:10px;min-width:280px;background:#131E5F;border:1px solid rgba(148,190,190,0.24);border-left:4px solid #DA501C;padding:9px 12px">
+      <div style="font:400 12px/1.4 'JetBrains Mono',monospace;color:#F8F3E0;white-space:nowrap">Интерфейс обновился</div>
+      <button onClick="{{ updateNow }}" style="border:0;background:#F8F3E0;color:#131E5F;padding:6px 12px;font:400 12px/1 'JetBrains Mono',monospace;white-space:nowrap" style-hover="background:#DA501C">Обновить</button>
+      <button onClick="{{ updateLater }}" style="border:0;background:transparent;color:#94BEBE;padding:6px 2px;font:400 12px/1 'JetBrains Mono',monospace">✕</button>
+    </div>
+  </sc-if>
   <sc-for list="{{ toasts }}" as="t" hint-placeholder-count="0">
     <div style="min-width:280px;background:#fff;border:1px solid rgba(19,30,95,0.16);border-left:4px solid {{ t.c }};padding:12px 14px;font:400 12px/1.4 'JetBrains Mono',monospace;color:#184153">{{ t.text }}</div>
   </sc-for>
@@ -390,7 +402,13 @@ class Component extends DCLogic {
     toasts:[], toastId:0,
     // Состояние потока событий: жив ли он, какие кадры по нему возят этой роли и
     // на что сервер жалуется. Экраны читают это через пропс `api`.
-    streamLive:false, streamServes:[], streamStale:null
+    streamLive:false, streamServes:[], streamStale:null,
+    // «Интерфейс обновился»: etag — метка версии index.html, с которой загрузилась
+    // эта вкладка (ETag, запас — Last-Modified); updateReady — на сервере лежит
+    // другая версия, и новые экраны приедут только с перезагрузкой. Только память
+    // вкладки: после перезагрузки всё выставляется заново первым HEAD-запросом,
+    // localStorage тут не нужен.
+    etag:null, updateReady:false
   };
 
   async componentDidMount(){
@@ -437,13 +455,101 @@ class Component extends DCLogic {
     // которым уже некому читать.
     this._leave = ()=>this.closeStream();
     window.addEventListener('pagehide', this._leave);
+
+    // Наблюдение за версией панели: запускается один раз при монтировании и
+    // живёт до размонтирования (см. stopUpdateWatch).
+    this.startUpdateWatch();
   }
   componentWillUnmount(){
     window.removeEventListener('keydown', this._key);
     window.removeEventListener('hashchange', this._hash);
     window.removeEventListener('pagehide', this._leave);
+    this.stopUpdateWatch();
     this.closeStream();
   }
+
+  // ── «интерфейс обновился» ───────────────────────────────────────────────────
+  //
+  // Открытая вкладка держит тот код оболочки, который загрузился: новые экраны и
+  // пункты меню приезжают только с перезагрузкой, и человек видит панель без
+  // нового раздела, считая, что выкатка не доехала. Перезагружать за него нельзя
+  // — в поле ввода может лежать недописанный черновик. Вместо этого оболочка
+  // сверяет метку версии index.html и при расхождении предлагает обновиться
+  // узкой плашкой снизу справа.
+  //
+  // Метка — ETag ответа, запас — Last-Modified; ничего при выкатке генерировать
+  // не нужно. Если сервер не отдаёт ни того ни другого, механизм молча выключен:
+  // сравнивать нечем, и никаких ошибок в консоль. Запрос один на всё —
+  // HEAD /radar/index.html без кеша: стартовый снимок, потом раз в три минуты
+  // и при возврате фокуса на вкладку (не чаще раза в 30 секунд). Ответ не 2xx/304
+  // или сеть моргнула — проверка молча пропускается, панель не трогается.
+  UPDATE_URL = '/radar/index.html';
+  UPDATE_PERIOD_MS = 3 * 60 * 1000;
+  UPDATE_VISIBILITY_THROTTLE_MS = 30 * 1000;
+
+  async startUpdateWatch(){
+    // Среда без сети (скретч-проверки исполняют логику под стабами) — просто
+    // не запускаемся: проверка не должна падать там, где fetch не существует.
+    if(typeof fetch !== 'function') return;
+    try {
+      const etag = await this.fetchEtag();
+      if(etag) this.setState({etag});
+      else return;   // ни ETag, ни Last-Modified — механизм молча выключен
+    } catch(e){
+      // Сеть на старте моргнула — не беда: таймер всё равно ставим, и первая
+      // удачная проверка сама поставит базовую метку (checkForUpdate).
+    }
+    if(this._updateTimer || this._vis) return;   // от второго запуска
+    this._updateTimer = typeof setInterval === 'function'
+      ? setInterval(()=>this.checkForUpdate(), this.UPDATE_PERIOD_MS) : null;
+    this._vis = ()=>{
+      // Вкладка ушла в фон — сверять нечего, приходит она обратно или нет.
+      if(typeof document !== 'undefined' && document.visibilityState !== 'visible') return;
+      const now = Date.now();
+      if(this._lastVisCheck && now - this._lastVisCheck < this.UPDATE_VISIBILITY_THROTTLE_MS) return;
+      this._lastVisCheck = now;
+      this.checkForUpdate();
+    };
+    window.addEventListener('visibilitychange', this._vis);
+  }
+
+  // Снимает таймер и слушатель, ставит флаг размонтирования: после ухода с
+  // панели не должно остаться ни висящего запроса, ни обработчика, дёргающего
+  // setState у мёртвого компонента.
+  stopUpdateWatch(){
+    this._unmounted = true;
+    if(this._updateTimer && typeof clearInterval === 'function'){
+      clearInterval(this._updateTimer);
+      this._updateTimer = null;
+    }
+    if(this._vis) window.removeEventListener('visibilitychange', this._vis);
+    this._vis = null;
+  }
+
+  // Сам запрос проверки. null — «сравнивать не с чем на этот раз»: ошибка сети,
+  // не-2xx/304 или ответ без метки. Молча по условию задачи.
+  async fetchEtag(){
+    const res = await fetch(this.UPDATE_URL, {method:'HEAD', cache:'no-store'});
+    if(!res || !((res.status >= 200 && res.status < 300) || res.status === 304)) return null;
+    return res.headers.get('ETag') || res.headers.get('Last-Modified') || null;
+  }
+
+  // Одна проверка. Плашка не мигает: пока она поднята, новых запросов нет вовсе;
+  // «потом» запоминает отвергнутую метку (_updateDismissed) и та же версия больше
+  // её не поднимает — только следующее расхождение.
+  async checkForUpdate(){
+    if(this._unmounted || this.state.updateReady) return;
+    if(typeof fetch !== 'function') return;
+    let etag = null;
+    try { etag = await this.fetchEtag(); }
+    catch(e){ return; }                                   // сеть моргнула — панель не трогаем
+    if(!etag) return;                                     // метки в ответе нет — пропустить
+    if(!this.state.etag){ this.setState({etag}); return; }  // старт без метки: это базовая
+    if(etag === this.state.etag || etag === this._updateDismissed) return;
+    this._updatePending = etag;
+    this.setState({updateReady:true});
+  }
+
 
   // Штамп версии оболочки: по нему видно на экране и в консоли, какая сборка
   // исполняется, даже если браузер показал старую копию из кеша. Менять дату при каждой выкатке.
@@ -1317,6 +1423,18 @@ class Component extends DCLogic {
       setModalInput:(e)=>this.setState({modalInput:e.target.value}),
       closeModal:()=>this.setState({modal:null, modalInput:''}),
       confirmModal:()=>this.confirmModal(),
+
+      // Плашка «Интерфейс обновился». «Обновить» — перезагрузка страницы целиком:
+      // новый код оболочки иначе не приезжает. «Потом» (крестик) прячет плашку
+      // до следующего расхождения метки: перезагрузка — решение человека, у него
+      // в поле может быть недописанный черновик.
+      updateReady:S.updateReady,
+      updateNow:()=>location.reload(),
+      updateLater:()=>{
+        this._updateDismissed = this._updatePending || null;
+        this._updatePending = null;
+        this.setState({updateReady:false});
+      },
       toasts:S.toasts,
 
       // У маршрута сценария в шапке — сценарий и раздел: в мобильном виде сайдбара
