@@ -653,12 +653,18 @@ class Component extends DCLogic {
   // Видимость кнопки: черновик одобрен, адресуется личным сообщением, право
   // draft.send есть и заказ ещё не висит в работе. У pending/deferred кнопки
   // нет вовсе — спорить с человеком тостом «уже заказано» хуже, чем не
-  // предлагать вторую отправку; у failed кнопка возвращается.
+  // предлагать вторую отправку; у failed кнопка возвращается. Но не тогда,
+  // когда already_sent: у человека два черновика одного сценария, другой уже
+  // доставлен (прод 22.09: #119 approved+failed с кнопкой при доставленном
+  // #120 — оператор видел кнопку и думал, что человеку ничего не ушло).
+  // Повторная отправка этому адресату — спам в тот же диалог, поэтому кнопки
+  // нет вовсе.
   canSendDraft(d){
     const api = this.props.api || {};
     const caps = Array.isArray(api.capabilities) ? api.capabilities : [];
     if(!d || d.state !== 'approved' || d.action !== 'dm') return false;
     if(caps.indexOf('draft.send') === -1) return false;
+    if(d.already_sent) return false;
     const ob = d.outbound;
     return !ob || (ob.state !== 'pending' && ob.state !== 'deferred');
   }
@@ -751,9 +757,28 @@ class Component extends DCLogic {
   sendBadgeOf(d){
     const empty = {show:false, text:'', color:'#8A8F9E',
                    hasLink:false, linkLabel:'', linkGo:()=>{}};
+    const api = this.props.api || {};
+    // already_sent важнее любой метки outbound — в первую очередь красной
+    // «не отправлено» у failed. Прод 22.09: #119 approved+failed показывал
+    // «не отправлено: PEER_ID_INVALID» рядом с доставленным #120, и оператор
+    // делал вывод «человеку ничего не ушло» — хотя другой черновик того же
+    // человека уже доставлен. Зелёная метка называет это прямо.
+    const as = d && d.already_sent;
+    if(as){
+      // Форма даты и маршрут ссылки — те же, что у delivered: тот же человек,
+      // тот же диалог, доставлен другим черновиком.
+      return {
+        show:true,
+        text:'этому человеку уже отправлено ' + this.commentWhen(as.at)
+             + ' · черновик #' + as.draft_id,
+        color:'#2E7D57',
+        hasLink: as.conversation_id != null, linkLabel:'в Переписки',
+        linkGo:()=>api.go && api.go('wf:' + this.wf() + ':conversations',
+                                      {focus:as.conversation_id})
+      };
+    }
     const ob = d && d.outbound;
     if(!ob) return empty;
-    const api = this.props.api || {};
     // Маршрут «Переписок» у сценария появляется в 16.5; ссылка ставится уже
     // сейчас, чтобы доставленный черновик сразу вёл в диалог.
     const link = {

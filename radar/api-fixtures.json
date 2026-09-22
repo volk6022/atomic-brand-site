@@ -3086,6 +3086,7 @@
           "reply_to_message_id": 1421,
           "value": "сообщение 1421"
         },
+        "already_sent": null,
         "author_name": "Виктор Б.",
         "author_username": "@user_17",
         "channel": "DevOps Chat",
@@ -3357,6 +3358,11 @@
       }
     ]
   },
+  "/workflows/{key}/drafts/{id}/already-sent": {
+    "draft_id": 120,
+    "at": "2026-09-20T08:14:37+00:00",
+    "conversation_id": 3
+  },
   "/workflows/{key}/drafts/{id}/outbound/deferred": {
     "id": 7,
     "state": "deferred",
@@ -3438,6 +3444,7 @@
         "reply_to_message_id": 1057,
         "value": "сообщение 1057"
       },
+      "already_sent": null,
       "author_name": "Пётр К.",
       "author_username": "@user_14",
       "channel": "DevOps Chat",
@@ -3558,6 +3565,7 @@
         "reply_to_message_id": 1421,
         "value": "сообщение 1421"
       },
+      "already_sent": null,
       "author_name": "Виктор Б.",
       "author_username": "@user_17",
       "channel": "DevOps Chat",

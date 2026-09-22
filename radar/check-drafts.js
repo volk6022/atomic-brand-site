@@ -1000,6 +1000,52 @@ async function sendChecks() {
     check('отправка: после неудачной отправки кнопка доступна снова',
           vals(c).canSend === true);
   }
+  // 30a. Другому черновику этого сценария тот же человек уже доставлен
+  //      (already_sent). Прод 22.09: #119 approved+failed с кнопкой «Отправить»
+  //      при доставленном #120 — оператор думал, что человеку ничего не ушло.
+  //      Кнопки быть не должно, метка — зелёная, а не красная «не отправлено».
+  {
+    const as = {draft_id: 120, at: '2026-09-20T08:14:37+00:00',
+                conversation_id: 3};
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({outbound: OUTBOUND('failed'),
+                                         already_sent: as}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls, {go: (r, p) => calls.go.push({r: r, p: p || {}})});
+    check('отправка: этому человеку уже отправлено — кнопки нет',
+          vals(c).canSend === false);
+    const b = vals(c).sendBadge || {};
+    check('отправка: already_sent — метка зелёная',
+          b.show === true && b.color === '#2E7D57', JSON.stringify(b));
+    check('отправка: already_sent — в метке дата дд.мм чч:мм и номер черновика',
+          b.text.indexOf('этому человеку уже отправлено') === 0
+          && /отправлено \d{2}\.\d{2} \d{2}:\d{2} · черновик #120$/.test(b.text),
+          JSON.stringify(b));
+    check('отправка: already_sent — красного «не отправлено» вместо неё нет',
+          b.text.indexOf('не отправлено') === -1, JSON.stringify(b));
+    check('отправка: already_sent — есть ссылка «в Переписки»',
+          b.hasLink === true && b.linkLabel === 'в Переписки');
+    b.linkGo();
+    check('отправка: already_sent — ссылка ведёт в Переписки сценария, диалог 3',
+          calls.go.length === 1 && calls.go[0].r === 'wf:' + WF + ':conversations'
+          && calls.go[0].p.focus === 3, JSON.stringify(calls.go));
+  }
+  {
+    const {c, calls} = build('RadarDrafts.dc.html', {workflow: WF},
+                             approvedDM({outbound: OUTBOUND('failed'),
+                                         already_sent: null}));
+    await c.componentDidMount();
+    await settle();
+    grantSend(c, calls);
+    check('отправка: already_sent null — прежнее поведение: кнопка есть',
+          vals(c).canSend === true);
+    const b = vals(c).sendBadge || {};
+    check('отправка: already_sent null — метка красная «не отправлено: …»',
+          b.show === true && b.color === '#DA501C'
+          && b.text === 'не отправлено: получатель запретил личные сообщения',
+          JSON.stringify(b));
+  }
 
   // 31. Нажатие: ровно один GET preflight, модалка с адресатом, остатком и
   //     текстом; до подтверждения POST не уходит.
