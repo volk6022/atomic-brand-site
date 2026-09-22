@@ -209,6 +209,92 @@
           <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap">{{ prompt }}</pre>
         </sc-if>
       </div>
+
+      <!-- под капотом: только чтение — снимок серверного исполнения каскада.
+           Ключа under_the_hood может не быть (старый сервер) — тогда раздела
+           нет вовсе: пустая секция сбивает с толку сильнее, чем её отсутствие. -->
+      <sc-if value="{{ hoodReady }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fff;border:1px solid rgba(19,30,95,0.16);padding:16px;display:flex;flex-direction:column;gap:12px">
+          <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:#156479">Под капотом</div>
+          <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">только чтение: так каскад исполняется на сервере сейчас; править — через набор (экспорт/импорт) или код</div>
+          <sc-for list="{{ hoodBlocks }}" as="b" hint-placeholder-count="5">
+            <div>
+              <div onClick="{{ b.toggle }}" style="border:1px solid rgba(19,30,95,0.24);padding:12px;font:400 12px/1 'JetBrains Mono',monospace;color:#156479;display:flex;justify-content:space-between;gap:10px;cursor:pointer;flex-wrap:wrap"><span>{{ b.title }}</span><span style="color:#8A8F9E;flex:1;text-align:right">{{ b.hint }}</span><span>{{ b.arrow }}</span></div>
+              <sc-if value="{{ b.open }}" hint-placeholder-val="{{ false }}">
+                <div style="border:1px solid rgba(19,30,95,0.16);border-top:0;padding:12px;display:flex;flex-direction:column;gap:10px;background:#fff">
+                  <sc-if value="{{ b.isStage }}" hint-placeholder-val="{{ true }}">
+                    <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap;overflow-wrap:anywhere">{{ b.text }}</div>
+                    <sc-if value="{{ b.hasParams }}" hint-placeholder-val="{{ false }}">
+                      <div style="overflow:auto">
+                        <table style="font:400 13px/1.4 'JetBrains Mono',monospace;color:#184153">
+                          <thead><tr>
+                            <sc-for list="{{ b.paramCols }}" as="pc" hint-placeholder-count="2">
+                              <th style="padding:8px 12px;text-align:left;font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479;border-bottom:1px solid rgba(19,30,95,0.24);white-space:nowrap">{{ pc }}</th>
+                            </sc-for>
+                          </tr></thead>
+                          <tbody>
+                            <sc-for list="{{ b.paramRows }}" as="pr" hint-placeholder-count="3">
+                              <tr>
+                                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);color:#131E5F;white-space:nowrap">{{ pr.k }}</td>
+                                <td style="padding:9px 12px;border-bottom:1px solid rgba(19,30,95,0.08);white-space:pre-wrap;overflow-wrap:anywhere">{{ pr.v }}</td>
+                              </tr>
+                            </sc-for>
+                          </tbody>
+                        </table>
+                      </div>
+                    </sc-if>
+                  </sc-if>
+                  <sc-if value="{{ b.isPrompt }}" hint-placeholder-val="{{ false }}">
+                    <div>
+                      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">системный</div>
+                      <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap;overflow-wrap:anywhere">{{ b.system }}</pre>
+                    </div>
+                    <div>
+                      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">шаблон пользовательского сообщения</div>
+                      <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap;overflow-wrap:anywhere">{{ b.userTemplate }}</pre>
+                    </div>
+                    <sc-if value="{{ b.hasGrammar }}" hint-placeholder-val="{{ true }}">
+                      <div>
+                        <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">грамматика (GBNF)</div>
+                        <pre style="margin:10px 0 0;border:1px solid rgba(19,30,95,0.24);background:#F8F3E0;padding:14px;font:400 12px/1.6 'JetBrains Mono',monospace;color:#131E5F;white-space:pre-wrap;overflow-wrap:anywhere">{{ b.grammar }}</pre>
+                      </div>
+                    </sc-if>
+                    <sc-if value="{{ b.noGrammar }}" hint-placeholder-val="{{ false }}">
+                      <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#8A8F9E">грамматики нет — модель отвечает свободным текстом</div>
+                    </sc-if>
+                  </sc-if>
+                  <sc-if value="{{ b.isDrafts }}" hint-placeholder-val="{{ false }}">
+                    <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#8A8F9E">{{ b.note }}</div>
+                    <div style="font:400 12px/1.6 'JetBrains Mono',monospace;color:#184153">{{ b.contactLine }}</div>
+                    <div>
+                      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Личка</div>
+                      <sc-for list="{{ b.dmGroups }}" as="g" hint-placeholder-count="3">
+                        <div style="margin-top:8px">
+                          <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#156479">{{ g.label }}</div>
+                          <sc-for list="{{ g.texts }}" as="x" hint-placeholder-count="2">
+                            <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap;overflow-wrap:anywhere">— {{ x }}</div>
+                          </sc-for>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div>
+                      <div style="font:400 10px/1 'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:#156479">Публичный ответ</div>
+                      <sc-for list="{{ b.publicGroups }}" as="pg" hint-placeholder-count="1">
+                        <div style="margin-top:8px">
+                          <div style="font:400 11px/1.4 'JetBrains Mono',monospace;color:#156479">{{ pg.label }}</div>
+                          <sc-for list="{{ pg.texts }}" as="px" hint-placeholder-count="2">
+                            <div style="margin-top:4px;font:400 12px/1.5 'JetBrains Mono',monospace;color:#184153;white-space:pre-wrap;overflow-wrap:anywhere">— {{ px }}</div>
+                          </sc-for>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </sc-if>
+                </div>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
     </div>
   </sc-if>
 
@@ -273,6 +359,8 @@ class Component extends DCLogic {
     editingNoise:null, noiseDraft:'',
     disqEditing:false, disqDrafts:{},
     promptEditing:false, promptDraft:'',
+    // Раздел «Под капотом»: ключи блоков → раскрыт ли. По умолчанию всё свёрнуто.
+    hoodOpen:{},
   };
 
   async componentDidMount(){
@@ -496,6 +584,78 @@ class Component extends DCLogic {
       }, 'Набор удалён: ' + f.name),
     }));
 
+    // ── под капотом: снимок серверного каскада, только чтение ────────────────
+    // Сервер присылает `cascade.under_the_hood`: применённый набор, ступени,
+    // промпты и шаблоны черновиков. Ключа может не быть (старый сервер) — тогда
+    // раздела нет вовсе, экран работает как раньше. Блоки свёрнуты по умолчанию,
+    // состояние раскрытия — в state.hoodOpen по ключу блока.
+    const hood = c.under_the_hood || null;
+    const hoodToggle = (k)=>this.setState(
+      {hoodOpen:Object.assign({}, S.hoodOpen, {[k]: !S.hoodOpen[k]})});
+    const hoodBlocks = [];
+    if (hood) {
+      for (const stg of (hood.stages || [])) {
+        const hk = 'stage:' + (stg.key || '');
+        hoodBlocks.push({
+          key:hk, isStage:true, isPrompt:false, isDrafts:false,
+          title:stg.title || stg.key || '—', hint:stg.where || '',
+          arrow:S.hoodOpen[hk] ? '▴' : '▾', open:!!S.hoodOpen[hk],
+          toggle:()=>hoodToggle(hk),
+          text:stg.text || '',
+          hasParams:!!(stg.params && Object.keys(stg.params).length),
+          paramCols:['Параметр','Значение'],
+          paramRows:Object.entries(stg.params || {}).map(
+            ([pk, pv])=>({k:pk, v:String(pv)})),
+        });
+      }
+      for (const pr of (hood.prompts || [])) {
+        const hk = 'prompt:' + (pr.key || '');
+        hoodBlocks.push({
+          key:hk, isStage:false, isPrompt:true, isDrafts:false,
+          title:'Промпт ' + (pr.key || '—') + ' · ' + (pr.version || '—'),
+          hint:pr.used_for || '',
+          arrow:S.hoodOpen[hk] ? '▴' : '▾', open:!!S.hoodOpen[hk],
+          toggle:()=>hoodToggle(hk),
+          system:pr.system || '',
+          userTemplate:pr.user_template || '',
+          grammar:pr.grammar == null ? null : String(pr.grammar),
+          hasGrammar:pr.grammar != null && pr.grammar !== '',
+          noGrammar:pr.grammar == null || pr.grammar === '',
+        });
+      }
+      const tpl = hood.draft_templates;
+      if (tpl) {
+        const hk = 'drafts';
+        // `_fallback` — это не боль, а случай «распознанной боли не было».
+        const groups = (obj)=>Object.entries(obj || {}).map(([gk, texts])=>({
+          label:gk === '_fallback' ? 'без распознанной боли' : gk,
+          texts:Array.isArray(texts) ? texts.map(String) : [],
+        }));
+        hoodBlocks.push({
+          key:hk, isStage:false, isPrompt:false, isDrafts:true,
+          title:'Шаблоны черновиков · ' + (tpl.prompt_version || '—'), hint:'',
+          arrow:S.hoodOpen[hk] ? '▴' : '▾', open:!!S.hoodOpen[hk],
+          toggle:()=>hoodToggle(hk),
+          note:tpl.note || '',
+          contactLine:'контакт в шаблонах: ' + (tpl.contact || '—'),
+          dmGroups:groups(tpl.dm),
+          publicGroups:groups(tpl.public),
+        });
+      }
+    }
+
+    // Набор (config): имя применённого файла настроек и когда. Дата — дд.мм чч:мм.
+    // Версия промпта к набору не привязана — у неё своя нумерация, поэтому в
+    // таблице они соседние строки, а подпись это проговаривает словами.
+    const bundle = (hood && hood.bundle) || null;
+    const applied = bundle && bundle.applied_at ? String(bundle.applied_at) : '';
+    const appliedShort = applied.length >= 16
+      ? applied.slice(8, 10) + '.' + applied.slice(5, 7) + ' ' + applied.slice(11, 16)
+      : '';
+    const bundleLabel = bundle
+      ? [bundle.name || '—', appliedShort].filter(Boolean).join(' · ')
+      : '— (набор не применялся)';
+
     return {
       pad: this.props.mobile ? '12px' : '0',
       versionLabel: note || ('Версия профиля: ' + (d.version || '—') +
@@ -646,7 +806,10 @@ class Component extends DCLogic {
         {k:'L2 · эмбеддинги', v:onOff(c.l2_enabled, c.l2_model)},
         {k:'L2 · минимальный отрыв', v: c.l2_min_margin == null ? '—' : String(c.l2_min_margin)},
         {k:'L3 · LLM', v:onOff(c.l3_enabled, c.l3_model)},
-        {k:'L3 · версия промпта', v:c.l3_prompt_version || '—'},
+        {k:'Набор (config)', v:bundleLabel},
+        {k:'L3 · версия промпта', v: c.l3_prompt_version
+          ? c.l3_prompt_version + ' · нумерация промпта своя: растёт при каждом сохранении текста, к имени набора не привязана'
+          : '—'},
         {k:'Версия таксономии', v:(d.cascade_version && d.cascade_version.version) || '—'},
         {k:'Черновики', v:(d.generation && d.generation.note) || '—'},
       ],
@@ -664,6 +827,10 @@ class Component extends DCLogic {
         this.save({l3_system_prompt: text}, 'Промпт L3 сохранён, версия поднята и включена');
       },
       promptCancel: ()=>this.setState({promptEditing:false}),
+
+      // ── под капотом (только чтение) ─────────────────────────────────────────
+      hoodReady: !!hood,
+      hoodBlocks,
     };
   }
 }
