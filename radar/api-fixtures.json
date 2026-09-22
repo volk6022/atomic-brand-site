@@ -5012,30 +5012,92 @@
         "data": {
           "organizations": [
             {
-              "name": "Кофейня «Пример»",
-              "address": "Санкт-Петербург, Невский проспект, 1",
-              "phone": "+7 812 000-00-00",
-              "url": "https://kofeynya-primer.example",
-              "rating": 4.5,
-              "reviews_count": 128,
-              "business_oid": "1122446688",
-              "seoname": "kofeynya_primer",
-              "lat": 59.9356,
-              "lon": 30.3258
+              "oid": "10847347823",
+              "seoname": "sibaristica",
+              "title": "Sibaristica",
+              "permalink": "ymapsbm1://org?oid=10847347823",
+              "address": "наб. Обводного канала, 199-201К",
+              "fullAddress": "Санкт-Петербург, набережная Обводного канала, 199-201К",
+              "country": "Россия",
+              "coordinates": {
+                "lat": 59.910412,
+                "lon": 30.284159
+              },
+              "phones": [
+                {
+                  "number": "+7 (812) 309-42-16, доб. 3",
+                  "value": "+78123094216",
+                  "type": "phone",
+                  "info": null
+                }
+              ],
+              "site": null,
+              "socialLinks": [],
+              "categories": [
+                {
+                  "id": "35193114937",
+                  "name": "Кофейня",
+                  "seoname": "coffee_shop",
+                  "class": "cafe",
+                  "pluralName": "Кофейни"
+                },
+                {
+                  "id": "184106390",
+                  "name": "кафе",
+                  "seoname": "cafe",
+                  "class": "cafe",
+                  "pluralName": "Кафе"
+                }
+              ],
+              "rubricIds": [],
+              "rating": 5.0,
+              "ratingCount": 3923,
+              "reviewsCount": 1901,
+              "workingTime": null,
+              "status": "open"
             },
             {
-              "name": "Пекарня «Образец»",
-              "address": "Санкт-Петербург, Гороховая улица, 2",
-              "phone": null,
-              "url": null,
-              "rating": 4.1,
-              "reviews_count": 41,
-              "business_oid": "1099887766",
-              "seoname": "pekarnya_obrazets",
-              "lat": 59.9301,
-              "lon": 30.3378
+              "oid": "106360233783",
+              "seoname": "baggins_coffee",
+              "title": "Baggins Coffee",
+              "permalink": "ymapsbm1://org?oid=106360233783",
+              "address": "Лиговский просп., 119",
+              "fullAddress": "Санкт-Петербург, Лиговский проспект, 119",
+              "country": "Россия",
+              "coordinates": {
+                "lat": 59.91879,
+                "lon": 30.35244
+              },
+              "phones": [
+                {
+                  "number": "8 (800) 600-70-15",
+                  "value": "+78006007015",
+                  "type": "phone",
+                  "info": null
+                }
+              ],
+              "site": null,
+              "socialLinks": [],
+              "categories": [
+                {
+                  "id": "35193114937",
+                  "name": "Кофейня",
+                  "seoname": "coffee_shop",
+                  "class": "cafe",
+                  "pluralName": "Кофейни"
+                }
+              ],
+              "rubricIds": [],
+              "rating": 4.699999809265137,
+              "ratingCount": 340,
+              "reviewsCount": 188,
+              "workingTime": null,
+              "status": "open"
             }
-          ]
+          ],
+          "total": 24,
+          "query": "кофейня",
+          "region_id": 2
         }
       },
       {
@@ -5045,18 +5107,61 @@
         "data": {
           "organizations": [
             {
-              "name": "Стоматология «Тест»",
-              "address": "Москва, Тверская улица, 3",
-              "phone": "+7 495 000-00-00",
-              "url": "https://stomatologiya-test.example",
-              "rating": 4.8,
-              "reviews_count": 210,
-              "business_oid": "1332211445",
-              "seoname": "stomatologiya_test",
-              "lat": 55.7615,
-              "lon": 37.6094
+              "oid": "6077001327",
+              "seoname": "baggins_coffee",
+              "title": "Baggins Coffee",
+              "permalink": "ymapsbm1://org?oid=6077001327",
+              "address": "Большая Пушкарская ул., 22",
+              "fullAddress": "Санкт-Петербург, Большая Пушкарская улица, 22",
+              "country": "Россия",
+              "coordinates": {
+                "lat": 59.958194,
+                "lon": 30.302408
+              },
+              "phones": [
+                {
+                  "number": "8 (800) 600-70-15",
+                  "value": "+78006007015",
+                  "type": "phone",
+                  "info": null
+                }
+              ],
+              "site": null,
+              "socialLinks": [],
+              "categories": [
+                {
+                  "id": "35193114937",
+                  "name": "Кофейня",
+                  "seoname": "coffee_shop",
+                  "class": "cafe",
+                  "pluralName": "Кофейни"
+                },
+                {
+                  "id": "144176536401",
+                  "name": "магазин кофе",
+                  "seoname": "coffee_store",
+                  "class": "supermarket",
+                  "pluralName": "Магазины кофе"
+                },
+                {
+                  "id": "178781223490",
+                  "name": "кофе с собой",
+                  "seoname": "coffee_to_go",
+                  "class": "cafe",
+                  "pluralName": "Кофе с собой"
+                }
+              ],
+              "rubricIds": [],
+              "rating": 5.0,
+              "ratingCount": 236,
+              "reviewsCount": 201,
+              "workingTime": null,
+              "status": "open"
             }
-          ]
+          ],
+          "total": 24,
+          "query": "кофейня",
+          "region_id": 2
         }
       },
       {
@@ -5066,6 +5171,108 @@
         "error": {
           "code": "captcha",
           "message": "Яндекс показал капчу — повторите позже"
+        }
+      }
+    ]
+  },
+  "POST /intel/yandex [card]": {
+    "kind": "card",
+    "total": 1,
+    "ok": 1,
+    "failed": 0,
+    "results": [
+      {
+        "i": 0,
+        "ok": true,
+        "error": null,
+        "data": {
+          "card": {
+            "oid": "10847347823",
+            "seoname": "sibaristica",
+            "title": "Sibaristica",
+            "description": "Санкт-Петербург, наб. Обводного канала, 199-201К",
+            "social_links": [
+              {
+                "type": "telegram",
+                "href": "https://t.me/sibaristica_coffee",
+                "readableHref": "@sibaristica_coffee"
+              },
+              {
+                "type": "vkontakte",
+                "href": "https://vk.ru/sibaristica",
+                "readableHref": "vk.ru/sibaristica"
+              }
+            ],
+            "phones": [
+              "+7 (812) 309-42-16"
+            ],
+            "hours": null,
+            "rating": 5.0,
+            "reviews_count": 1901
+          },
+          "business_oid": "10847347823"
+        }
+      }
+    ]
+  },
+  "POST /intel/yandex [reviews]": {
+    "kind": "reviews",
+    "total": 1,
+    "ok": 1,
+    "failed": 0,
+    "results": [
+      {
+        "i": 0,
+        "ok": true,
+        "error": null,
+        "data": {
+          "reviews": [
+            {
+              "reviewId": "RK9wPolZWZQO2WPXDtxuCRE87MFL9h",
+              "businessId": "10847347823",
+              "author": {
+                "publicId": "54zwuf3k60a39ytgujf2aevazr",
+                "name": "Squirrel07",
+                "avatarUrl": "https://avatars.mds.yandex.net/get-yapic/61207/0a-3/{size}",
+                "professionLevel": "Кофеман 3 уровня",
+                "rtb": "Кофеман 3 уровня",
+                "rtbType": "ACHIEVEMENT",
+                "isSubscribed": false,
+                "achievements": [],
+                "professions": []
+              },
+              "rating": 5,
+              "text": "Отличный кофе. Всегда в другом городе трудно найти приличный кофе , особенно если пьешь капучино или флет. Толковых нет ни в отелях, ни в кофейнях. Домой покупаю эти зерна, поэтому было интересно зайти. Муж пробовал сет , сказал что эспрессо достойный. Я пила капучино - вполне себе вкусный , пену можно бы и сделать поплотнее и текстурные при желании , но среди всех вариантов затвердений - показался лучшим. Карта бара огромная - нашлась позиция и для ребенка. В целом , осталось желание попробовать еще несколько позиций а-ля  «авторских».\n\nБлюда из завтрака нам понравились, как скребл с глазуньей , так и разные допинги в виде колбасок , креветок и хашбрауна.\n\nОгромное спасибо официанту и бармену за решение нашей маленькой проблемы.",
+              "textLanguage": "ru",
+              "updatedTime": "2026-05-10T17:46:46.361Z",
+              "businessComment": {
+                "text": "Спасибо за такой внимательный отзыв — особенно приятно получать его от человека, который хорошо чувствует кофе.\n\nОчень рады, что вам понравились и эспрессо, и завтраки, и барная карта. По текстуре молока тоже услышали вас — это как раз те нюансы, над которыми всегда продолжаем работать.\n\nИ отдельное спасибо за тёплые слова о команде. Для нас сервис и атмосфера — такая же важная часть опыта, как и сам кофе. Будем рады видеть вас снова и познакомить с остальными позициями ✨\n",
+                "updatedTime": "2026-05-17T20:27:51.037Z"
+              }
+            },
+            {
+              "reviewId": "_s5d7AxpDEL-HBCXtRM0Ocph4uq0ZAMz5",
+              "businessId": "10847347823",
+              "author": {
+                "publicId": "6wk7y36xukfkwtdaq9p96ttf9r",
+                "name": "Светлана Бубнова",
+                "avatarUrl": "https://avatars.mds.yandex.net/get-yapic/20706/enc-38bc1a6f0946cd10ddc2d826520343ed/{size}",
+                "professionLevel": "Знаток города 11 уровня",
+                "rtb": "Знаток города 11 уровня",
+                "rtbType": "PROFESSION",
+                "isSubscribed": false,
+                "achievements": [],
+                "professions": []
+              },
+              "rating": 5,
+              "text": "Классное, стильное место. Вкусный кофе, интересные десерты. Атмосфера современная. Напоминает пространство seno на сенной площади. Для встречи за обедом отличное место. ",
+              "textLanguage": "ru",
+              "updatedTime": "2026-09-21T17:56:45.411Z",
+              "businessComment": null
+            }
+          ],
+          "total": 2,
+          "business_oid": "10847347823"
         }
       }
     ]

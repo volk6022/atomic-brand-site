@@ -106,9 +106,9 @@ class Component extends DCLogic {
     {key:'extract', label:'Организации',
      hint:'Ищем организации: каждая строка — один поисковый запрос. Поля: query (обязательно), region_id (2 — Санкт-Петербург, 213 — Москва), city_slug (например saint-petersburg), target_count (сколько собрать, до 200).'},
     {key:'card', label:'Карточка',
-     hint:'Карточка одной организации: описание, телефоны, соцсети. Нужны оба поля: business_oid (цифровой код) и seoname (кусок адреса организации на Картах).'},
+     hint:'Карточка одной организации: описание, телефоны, соцсети. Нужны оба поля: business_oid (цифровой код) и seoname — оба берутся из результатов режима «Организации» (там это поля oid и seoname).'},
     {key:'reviews', label:'Отзывы',
-     hint:'Отзывы одной организации. Нужны оба поля: business_oid и seoname; можно max_count (сколько отзывов, по умолчанию 50) и since_months (за сколько месяцев).'}
+     hint:'Отзывы одной организации. Нужны оба поля: business_oid и seoname — оба берутся из результатов режима «Организации» (там это поля oid и seoname); можно max_count (сколько отзывов, по умолчанию 50) и since_months (за сколько месяцев).'}
   ];
   KIND_LABEL = {extract:'«Организации»', card:'«Карточка»', reviews:'«Отзывы»'};
 
@@ -352,42 +352,70 @@ class Component extends DCLogic {
     return /[",\r\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   }
 
+  // Ячейка строки extract под настоящую форму организации: телефоны — через
+  // «; » по number, категории — по name, координаты — из coordinates;
+  // отсутствующее (site: null, нет coordinates/phones) — пустая ячейка.
+  extractCell(o, q, c){
+    if(c === 'query') return q;
+    if(c === 'phones'){
+      return Array.isArray(o.phones)
+        ? o.phones.map((p)=>(p && p.number) || '').filter(Boolean).join('; ') : '';
+    }
+    if(c === 'categories'){
+      return Array.isArray(o.categories)
+        ? o.categories.map((x)=>(x && x.name) || '').filter(Boolean).join('; ') : '';
+    }
+    if(c === 'lat' || c === 'lon'){
+      const crd = o.coordinates || {};
+      return (crd[c] === undefined || crd[c] === null) ? '' : crd[c];
+    }
+    return o[c];
+  }
+
+  // Колонки CSV — под настоящие имена полей ответа (_SAMPLES-yandex.json):
+  // extract читает data.organizations[] (см. extractCell), card — data.card,
+  // reviews — data.reviews[]. Правила прежние: RFC 4180, запятая, BOM,
+  // отсутствующее — пустая ячейка, объекты — JSON.
   buildCsv(){
     const S = this.state;
     const resp = S.resp || {};
     const results = Array.isArray(resp.results) ? resp.results : [];
     const lines = [];
     if(S.kind === 'extract'){
-      const cols = ['query','name','address','phone','url','rating',
-                    'reviews_count','business_oid','seoname','lat','lon'];
+      const cols = ['query','oid','seoname','title','address','phones','site',
+                    'categories','rating','ratingCount','reviewsCount','status','lat','lon'];
       lines.push(cols.join(','));
       for(const res of results){
         if(!res || !res.ok || !res.data || !Array.isArray(res.data.organizations)) continue;
         const q = (S.sentRows[res.i] || {}).query || '';
         for(const o of res.data.organizations){
-          lines.push(cols.map((c)=>this.csvCell(c === 'query' ? q : o[c])).join(','));
+          lines.push(cols.map((c)=>this.csvCell(this.extractCell(o, q, c))).join(','));
         }
       }
     } else if(S.kind === 'card'){
-      const cols = ['business_oid','name','description','phones','socials'];
+      const cols = ['oid','seoname','title','description','phones','social_links',
+                    'hours','rating','reviews_count'];
       lines.push(cols.join(','));
       for(const res of results){
-        if(!res || !res.ok || !res.data) continue;
-        const d = res.data;
-        const bid = d.business_oid || (S.sentRows[res.i] || {}).business_oid ||
-                    (S.sentRows[res.i] || {}).seoname || '';
-        lines.push(cols.map((c)=>this.csvCell(c === 'business_oid' ? bid : d[c])).join(','));
+        if(!res || !res.ok || !res.data || !res.data.card) continue;
+        const d = res.data.card;
+        lines.push(cols.map((c)=>this.csvCell(c === 'social_links'
+          ? (Array.isArray(d.social_links)
+              ? d.social_links.map((s)=>((s && s.type) || '') + ': ' +
+                                        ((s && s.readableHref) || '')).join('; ')
+              : '')
+          : d[c])).join(','));
       }
     } else {
-      const cols = ['business_oid','author','rating','date','text'];
+      const cols = ['businessId','reviewId','author','rating','updatedTime','text','businessComment'];
       lines.push(cols.join(','));
       for(const res of results){
         if(!res || !res.ok || !res.data) continue;
-        const bid = res.data.business_oid || (S.sentRows[res.i] || {}).business_oid ||
-                    (S.sentRows[res.i] || {}).seoname || '';
         const revs = Array.isArray(res.data.reviews) ? res.data.reviews : [];
         for(const rv of revs){
-          lines.push(cols.map((c)=>this.csvCell(c === 'business_oid' ? bid : rv[c])).join(','));
+          lines.push(cols.map((c)=>this.csvCell(c === 'author'
+            ? (rv.author && rv.author.name) || ''
+            : rv[c])).join(','));
         }
       }
     }

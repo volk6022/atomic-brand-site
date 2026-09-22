@@ -1,14 +1,19 @@
 ﻿// Поведенческая проверка экрана «Яндекс-карты» (RadarIntelYandex.dc.html) —
 // по образцу check-intel.js: настоящий блок логики экрана исполняется под
 // записывающим API, кнопки нажимаются по-настоящему. Значения ответа —
-// дословно из `api-fixtures.json` («POST /intel/yandex», 3 строки, одна
-// красная с captcha). Это контракт: правится экран, а не файл.
+// дословно из `api-fixtures.json`: «POST /intel/yandex» (3 строки extract,
+// одна красная с captcha) и настоящие формы card/reviews в соседних ключах
+// «…[card]»/«…[reviews]» — всё сведено к продовой форме из
+// _SAMPLES-yandex.json. Это контракт: правится экран, а не файл.
 //
-// Что проверяется (по задаче _TASK-yandex-maps-gui.md):
+// Что проверяется (по задачам _TASK-yandex-maps-gui.md и _TASK-yandex-real-shape.md):
 //   • разбор входа: CSV с «;», с кавычками (удвоение) и с BOM; JSON-массив;
 //     голые строки без заголовка для extract (строка = {query});
-//   • сборка CSV на выходе: экранирование запятой и кавычки (RFC 4180),
-//     пустые поля остаются пустыми, BOM в начале;
+//   • сборка CSV на выходе по настоящим полям ответа: extract — phones по
+//     number и categories по name через «; », lat/lon из coordinates,
+//     site null / нет coordinates и phones — пустые ячейки; card —
+//     social_links «type: readableHref»; reviews — author из author.name;
+//     экранирование RFC 4180, пустые поля остаются пустыми, BOM в начале;
 //   • блокировка «Запустить» при 0 и >50 строках (и на время запроса);
 //   • отрисовка таблицы по фикстуре: 3 строки, одна красная, сводка;
 //   • 409 → подсказка про «Ключ Intel» (go в журнале), экран жив.
@@ -21,9 +26,13 @@ const vm = require('vm');
 const DIR = __dirname;
 const fixtures = JSON.parse(fs.readFileSync(DIR + '/api-fixtures.json', 'utf8'));
 const YANDEX = fixtures['POST /intel/yandex'];
+const YANDEX_CARD = fixtures['POST /intel/yandex [card]'];
+const YANDEX_REVIEWS = fixtures['POST /intel/yandex [reviews]'];
 
-if (!YANDEX || !Array.isArray(YANDEX.results) || YANDEX.results.length !== 3) {
-  console.error('нет образца «POST /intel/yandex» в api-fixtures.json (3 строки, одна с error.code captcha)');
+if (!YANDEX || !Array.isArray(YANDEX.results) || YANDEX.results.length !== 3 ||
+    !YANDEX_CARD || !YANDEX_REVIEWS) {
+  console.error('нет образцов «POST /intel/yandex» в api-fixtures.json ' +
+                '(3 строки extract, одна с error.code captcha; рядом [card] и [reviews])');
   process.exit(2);
 }
 
@@ -272,7 +281,7 @@ async function main() {
     v = vals(c);
     check('N5 клик по строке раскрывает <pre> с data (JSON организаций)',
           v.hasDetail === true && v.detailText.indexOf('{') === 0 &&
-          /stomatologiya_test/.test(v.detailText),
+          /6077001327/.test(v.detailText),
           v.detailText.slice(0, 80));
     v.rows[2].open(); await sleep();
     v = vals(c);
@@ -283,8 +292,9 @@ async function main() {
     check('N5 повторный клик сворачивает <pre>', vals(c).hasDetail === false);
   }
 
-  // N6. Выгрузки: JSON — весь ответ как есть; CSV — RFC 4180, пустые поля,
-  // BOM; имена yandex-<kind>-<ГГГГММДД-ЧЧмм>.
+  // N6. Выгрузки: JSON — весь ответ как есть; CSV — настоящие поля ответа
+  // (extract: phones по number, categories по name, lat/lon из coordinates,
+  // site null → пусто), RFC 4180, пустые поля, BOM; имена yandex-<kind>-<…>.
   {
     const {c, calls} = build();
     setText(c, BARE3);
@@ -301,22 +311,27 @@ async function main() {
     const csv = calls.blobs[0].parts[0];
     check('N6 CSV начинается с BOM', csv.indexOf('\uFEFF') === 0);
     const lines = csv.replace(/^\uFEFF/, '').split('\r\n');
-    check('N6 CSV: шапка дословно по колонкам extract',
-          lines[0] === 'query,name,address,phone,url,rating,reviews_count,business_oid,seoname,lat,lon',
+    check('N6 CSV: шапка дословно по настоящим полям extract',
+          lines[0] === 'query,oid,seoname,title,address,phones,site,categories,' +
+                       'rating,ratingCount,reviewsCount,status,lat,lon',
           lines[0]);
     check('N6 CSV: по строке на организацию (3 строки данных)',
           lines.length === 4, 'строк: ' + lines.length);
-    check('N6 CSV: запятые внутри адреса — в кавычках',
-          lines[1] === 'кофейни,Кофейня «Пример»,"Санкт-Петербург, Невский проспект, 1",' +
-                       '+7 812 000-00-00,https://kofeynya-primer.example,4.5,128,' +
-                       '1122446688,kofeynya_primer,59.9356,30.3258',
+    check('N6 CSV: phones по number и адрес с запятой — в кавычках, site null — пусто',
+          lines[1] === 'кофейни,10847347823,sibaristica,Sibaristica,' +
+                       '"наб. Обводного канала, 199-201К","+7 (812) 309-42-16, доб. 3",,' +
+                       'Кофейня; кафе,5,3923,1901,open,59.910412,30.284159',
           lines[1]);
-    check('N6 CSV: отсутствующие phone/url остаются пустыми полями',
-          lines[2] === 'кофейни,Пекарня «Образец»,"Санкт-Петербург, Гороховая улица, 2",,,' +
-                       '4.1,41,1099887766,pekarnya_obrazets,59.9301,30.3378',
+    check('N6 CSV: categories по name, координаты из coordinates',
+          lines[2] === 'кофейни,106360233783,baggins_coffee,Baggins Coffee,' +
+                       '"Лиговский просп., 119",8 (800) 600-70-15,,Кофейня,' +
+                       '4.699999809265137,340,188,open,59.91879,30.35244',
           lines[2]);
     check('N6 CSV: query берётся из строки входа',
-          lines[3].indexOf('цветы,') === 0 && lines[4] === undefined, lines[3]);
+          lines[3] === 'цветы,6077001327,baggins_coffee,Baggins Coffee,' +
+                       '"Большая Пушкарская ул., 22",8 (800) 600-70-15,,' +
+                       'Кофейня; магазин кофе; кофе с собой,5,236,201,open,59.958194,30.302408',
+          lines[3]);
     const json = JSON.parse(calls.blobs[1].parts[0]);
     check('N6 JSON — весь ответ как есть (дословно из фикстуры)',
           JSON.stringify(json) === JSON.stringify(YANDEX));
@@ -324,8 +339,8 @@ async function main() {
     // Мутация: запятая и кавычка внутри значения — кавычки удваиваются.
     const q = build({resp: (() => {
       const r = clone(YANDEX);
-      r.results[0].data.organizations[0].name = 'Кофейня, "Пример"';
-      r.results[0].data.organizations[0].phone = '+7 812 000-00-00, доб. 9';
+      r.results[0].data.organizations[0].title = 'Кофейня, "Пример"';
+      r.results[0].data.organizations[0].phones = [{number: '+7 812 000-00-00, доб. 9'}];
       return r;
     })()});
     setText(q.c, BARE3);
@@ -333,10 +348,67 @@ async function main() {
     vals(q.c).dlCsv(); await sleep();
     const qline = q.calls.blobs[0].parts[0].replace(/^\uFEFF/, '').split('\r\n')[1];
     check('N6 мутация: кавычка удваивается, поле с запятой и кавычкой — в кавычках',
-          qline === 'кофейни,"Кофейня, ""Пример""","Санкт-Петербург, Невский проспект, 1",' +
-                    '"+7 812 000-00-00, доб. 9",https://kofeynya-primer.example,4.5,128,' +
-                    '1122446688,kofeynya_primer,59.9356,30.3258',
+          qline === 'кофейни,10847347823,sibaristica,"Кофейня, ""Пример""",' +
+                    '"наб. Обводного канала, 199-201К","+7 812 000-00-00, доб. 9",,' +
+                    'Кофейня; кафе,5,3923,1901,open,59.910412,30.284159',
           qline);
+
+    // Организация без coordinates и без phones не ломает CSV: пустые ячейки.
+    const bare = build({resp: (() => {
+      const r = clone(YANDEX);
+      delete r.results[0].data.organizations[0].coordinates;
+      delete r.results[0].data.organizations[0].phones;
+      return r;
+    })()});
+    setText(bare.c, BARE3);
+    await vals(bare.c).doRun(); await sleep();
+    vals(bare.c).dlCsv(); await sleep();
+    const bline = bare.calls.blobs[0].parts[0].replace(/^\uFEFF/, '').split('\r\n')[1];
+    check('N6 организация без coordinates и phones: пустые lat/lon/phones, CSV цел',
+          bline === 'кофейни,10847347823,sibaristica,Sibaristica,' +
+                    '"наб. Обводного канала, 199-201К",,,Кофейня; кафе,5,3923,1901,open,,',
+          bline);
+  }
+
+  // N6b. Выгрузки card/reviews по настоящим формам data.card и data.reviews:
+  // social_links «type: readableHref», author из author.name, объект — JSON,
+  // null (hours, businessComment) — пустая ячейка.
+  {
+    const card = build({resp: YANDEX_CARD});
+    vals(card.c).kinds[1].pick(); // режим «Карточка»
+    setText(card.c, CSV_CARD);
+    await vals(card.c).doRun(); await sleep();
+    vals(card.c).dlCsv(); await sleep();
+    const cardCsv = card.calls.blobs[0].parts[0].replace(/^\uFEFF/, '').split('\r\n');
+    check('N6b card CSV: шапка дословно по настоящим полям card',
+          cardCsv[0] === 'oid,seoname,title,description,phones,social_links,hours,rating,reviews_count',
+          cardCsv[0]);
+    check('N6b card CSV: описание с запятой — в кавычках, social_links «type: readableHref», hours null — пусто',
+          cardCsv[1] === '10847347823,sibaristica,Sibaristica,' +
+                         '"Санкт-Петербург, наб. Обводного канала, 199-201К",' +
+                         '+7 (812) 309-42-16,' +
+                         'telegram: @sibaristica_coffee; vkontakte: vk.ru/sibaristica,,5,1901',
+          cardCsv[1]);
+
+    const rev = build({resp: YANDEX_REVIEWS});
+    vals(rev.c).kinds[2].pick(); // режим «Отзывы»
+    setText(rev.c, '[{"business_oid": "10847347823", "seoname": "sibaristica"}]');
+    await vals(rev.c).doRun(); await sleep();
+    vals(rev.c).dlCsv(); await sleep();
+    const revCsv = rev.calls.blobs[0].parts[0].replace(/^\uFEFF/, '').split('\r\n');
+    check('N6b reviews CSV: шапка дословно по настоящим полям reviews',
+          revCsv[0] === 'businessId,reviewId,author,rating,updatedTime,text,businessComment',
+          revCsv[0]);
+    check('N6b reviews CSV: author из author.name, businessId/reviewId/rating/updatedTime из отзыва',
+          revCsv.length === 3 &&
+          revCsv[1].indexOf('10847347823,RK9wPolZWZQO2WPXDtxuCRE87MFL9h,' +
+                            'Squirrel07,5,2026-05-10T17:46:46.361Z,"Отличный кофе.') === 0 &&
+          revCsv[2].indexOf('10847347823,_s5d7AxpDEL-HBCXtRM0Ocph4uq0ZAMz5,' +
+                            'Светлана Бубнова,5,2026-09-21T17:56:45.411Z,"Классное,') === 0,
+          JSON.stringify(revCsv.map((l) => l.slice(0, 90))));
+    check('N6b reviews CSV: businessComment-объект — JSON в кавычках, null — пустая ячейка',
+          revCsv[1].endsWith('}"') && revCsv[2].endsWith('",'),
+          JSON.stringify([revCsv[1].slice(-40), revCsv[2].slice(-40)]));
   }
 
   // N7. 409 — ключ Intel не заведён: подсказка про «Ключ Intel» (клик по ней
