@@ -1,0 +1,261 @@
+/* ==========================================================================
+   docs/docs.css — общий стиль публичной документации (/docs).
+   Сделан на основе legal/legal.css: те же токены из _ds/atomic-design-system…,
+   шапка с логотипом, колонка ≤ 760px, футер. Отличия: без плашки «Черновик»
+   и маркеров [[ВОПРОС]] (это опубликованная документация), плюс навигация
+   между четырьмя страницами руководства (.doc-nav).
+   Токены подключаются из _ds/: шрифты (@font-face) и цвета — локальные файлы,
+   никаких внешних запросов и CDN. Страницы — обычный статический HTML
+   без React и скриптов.
+   ========================================================================== */
+
+@import url("../_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/fonts.css");
+@import url("../_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/colors.css");
+@import url("../_ds/atomic-design-system-50e984fd-4392-4774-97df-16e34bf0cac3/tokens/typography.css");
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-page, #F8F3E0);
+  color: var(--text-body, #184153);
+  font-family: var(--font-display, "Architexture", -apple-system, "Segoe UI", sans-serif);
+  font-size: 17px;
+  line-height: var(--leading-body, 1.35);
+}
+
+a {
+  color: var(--atomic-sea, #156479);
+  text-decoration-color: rgba(21, 100, 121, 0.4);
+}
+a:hover { color: var(--brand-accent, #DA501C); }
+
+/* — шапка: как на страницах сайта (docs.dc.html): sticky, cream, hairline снизу — */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 22px;
+  background: rgba(248, 243, 224, 0.88);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-hairline, rgba(19, 30, 95, 0.16));
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-decoration: none;
+}
+
+.brand .mark { height: 24px; width: auto; display: block; }
+.brand .wordmark { height: 16px; width: auto; display: block; }
+
+.nav-note {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--atomic-sea, #156479);
+  text-align: right;
+}
+
+/* — колонка текста ≤ 760px — */
+.wrap {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 48px 22px 64px;
+}
+
+.crumbs {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: var(--atomic-sea, #156479);
+  margin: 0 0 24px;
+}
+.crumbs a {
+  color: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(21, 100, 121, 0.4);
+}
+.crumbs a:hover { color: var(--brand-accent, #DA501C); border-bottom-color: #DA501C; }
+
+h1 {
+  font-size: 48px;
+  line-height: var(--leading-tight, 1.0);
+  font-weight: 400;
+  color: var(--text-primary, #131E5F);
+  margin: 0 0 18px;
+}
+
+.doc-meta {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--atomic-sea, #156479);
+  margin: 0 0 34px;
+}
+
+h2 {
+  font-size: 26px;
+  line-height: 1.15;
+  font-weight: 400;
+  color: var(--text-primary, #131E5F);
+  margin: 40px 0 14px;
+}
+
+h3 {
+  font-size: 19px;
+  line-height: 1.25;
+  font-weight: 400;
+  color: var(--text-primary, #131E5F);
+  margin: 28px 0 10px;
+}
+
+/* нумерованные пункты — номер моноширинным, как технические подписи на сайте */
+.itm { margin: 0 0 12px; }
+.itm .no {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 13px;
+  color: var(--atomic-sea, #156479);
+  margin-right: 6px;
+}
+.itm.sub { padding-left: 22px; }
+
+.doc-list {
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.doc-list li {
+  position: relative;
+  padding-left: 22px;
+  margin: 0 0 8px;
+}
+.doc-list li::before {
+  content: "—";
+  position: absolute;
+  left: 0;
+  color: var(--atomic-sea, #156479);
+}
+.doc-list .doc-list { margin-top: 8px; }
+
+code {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 13px;
+  color: var(--atomic-deep, #184153);
+  background: var(--atomic-ice, #EDF4F3);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+/* — навигация между страницами руководства (список вверху и внизу страницы) — */
+.doc-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  padding: 14px 0;
+  margin: 0 0 30px;
+  border-top: 1px solid var(--border-hairline, rgba(19, 30, 95, 0.16));
+  border-bottom: 1px solid var(--border-hairline, rgba(19, 30, 95, 0.16));
+}
+.doc-nav .dn-label { color: var(--atomic-sea, #156479); }
+.doc-nav a {
+  color: var(--atomic-sea, #156479);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(21, 100, 121, 0.4);
+}
+.doc-nav a:hover { color: var(--brand-accent, #DA501C); border-bottom-color: #DA501C; }
+.doc-nav .dn-here {
+  color: var(--text-primary, #131E5F);
+  border-bottom: 1px solid rgba(19, 30, 95, 0.4);
+}
+.doc-nav.bottom { margin: 44px 0 0; }
+
+/* таблицы — таблицами (на случай будущих таблиц в текстах) */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 16px;
+  font-size: 15px;
+}
+th, td {
+  border: 1px solid var(--border-hairline, rgba(19, 30, 95, 0.16));
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+th {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  color: var(--atomic-sea, #156479);
+  background: var(--atomic-ice, #EDF4F3);
+}
+
+/* — футер: navy, как футер главной (index.dc.html) — */
+.site-footer {
+  background: var(--surface-deep, #131E5F);
+  color: var(--text-inverse, #F8F3E0);
+  margin-top: auto;
+}
+.site-footer .wrap { padding: 44px 22px 40px; }
+.site-footer a { color: inherit; text-decoration: none; }
+.site-footer a:hover { color: var(--atomic-teal, #94BEBE); }
+.f-label {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--atomic-teal, #94BEBE);
+  margin: 18px 0 8px;
+}
+.f-label:first-child { margin-top: 0; }
+.f-item {
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text-inverse, #F8F3E0);
+}
+.f-note {
+  margin-top: 28px;
+  font-family: var(--font-mono, "JetBrains Mono", ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--atomic-teal, #94BEBE);
+}
+
+/* — мобильная ширина — */
+@media (max-width: 640px) {
+  h1 { font-size: 34px; }
+  h2 { font-size: 22px; }
+  h3 { font-size: 18px; }
+  .wrap { padding: 36px 18px 48px; }
+  .brand .wordmark { height: 14px; }
+  .brand .mark { height: 22px; }
+}
+
+/* — печать: без шапки-навигации, чёрным по белому — */
+@media print {
+  body { font-size: 12pt; background: #fff; }
+  .site-nav { position: static; background: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .doc-nav { display: none; }
+  .site-footer { background: none; color: var(--atomic-navy, #131E5F); }
+  .site-footer .f-label, .site-footer .f-note { color: var(--atomic-navy, #131E5F); }
+  .site-footer .f-item { color: var(--atomic-navy, #131E5F); }
+  a { color: inherit; }
+}

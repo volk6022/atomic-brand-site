@@ -8,7 +8,10 @@
 <body>
 <x-dc>
 <div style="display:flex;flex-direction:column;gap:14px">
-  <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Ключ Intel</div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="font:400 22px/1 'Architexture',sans-serif;color:#131E5F">Ключ Intel</div>
+    <a href="/docs/intel-key.html" target="_blank" rel="noopener" title="Руководство" style="font:400 11px/1 'JetBrains Mono',monospace;color:#156479;border:1px solid rgba(19,30,95,0.24);padding:3px 7px;text-decoration:none">?</a>
+  </div>
 
   <sc-if value="{{ loading }}" hint-placeholder-val="{{ false }}">
     <div style="font:400 12px/1.5 'JetBrains Mono',monospace;color:#8A8F9E">Загружаю…</div>
